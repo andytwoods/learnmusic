@@ -11,7 +11,11 @@
       <div class="col-md-4">
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">{{ learningscheme.instrument }}</h5>
+            <h5 class="card-title">
+              <a href='{% url 'practice' learningscheme_id=learningscheme.id %}' class="btn" aria-label="Play the selected item">
+                <i class="fas fa-play text-success"></i>
+              </a>
+              {{ learningscheme.instrument }}</h5>
             <p class="card-text">
               {{ learningscheme.clef }}
               Some quick example text to build on the card title and make up the bulk of the card's content.

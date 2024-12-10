@@ -43,3 +43,8 @@ def edit_learning_scenario(request, pk: int):
     context = {'form': form,}
 
     return render(request, 'notes/learning_scenario_edit.html', context=context)
+
+
+def practice(request, learningscheme_id:int):
+    context = {}
+    return render(request, 'notes/practice.html', context=context)
