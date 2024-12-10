@@ -1,8 +1,12 @@
 # ruff: noqa
+from django.contrib.auth.decorators import login_required
 from django.urls import path
-from django.views.generic import TemplateView
+
+from notes import views
 
 urlpatterns = [
-    # path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
+    path("", views.notes_home, name="notes-home"),
+    path("new-learning-scenario/", views.new_learning_scenario, name='new-learning-scenario'),
+    path("edit-learning-scenario/<int:pk>/",views.edit_learning_scenario, name='edit-learning-scenario')
 
 ]

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Child Page Title
+{% endblock %}
+
+{% block content %}
+  <h2>Learning Manager</h2>
+  <div class="row mb-3">
+    {% for learningscheme in learningschemes %}
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{{ learningscheme.instrument }}</h5>
+            <p class="card-text">
+              {{ learningscheme.clef }}
+              Some quick example text to build on the card title and make up the bulk of the card's content.
+            </p>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <a href="{% url 'new-learning-scenario' %}" class="btn btn-primary btn-lg">
+    Set up a new learning scenario
+  </a>
+{% endblock content %}

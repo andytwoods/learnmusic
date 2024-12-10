@@ -84,7 +84,6 @@ THIRD_PARTY_APPS = [
     "allauth.account",
     "allauth.mfa",
     "allauth.socialaccount",
-    "unique_user_email",
 ]
 
 LOCAL_APPS = [
@@ -103,7 +102,7 @@ MIGRATION_MODULES = {"sites": "learnmusic.contrib.sites.migrations"}
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#authentication-backends
 AUTHENTICATION_BACKENDS = [
-    'unique_user_email.backend.EmailBackend',
+    "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-user-model
