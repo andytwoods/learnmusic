@@ -7,18 +7,18 @@
 {% block content %}
   <h2>Learning Manager</h2>
   <div class="row mb-3">
-    {% for learningscheme in learningschemes %}
+    {% for learningscenario in learningscenarios %}
       <div class="col-md-4">
-        <div class="card">
+        <div class="card mb-4">
           <div class="card-body">
             <h5 class="card-title">
-              <a href='{% url 'practice' learningscheme_id=learningscheme.id %}' class="btn"
+              <a href='{% url 'practice' learningscenario_id=learningscenario.id %}' class="btn"
                  aria-label="Play the selected item">
                 <i class="fas fa-play text-success"></i>
               </a>
-              {{ learningscheme.instrument }}</h5>
+              {{ learningscenario.instrument }}</h5>
             <p class="card-text">
-              {{ learningscheme.clef }}
+              {{ learningscenario.clef }}
               Some quick example text to build on the card title and make up the bulk of the card's content.
             </p>
           </div>
@@ -30,5 +30,5 @@
     Set up a new learning scenario
   </a>
 
- 
+
 {% endblock content %}

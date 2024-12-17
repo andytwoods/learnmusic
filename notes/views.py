@@ -1,3 +1,4 @@
+import json
 from wsgiref.util import request_uri
 
 from django.contrib.auth.decorators import login_required
@@ -14,14 +15,15 @@ from notes.models import LearningScenario
 def notes_home(request):
 
     context = {
-        'learningschemes': LearningScenario.objects.filter(user=request.user)
+        'learningscenarios': LearningScenario.objects.filter(user=request.user)
     }
     return render(request, 'notes/learn.html', context=context)
 
 
 @login_required
 def new_learning_scenario(request):
-    scenario = LearningScenario.objects.create(user=request.user)
+    scenario = LearningScenario(user=request.user)
+    scenario.save()
     return redirect(reverse('edit-learning-scenario', kwargs={'pk': scenario.id}))
 
 
@@ -30,21 +32,29 @@ def edit_learning_scenario(request, pk: int):
     model = LearningScenario.objects.get(id=pk)
     form = None
     if request.POST:
-        form = LearningScenarioForm(request.POST)
+        form = LearningScenarioForm(request.POST, instance=model)
         if form.is_valid():
             learningscenario:LearningScenario = form.save(commit=False)
-            learningscenario.user = request.user
-            form.save()
+            learningscenario.add_notes_if_none()
+            learningscenario.save()
             return redirect(reverse('notes-home'))
 
     if not form:
-        form = LearningScenarioForm()
+        form = LearningScenarioForm(instance=model)
 
     context = {'form': form,}
 
     return render(request, 'notes/learning_scenario_edit.html', context=context)
 
 
-def practice(request, learningscheme_id:int):
-    context = {}
+def practice(request, learningscenario_id:int):
+    learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
+    context = {
+        'learningscenario_id': learningscenario_id
+    }
     return render(request, 'notes/practice.html', context=context)
+
+def practice_data(request, learningscenario_id:int):
+    json_data = json.loads(request.body)
+    tools.process_answers(json_data.get('data'))
+    return JsonResponse({'success': True})

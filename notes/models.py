@@ -7,6 +7,8 @@ from model_utils.models import TimeStampedModel
 
 from django.contrib.auth import get_user_model
 
+from notes import tools
+
 User = get_user_model()
 
 from learnmusic import users
@@ -125,8 +127,17 @@ class LearningScenario(TimeStampedModel):
     def __str__(self):
         return f'{self.user} {self.instrument}'
 
+    def add_notes_if_none(self):
+        if not self.vocabulary.exists():
+            instrument: Instrument = Instrument.objects.get(name=self.instrument)
+            highest_note = instrument.highest_note
+            lowest_note = instrument.lowest_note
+            notes = tools.generate_notes(highest_note, lowest_note)
+
+
 class NoteRecord(TimeStampedModel):
     note = models.ForeignKey(Note, on_delete=models.CASCADE)
     learning_scheme = models.ForeignKey(LearningScenario, on_delete=models.CASCADE)
     reaction_time = models.PositiveIntegerField(null=True, blank=True)
     n = models.PositiveIntegerField(default=0)
+

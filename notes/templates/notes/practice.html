@@ -28,6 +28,21 @@
     </div>
   </div>
 
+  <script>
+    function sendListToBackend(list) {
+
+      // Sending the POST request to the backend
+      const response = fetch("{% url 'practice-data' learningscenario_id=learningscenario_id %}", {
+        method: 'POST', // HTTP method
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': "{{ csrf_token }}"
+        },
+        body: JSON.stringify({data: list}) // Convert the list to JSON format
+      });
+
+    }
+  </script>
 
   <script>
     var sheet_width = 400;
@@ -165,7 +180,7 @@
           Vex.Flow.Accidental.applyAccidentals([voice], 'C');
           var formatter = new Vex.Flow.Formatter().joinVoices([voice]).format([voice], this.width);
           // apply accidentals
-          
+
           voice.draw(this.context, this.stave);
 
           for (var i = 0, l = notes.length; i < l; i++) {
