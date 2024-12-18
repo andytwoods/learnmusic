@@ -1,7 +1,7 @@
 from django.test import TestCase
 
-from notes.factories import NoteFactory
-from notes.models import Note
+from notes.factories import NoteFactory, LearningScenarioFactory
+from notes.models import Note, LearningScenario
 from notes.tools import generate_notes
 
 
@@ -15,4 +15,8 @@ class TestTools(TestCase):
         )
         notes = generate_notes(start_note, end_note, include_crazy_notes=True)
         self.assertEqual(len(notes), 19)
+
+class TestModels(TestCase):
+    def test_progress_latest_serialised(self):
+        scenario: LearningScenario = LearningScenarioFactory()
 

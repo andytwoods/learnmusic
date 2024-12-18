@@ -50,7 +50,8 @@ def edit_learning_scenario(request, pk: int):
 def practice(request, learningscenario_id:int):
     learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
     context = {
-        'learningscenario_id': learningscenario_id
+        'learningscenario_id': learningscenario_id,
+        'progress': learningscenario.progress_latest_serialised()
     }
     return render(request, 'notes/practice.html', context=context)
 

@@ -134,10 +134,30 @@ class LearningScenario(TimeStampedModel):
             lowest_note = instrument.lowest_note
             notes = tools.generate_notes(highest_note, lowest_note)
 
+    def progress_latest_serialised(self):
+        progress = []
+        for note in self.vocabulary.all():
+            noterecord: NoteRecord = (NoteRecord.
+                                      objects.
+                                      filter(learning_scheme=self, note=note).select_related('note').
+                                      latest('created'))
+            progress.append(noterecord.serialise())
+        return progress
+
 
 class NoteRecord(TimeStampedModel):
     note = models.ForeignKey(Note, on_delete=models.CASCADE)
     learning_scheme = models.ForeignKey(LearningScenario, on_delete=models.CASCADE)
     reaction_time = models.PositiveIntegerField(null=True, blank=True)
     n = models.PositiveIntegerField(default=0)
+
+    def serialise(self):
+        return {
+            'note': self.note.note,
+            'octave': self.note.octave,
+            'alter': self.note.alter,
+            'reaction_time': self.reaction_time,
+            'n': self.n,
+        }
+
 
