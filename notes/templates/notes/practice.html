@@ -1,15 +1,110 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block css %}
+  {{ block.super }}
+
+  <style>
+
+    .draggable {
+      touch-action: none;
+      user-select: none;
+    }
+
+    #sheet {
+      width: 100%; /* Container takes full width */
+      height: 250px; /* Define the height for the stave */
+      border: 1px solid #ccc; /* Optional: Add a border */
+      display: flex;
+      justify-content: center; /* Horizontally center the stave */
+      align-items: center; /* Vertically center the stave */
+    }
+
+    /* Ensure the SVG dynamically adjusts */
+    svg {
+      display: block; /* Ensure no extra spaces due to inline SVG behavior */
+    }
+
+    .draggable-box {
+      display: flex;
+      flex-direction: column; /* Stack buttons vertically */
+      justify-content: space-around; /* Space evenly between buttons */
+      align-items: center; /* Center-align buttons horizontally in the container */
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 150px; /* Adjust width for vertical layout */
+      height: 300px; /* Make the box taller to fit vertical buttons */
+      background: #fff;
+      border: 2px solid #ccc;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      cursor: grab;
+    }
+
+    .drag-handle {
+      width: 100%;
+      top: -30px;
+      left: -30px;
+      cursor: grab; /* Show a grab cursor */
+      text-align: left;
+      border-radius: 6px 6px 0 0; /* Rounded corners only at the top */
+    }
+
+    .trumpet {
+      width: 90%;
+      height: 30%;
+      margin:10px;
+      border-radius: 50%;
+    }
+
+    /* Buttons inside the box */
+    .draggable-box button {
+      padding: 10px 20px;
+      border: none;
+      background-color: #3478f6;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .draggable-box button:hover {
+      top: -30px;
+      left: -30px;
+    }
+
+    /* Resize/rotate handles (for resizing and rotating the box) */
+    .resize-handle {
+      width: 10px;
+      height: 10px;
+      position: absolute;
+    }
+
+    .resize-handle.br { /* Bottom-Right handle */
+      bottom: -5px;
+      right: -5px;
+      cursor: se-resize;
+    }
+
+    .resize-handle.rotate { /* Rotate handle */
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      cursor: grab;
+    }
+  </style>
+{% endblock css %}
+
 {% block javascript %}
-  <script
-    src="https://code.jquery.com/jquery-3.7.1.slim.min.js"
-    integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8="
-    crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"
-          integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ=="
-          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
   <script src="{% static 'js/vexflow.js' %}"></script>
+
+
 {% endblock javascript %}
 
 {% block title %}
@@ -18,17 +113,106 @@
 
 {% block content %}
   <h2>Practice</h2>
+
   <div class="row">
     <div class="col-12">
       <h5>Trumpet note/fingering learning tool</h5>
     </div>
-    <div class="col align-self-center text-center">
-      <div id='sheet' style='width: 100%; height:200px;'></div>
+    <div class="col-12 align-self-center text-center">
 
+      <div id="sheet"></div>
+    </div>
+
+  </div>
+
+  <div class="draggable-box" id="draggable-container">
+    <div class="drag-handle">
+      <i class="fa-solid fa-arrows-up-down-left-right"></i>
+    </div> <!-- Dragging handle -->
+    <div class="resize-handle rotate">
+      <i class="fa-solid fa-rotate"></i>
+    </div>
+    <button class="btn btn-secondary trumpet">3</button>
+    <button class="btn btn-secondary trumpet">2</button>
+    <button class="btn btn-secondary trumpet">1</button>
+    <div class="resize-handle br">
+      <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
     </div>
   </div>
 
+  <script type="module">
+    import 'https://cdn.interactjs.io/v1.9.20/auto-start/index.js'
+    import 'https://cdn.interactjs.io/v1.9.20/actions/drag/index.js'
+    import 'https://cdn.interactjs.io/v1.9.20/actions/resize/index.js'
+    import interact from 'https://cdn.interactjs.io/v1.9.20/interactjs/index.js'
+
+
+    const container = document.getElementById("draggable-container");
+
+    let rotationAngle = 0;
+
+    // Make the box draggable using the handle
+    interact(container).draggable({
+      allowFrom: '.drag-handle', // Enable dragging only from the handle
+      listeners: {
+        move(event) {
+          const {dx, dy} = event;
+          const style = window.getComputedStyle(container);
+          const matrix = new DOMMatrix(style.transform);
+
+          const x = (matrix.m41 || 0) + dx;
+          const y = (matrix.m42 || 0) + dy;
+
+          container.style.transform = `translate(${x}px, ${y}px) rotate(${rotationAngle}deg)`;
+        },
+      },
+    });
+
+    // Make the box resizable
+    interact(container).resizable({
+      edges: {bottom: true, right: true},
+      modifiers: [
+        interact.modifiers.restrictSize({
+          min: {width: window.innerWidth * 0.05, height: window.innerHeight * 0.10}, // Minimum dimensions
+        }),
+      ],
+      listeners: {
+        move(event) {
+          const {width, height} = event.rect;
+
+          container.style.width = `${width}px`;
+          container.style.height = `${height}px`;
+
+          container.style.transform = event.target.style.transform;
+        },
+      },
+    });
+
+    // Add smoother rotation
+    interact(".resize-handle.rotate").draggable({
+      listeners: {
+        move(event) {
+          const rect = container.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+
+          const deltaX = event.clientX - centerX;
+          const deltaY = event.clientY - centerY;
+
+          const rawAngle = Math.atan2(deltaY, deltaX) * (180 / Math.PI) + 90;
+
+          const sensitivityFactor = 0.1;
+          rotationAngle += sensitivityFactor * (rawAngle - rotationAngle);
+
+          container.style.transform = `translate(-50%, -50%) rotate(${rotationAngle}deg)`;
+        },
+      },
+    });
+  </script>
+
   <script>
+
+
     function sendListToBackend(list) {
 
       // Sending the POST request to the backend
@@ -43,207 +227,75 @@
 
     }
   </script>
-
   <script>
-    var sheet_width = 400;
-    var sheet_height = 300;
 
-    function notation_manager() {
+    const VF = Vex.Flow;  // Reference VexFlow library
+    const div = document.getElementById("sheet");
+    const containerWidth = div.clientWidth;
+    const staveWidth = 200; //
 
-// adapted from https://jsfiddle.net/ncda8ywh/1/
-      var Note = function (options) {
-        options['auto_stem'] = true;
-        this.StaveNote = new Vex.Flow.StaveNote(options);
-        this.removed = false;
-        /**
-         * moves the note right from its ORIGINAL position by x pixels
-         * (sets the trasform: translate(x) value to x)
-         */
-        this.setOffsetX = (x) => {
-          if (this.removed) {
-            return this;
-          }
-          $.each(this.getElem(true), (index, node) => {
-            var x_y = this.getTransformXY(node);
-            x_y.x = x;
-            node.setAttribute('transform', `translate(${x_y.x},${x_y.y})`);
-          })
+    // Initialize VexFlow renderer
+    const renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
+    renderer.resize(containerWidth, 200);  // Resize the SVG
 
-          return this;
-        }
-        /**
-         * removes the SVG elements
-         */
-        this.remove = () => {
-          if (this.removed) {
-            return this;
-          }
-          var note = $(this.StaveNote.attrs.el);
-          var bar = this.getBar();
-          // remove line that go though the stave
-          bar.remove();
-          note.remove();
-          this.removed = true;
-          return this;
-        }
+    const context = renderer.getContext();  // Get the rendering context
 
+    const startX = (containerWidth - staveWidth) / 2; // Calculate the starting point for centering
+    const stave = new VF.Stave(startX, 40, staveWidth);
+    stave.addClef("treble");  // Add a Treble Clef
+    stave.setContext(context); // Attach the context to the stave
+    stave.draw(context);       // Draw the stave
 
-        /**
-         * returns the <svg>
-         */
-        this.getSvg = () => {
-          return $(this.StaveNote.attrs.el).closest('svg');
-        }
-        /**
-         * Gets the StaveNote.attrs.el as a jQuery object
-         * @param {boolean} include_bar - whether to include the <rect> bar with it
-         */
-        this.getElem = (include_bar) => {
-          var return_jquery = $(this.StaveNote.attrs.el);
+    // Function to dynamically show a single note
+    function displayNote() {
+      // Clear previous rendering
+      renderer.getContext().svg.innerHTML = ""; // Clear the SVG context
 
-          if (include_bar) {
-            var bar = this.getBar();
-            if (bar.length) {
-              return_jquery = return_jquery.add(bar);
-            }
-          }
+      // Redraw the stave and attach the context
+      stave.setContext(context);
+      stave.draw();
 
-          return return_jquery;
-        }
-        /**
-         * returns the <rect> before the StaveNote.attrs.el
-         * if it exists
-         */
-        this.getBar = () => {
-          return $(this.StaveNote.attrs.el).prev('rect');
-        }
+      // Create a single music note (e.g., "C4")
+      const notes = [
+        new VF.StaveNote({keys: ["C/4"], duration: "q"})
+      ];
 
-        /**
-         * gets the {x, y} of transform=translate(x,y)
-         * @param {HTMLElement} html_element
-         */
-        this.getTransformXY = (html_element) => {
-          var xforms = html_element.getAttribute('transform');
-          if (xforms === null) {
-            return {
-              x: 0,
-              y: 0
-            };
-          }
-          var parts = /translate\(\s*([^\s,)]+)[ ,]([^\s,)]+)/.exec(xforms);
-          return {
-            x: parseInt(parts[1]),
-            y: parseInt(parts[2])
-          }
-        }
-      }
+      // Format and draw the note
+      const voice = new VF.Voice({num_beats: 1, beat_value: 4});
+      voice.addTickables(notes);
 
-      var Sheet = function (selector) {
-        this.context = null;
-        this.stave = null;
-        this.width = sheet_width;
-        this.height = sheet_height;
-        this.drawn_notes = [];
-        this.selector = selector;
-        this.createSheet = () => {
-          var sheet_elem = $('#' + this.selector);
-
-          var renderer = new Vex.Flow.Renderer(sheet_elem[0], Vex.Flow.Renderer.Backends.SVG);
-
-          // Configure the rendering context.
-          renderer.resize(this.width, this.height);
-          this.context = renderer.getContext();
-          this.context.setFont("Arial", 10, "").setBackgroundFillStyle("#eed");
-
-          // Create a stave of width this.width at position 0, 0 on the canvas.
-          this.stave = new Vex.Flow.Stave(0, 0, this.width);
-
-          // Add a clef and time signature.
-          this.stave.addClef("treble");//.addTimeSignature("4/4");
-
-          // Connect it to the rendering context and draw!
-          this.stave.setContext(this.context).draw();
-
-          //sheet_elem.find('svg')[0].setAttribute('width', '100%');
-          //sheet_elem.find('svg')[0].setAttribute('viewBox', '0 0 ' + this.width + ' ' + this.height);
-        }
-
-        this.addNotes = (notes) => {
-          var num_notes = notes.length;
-
-          var voice = new Vex.Flow.Voice({
-            num_beats: num_notes,
-            beat_value: 4
-          });
-          voice.addTickables(notes.map(note => note.StaveNote));
-
-          Vex.Flow.Accidental.applyAccidentals([voice], 'C');
-          var formatter = new Vex.Flow.Formatter().joinVoices([voice]).format([voice], this.width);
-          // apply accidentals
-
-          voice.draw(this.context, this.stave);
-
-          for (var i = 0, l = notes.length; i < l; i++) {
-            this.drawn_notes.push(notes[i]);
-          }
-          return notes;
-        }
-        this.clearNotes = () => {
-          for (let note of this.drawn_notes) {
-            if (note.removed) {
-              continue;
-            }
-            note.remove()
-          }
-        }
-      }
-
-      var sheet = new Sheet('sheet');
-
-      sheet.createSheet();
-
-      function getNote(my_note) {
-        if (!(typeof my_note === 'string' || my_note instanceof String)) my_note = 'b'
-        return new Note({
-          keys: [my_note],
-          clef: 'treble',
-          duration: 'q',
-        })
-      }
-
-      var addNote = function (my_note) {
-        sheet.clearNotes();
-        var notes = sheet.addNotes([getNote(my_note)]);
-        var modifier = 0;
-        if (my_note.indexOf('b') !== -1 || my_note.indexOf('#') !== -1) {
-          modifier -= 15.5; // this will relate to fontsize in some fashion
-        }
-        for (var i in notes) {
-          notes[i].setOffsetX(sheet_width * .5 - 55 + modifier);
-        }
-      }
-
-      window.addNote = addNote;
-      window.clearNote = sheet.clearNotes;
-
+      new VF.Formatter().joinVoices([voice]).format([voice], 350);
+      voice.draw(context, stave);
     }
 
-  </script>
-  <script>
-    window.addEventListener("load", main);
+    // Optional: Programmatically load the first note on startup
+    displayNote();  // Show a default note when the page loads
 
-    var loaded = false;
+    let notesGroup = null;
 
-    function main() {
-      if (loaded) return;
-      loaded = true;
+    function updateNote(newNote) {
+      // Clear the SVG context to remove previous notes
+      renderer.getContext().svg.innerHTML = "";
 
-      notation_manager();
-      next();
+      // Redraw the stave
+      stave.setContext(context);
+      stave.draw();
+
+      const noteX = staveWidth / 2; // Calculate the horizontal center of the stave
+
+      // Create a single note using the passed `newNote`
+      const note = new VF.StaveNote({keys: [newNote], duration: "q", align_center: true})
+
+      // Add notes to a voice and render
+      const voice = new VF.Voice({num_beats: 1, beat_value: 4});
+      voice.addTickables([note]);
+
+      new VF.Formatter().joinVoices([voice]).format([voice], noteX);
+      voice.draw(context, stave);
     }
 
-    function next() {
-      window.addNote('C/4');
-    }
+    // Optional: Display a default note on load
+    updateNote('C/4'); // Show "C4" by default when the page loads
+
   </script>
 {% endblock content %}
