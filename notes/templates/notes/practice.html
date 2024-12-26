@@ -101,10 +101,8 @@
 {% endblock css %}
 
 {% block javascript %}
-
+  {{ block.super }}
   <script src="{% static 'js/vexflow.js' %}"></script>
-
-
 {% endblock javascript %}
 
 {% block title %}
@@ -125,92 +123,11 @@
 
   </div>
 
-  <div class="draggable-box" id="draggable-container">
-    <div class="drag-handle">
-      <i class="fa-solid fa-arrows-up-down-left-right"></i>
-    </div> <!-- Dragging handle -->
-    <div class="resize-handle rotate">
-      <i class="fa-solid fa-rotate"></i>
-    </div>
-    <button class="btn btn-secondary trumpet">3</button>
-    <button class="btn btn-secondary trumpet">2</button>
-    <button class="btn btn-secondary trumpet">1</button>
-    <div class="resize-handle br">
-      <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
-    </div>
-  </div>
+  {% include 'notes/instruments/trumpet.html' %}
+
 
   {{ progress|json_script:"progress-data" }}
 
-  <script type="module">
-    import 'https://cdn.interactjs.io/v1.9.20/auto-start/index.js'
-    import 'https://cdn.interactjs.io/v1.9.20/actions/drag/index.js'
-    import 'https://cdn.interactjs.io/v1.9.20/actions/resize/index.js'
-    import interact from 'https://cdn.interactjs.io/v1.9.20/interactjs/index.js'
-
-
-    const container = document.getElementById("draggable-container");
-
-    let rotationAngle = 0;
-
-    // Make the box draggable using the handle
-    interact(container).draggable({
-      allowFrom: '.drag-handle', // Enable dragging only from the handle
-      listeners: {
-        move(event) {
-          const {dx, dy} = event;
-          const style = window.getComputedStyle(container);
-          const matrix = new DOMMatrix(style.transform);
-
-          const x = (matrix.m41 || 0) + dx;
-          const y = (matrix.m42 || 0) + dy;
-
-          container.style.transform = `translate(${x}px, ${y}px) rotate(${rotationAngle}deg)`;
-        },
-      },
-    });
-
-    // Make the box resizable
-    interact(container).resizable({
-      edges: {bottom: true, right: true},
-      modifiers: [
-        interact.modifiers.restrictSize({
-          min: {width: window.innerWidth * 0.05, height: window.innerHeight * 0.10}, // Minimum dimensions
-        }),
-      ],
-      listeners: {
-        move(event) {
-          const {width, height} = event.rect;
-
-          container.style.width = `${width}px`;
-          container.style.height = `${height}px`;
-
-          container.style.transform = event.target.style.transform;
-        },
-      },
-    });
-
-    // Add smoother rotation
-    interact(".resize-handle.rotate").draggable({
-      listeners: {
-        move(event) {
-          const rect = container.getBoundingClientRect();
-          const centerX = rect.left + rect.width / 2;
-          const centerY = rect.top + rect.height / 2;
-
-          const deltaX = event.clientX - centerX;
-          const deltaY = event.clientY - centerY;
-
-          const rawAngle = Math.atan2(deltaY, deltaX) * (180 / Math.PI) + 90;
-
-          const sensitivityFactor = 0.1;
-          rotationAngle += sensitivityFactor * (rawAngle - rotationAngle);
-
-          container.style.transform = `translate(-50%, -50%) rotate(${rotationAngle}deg)`;
-        },
-      },
-    });
-  </script>
 
   <script>
 
@@ -248,34 +165,9 @@
     stave.setContext(context); // Attach the context to the stave
     stave.draw(context);       // Draw the stave
 
-    // Function to dynamically show a single note
-    function displayNote() {
-      // Clear previous rendering
-      renderer.getContext().svg.innerHTML = ""; // Clear the SVG context
-
-      // Redraw the stave and attach the context
-      stave.setContext(context);
-      stave.draw();
-
-      // Create a single music note (e.g., "C4")
-      const notes = [
-        new VF.StaveNote({keys: ["C/4"], duration: "q"})
-      ];
-
-      // Format and draw the note
-      const voice = new VF.Voice({num_beats: 1, beat_value: 4});
-      voice.addTickables(notes);
-
-      new VF.Formatter().joinVoices([voice]).format([voice], 350);
-      voice.draw(context, stave);
-    }
-
-    // Optional: Programmatically load the first note on startup
-    displayNote();  // Show a default note when the page loads
-
-    let notesGroup = null;
 
     function updateNote(newNote) {
+      console.log(newNote)
       // Clear the SVG context to remove previous notes
       renderer.getContext().svg.innerHTML = "";
 
@@ -288,16 +180,14 @@
       // Create a single note using the passed `newNote`
       const note = new VF.StaveNote({keys: [newNote], duration: "q", align_center: true})
 
+
       // Add notes to a voice and render
       const voice = new VF.Voice({num_beats: 1, beat_value: 4});
       voice.addTickables([note]);
-
+      VF.Accidental.applyAccidentals([voice], `D`);
       new VF.Formatter().joinVoices([voice]).format([voice], noteX);
       voice.draw(context, stave);
     }
-
-    // Optional: Display a default note on load
-    updateNote('C/4'); // Show "C4" by default when the page loads
 
   </script>
 
@@ -310,18 +200,26 @@
 
       trialmananger.setProgress(progress_data);
       trialmananger.start();
+    });
 
-
-    })
-
-    trialmananger = (function () {
+    const trialmananger = (function () {
       let api = {};
+
       let current_note;
       let progress_data;
-      
+
+      api.answer = function (answer) {
+        const note = answer.id;
+        const correct = note === current_note.note;
+        console.log(correct, answer)
+        //sendListToBackend([current_note, correct])
+        //trialmananger.start();
+      }
+
       api.setProgress = function (_progress_data) {
         progress_data = _progress_data;
       }
+
 
       function sortAndRandomizeByN() {
         console.log(progress_data)
@@ -356,7 +254,7 @@
       api.start = function () {
         current_note = sortAndRandomizeByN()[0];
         const parsed_note = parse_note(current_note);
-        console.log(parsed_note)
+        document.current_note = parsed_note;
         updateNote(parsed_note);
       }
 

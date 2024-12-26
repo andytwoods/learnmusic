@@ -57,3 +57,8 @@ def practice_data(request, learningscenario_id:int):
     json_data = json.loads(request.body)
     tools.process_answers(json_data.get('data'))
     return JsonResponse({'success': True})
+
+
+def instrument_data(request, instrument):
+
+    return None

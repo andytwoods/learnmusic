@@ -1,0 +1,85 @@
+<div class="row justify-content-center align-items-center text-center">
+  <div class="col-1">
+    <button class="btn btn-primary input-button" id="trumpet-b1">1</button>
+  </div>
+  <div class="col-1">
+    <button class="btn btn-primary input-button" id="trumpet-b2">2</button>
+  </div>
+  <div class="col-1">
+    <button class="btn btn-primary input-button" id="trumpet-b3">3</button>
+  </div>
+
+  <div class="col-12 text-center mt-3">
+    <button class="btn btn-secondary" id='answer' style="width:40%;">buzz</button>
+  </div>
+</div>
+
+<script>
+  const instrument_manager = (function () {
+    let api = {};
+    let instrument_data;
+
+    document.addEventListener("DOMContentLoaded", function () {
+      getInstrumentData('trumpet', function (_instrument_data) {
+        instrument_data = _instrument_data;
+      });
+    });
+
+    // Listen for keydown events (when a key is pressed)
+    document.addEventListener('keydown', function (event) {
+      buttonlogic(event.key, true);
+    });
+
+    document.addEventListener('keyup', function (event) {
+      buttonlogic(event.key, false);
+    })
+
+    function buttonlogic(key, is_active) {
+      let el;
+
+      switch (key) {
+        case '1':
+          el = 'trumpet-b1';
+          break;
+        case '2':
+          el = 'trumpet-b2';
+          break;
+        case '3':
+          el = 'trumpet-b3';
+          break;
+        case ' ':
+          if (!is_active) {
+            answered();
+            return;
+          }
+      }
+      if (el) {
+        const element = document.getElementById(el);
+        if (is_active) element.classList.add('active');
+        else element.classList.remove('active');
+
+      }
+    }
+
+    function answered() {
+      const buttons = document.getElementsByClassName('input-button');
+      var buttons_down = [];
+      for (var i = 0; i < buttons.length; i++) {
+        if (buttons[i].classList.contains('active')) {
+          buttons_down.push(buttons[i].id.replace('trumpet-b', ''));
+        }
+      }
+      const answer_given = buttons_down.join('+');
+      const correct_answer = instrument_data[document.current_note];
+
+      console.log(answer_given === correct_answer, answer_given, correct_answer);
+
+
+    }
+
+    document.getElementById('answer').addEventListener('click', answered);
+
+
+    return api;
+  }());
+</script>

@@ -88,7 +88,7 @@ class LevelChoices(models.TextChoices):
 
 class Instrument(models.Model):
     BASE_INSTRUMENTS = (
-        ("Trumpet", "Beginner", "C 0 3", "G 0 3", ClefChoices.TREBLE),
+        ("Trumpet", "Beginner", "C 0 4", "B 0 5", ClefChoices.TREBLE),
         ("Trumpet", "Intermediate", "F 1 3", "C 0 5", ClefChoices.TREBLE),
         ("Trumpet", "Advanced", "F 1 3", "C 0 6", ClefChoices.TREBLE),
     )
