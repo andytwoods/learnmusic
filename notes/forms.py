@@ -7,11 +7,11 @@ from .models import LearningScenario, Instrument
 
 
 class LearningScenarioForm(forms.ModelForm):
-    instrument = forms.ModelChoiceField(
-        queryset=Instrument.objects.all(),
-        empty_label="Select an Instrument",
-        widget=forms.Select(attrs={'class': 'dropdown'})
-    )
+    # instrument = forms.ModelChoiceField(
+    #     queryset=Instrument.objects.all(),
+    #     empty_label="Select an Instrument",
+    #     widget=forms.Select(attrs={'class': 'dropdown'})
+    # )
     class Meta:
         model = LearningScenario
         fields = ['instrument']

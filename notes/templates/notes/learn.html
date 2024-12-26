@@ -16,7 +16,7 @@
                  aria-label="Play the selected item">
                 <i class="fas fa-play text-success"></i>
               </a>
-              {{ learningscenario.instrument }}</h5>
+              {{ learningscenario.instrument }}  <a class='small' href="{% url 'edit-learning-scenario' pk=learningscenario.id %}">edit</a></h5>
             <p class="card-text">
               {{ learningscenario.clef }}
               Some quick example text to build on the card title and make up the bulk of the card's content.

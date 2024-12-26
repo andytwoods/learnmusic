@@ -34,9 +34,7 @@ def edit_learning_scenario(request, pk: int):
     if request.POST:
         form = LearningScenarioForm(request.POST, instance=model)
         if form.is_valid():
-            learningscenario:LearningScenario = form.save(commit=False)
-            learningscenario.add_notes_if_none()
-            learningscenario.save()
+            form.save()
             return redirect(reverse('notes-home'))
 
     if not form:

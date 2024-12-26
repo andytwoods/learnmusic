@@ -56,7 +56,7 @@
     .trumpet {
       width: 90%;
       height: 30%;
-      margin:10px;
+      margin: 10px;
       border-radius: 50%;
     }
 
@@ -139,6 +139,8 @@
       <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
     </div>
   </div>
+
+  {{ progress|json_script:"progress-data" }}
 
   <script type="module">
     import 'https://cdn.interactjs.io/v1.9.20/auto-start/index.js'
@@ -297,5 +299,69 @@
     // Optional: Display a default note on load
     updateNote('C/4'); // Show "C4" by default when the page loads
 
+  </script>
+
+  <script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const progress_data = JSON.parse(
+        document.getElementById('progress-data').textContent
+      );
+
+      trialmananger.setProgress(progress_data);
+      trialmananger.start();
+
+
+    })
+
+    trialmananger = (function () {
+      let api = {};
+      let current_note;
+      let progress_data;
+      
+      api.setProgress = function (_progress_data) {
+        progress_data = _progress_data;
+      }
+
+      function sortAndRandomizeByN() {
+        console.log(progress_data)
+        return progress_data.slice().sort((a, b) => {
+          if (a.n !== b.n) {
+            return a.n - b.n;
+          }
+          return Math.random() - 0.5;
+        });
+      }
+
+      function parse_note(note) {
+        let note_str = note['note'];
+        switch (note['alter']) {
+          case 1:
+            note_str += '#';
+            break;
+          case -1:
+            note_str += 'b';
+            break;
+          case 2:
+            note_str += '##';
+            break;
+          case -2:
+            note_str += 'bb';
+            break;
+        }
+        note_str += '/' + note['octave'];
+        return note_str;
+      }
+
+      api.start = function () {
+        current_note = sortAndRandomizeByN()[0];
+        const parsed_note = parse_note(current_note);
+        console.log(parsed_note)
+        updateNote(parsed_note);
+      }
+
+
+      return api;
+    }());
   </script>
 {% endblock content %}

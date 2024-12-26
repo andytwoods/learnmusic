@@ -23,7 +23,7 @@ notes = [
     "G",
     "G♯ / A♭"
 ]
-def generate_notes(lowest_note, highest_note, include_crazy_notes):
+def generate_notes(lowest_note, highest_note, include_crazy_notes=False):
     from notes.models import Note
 
     start_note = lowest_note.note
@@ -75,7 +75,9 @@ def generate_notes(lowest_note, highest_note, include_crazy_notes):
                 elif current_note == 'C' and alter == -1:
                     continue
 
-            note = Note(note=current_note, octave=current_octave, alter=alter)
+            note, created = Note.objects.get_or_create(note=current_note, octave=current_octave, alter=alter)
+            if created:
+                note.save()
             compiled.append(note)
 
         alter_i=0

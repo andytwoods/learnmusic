@@ -1,4 +1,5 @@
 from collections import namedtuple
+from typing import Any
 
 from click.core import batch
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -95,6 +96,10 @@ class Instrument(models.Model):
     def __str__(self):
         return f"{self.name} {self.level}"
 
+    @classmethod
+    def get_instrument(cls, instrument_name):
+        return cls.objects.get(name=instrument_name)
+
     def create_default_instruments(*args, **kwargs):
         instruments = []
         for instrument_info in Instrument.BASE_INSTRUMENTS:
@@ -120,23 +125,29 @@ class Instrument(models.Model):
 
 class LearningScenario(TimeStampedModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    instrument = models.CharField(max_length=64, null=True, blank=True)
+    instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE, null=True, blank=True)
     vocabulary = models.ManyToManyField(Note)
     clef = models.CharField(max_length=64, choices=ClefChoices.choices, default=ClefChoices.TREBLE)
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        # instrument can be null as we create a blank instence before user specifies this
+        if self.instrument and not self.vocabulary.exists():
+            highest_note = self.instrument.highest_note
+            lowest_note = self.instrument.lowest_note
+            notes = tools.generate_notes(highest_note=highest_note,
+                                         lowest_note=lowest_note)
+            NoteRecord.generate_records(notes, self)
+
+            self.vocabulary.add(*notes)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.user} {self.instrument}'
 
-    def add_notes_if_none(self):
-        if not self.vocabulary.exists():
-            instrument: Instrument = Instrument.objects.get(name=self.instrument)
-            highest_note = instrument.highest_note
-            lowest_note = instrument.lowest_note
-            notes = tools.generate_notes(highest_note, lowest_note)
-
     def progress_latest_serialised(self):
         progress = []
         for note in self.vocabulary.all():
+
             noterecord: NoteRecord = (NoteRecord.
                                       objects.
                                       filter(learning_scheme=self, note=note).select_related('note').
@@ -159,5 +170,13 @@ class NoteRecord(TimeStampedModel):
             'reaction_time': self.reaction_time,
             'n': self.n,
         }
+
+    @classmethod
+    def generate_records(cls, notes, learningscenario: LearningScenario):
+        records = []
+        for note in notes:
+            record: NoteRecord = cls(note=note, learning_scheme=learningscenario)
+            records.append(record)
+        NoteRecord.objects.bulk_create(records)
 
 
