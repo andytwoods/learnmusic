@@ -88,7 +88,7 @@ class LevelChoices(models.TextChoices):
 
 class Instrument(models.Model):
     BASE_INSTRUMENTS = (
-        ("Trumpet", "Beginner", "C 0 4", "B 0 5", ClefChoices.TREBLE),
+        ("Trumpet", "Beginner", None, None, ClefChoices.TREBLE, 'C 0 4;D 0 4;E 0 4;F 0 4;G 0 4;A 0 4;Bb -1 4;B 0 4'),
         ("Trumpet", "Intermediate", "F 1 3", "C 0 5", ClefChoices.TREBLE),
         ("Trumpet", "Advanced", "F 1 3", "C 0 6", ClefChoices.TREBLE),
     )
@@ -110,6 +110,9 @@ class Instrument(models.Model):
                 highest_note=Note.get_from_str(instrument_info[3]),
                 clef=instrument_info[4],
             )
+            if len(instrument_info) >= 5:
+                instrument.notes_str = instrument_info[5]
+
             instruments.append(instrument)
 
         Instrument.objects.bulk_create(instruments)
@@ -119,8 +122,9 @@ class Instrument(models.Model):
                              choices=LevelChoices.choices,
                              default=LevelChoices.BEGINNER)
     clef = models.CharField(max_length=64, choices=ClefChoices.choices, default=ClefChoices.TREBLE)
-    lowest_note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name='instrument_lowest_note')
-    highest_note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name='instrument_highest_note')
+    lowest_note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name='instrument_lowest_note', null=True, blank=True)
+    highest_note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name='instrument_highest_note', null=True, blank=True)
+    notes_str = models.CharField(max_length=512, default='')
 
 
 class LearningScenario(TimeStampedModel):
@@ -134,8 +138,12 @@ class LearningScenario(TimeStampedModel):
         if self.instrument and not self.vocabulary.exists():
             highest_note = self.instrument.highest_note
             lowest_note = self.instrument.lowest_note
-            notes = tools.generate_notes(highest_note=highest_note,
-                                         lowest_note=lowest_note)
+            if highest_note and lowest_note:
+                notes = tools.generate_notes(highest_note=highest_note,
+                                             lowest_note=lowest_note)
+            else:
+                notes = tools.generate_notes_from_str(self.instrument.notes_str)
+
             NoteRecord.generate_records(notes, self)
 
             self.vocabulary.add(*notes)

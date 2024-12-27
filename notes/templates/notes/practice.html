@@ -175,7 +175,7 @@
       stave.setContext(context);
       stave.draw();
 
-      const noteX = staveWidth / 2; // Calculate the horizontal center of the stave
+      let noteX = staveWidth / 2; // Calculate the horizontal center of the stave
 
       // Create a single note using the passed `newNote`
       const note = new VF.StaveNote({keys: [newNote], duration: "q", align_center: true})
@@ -184,7 +184,10 @@
       // Add notes to a voice and render
       const voice = new VF.Voice({num_beats: 1, beat_value: 4});
       voice.addTickables([note]);
-      VF.Accidental.applyAccidentals([voice], `D`);
+      if(newNote.indexOf('#') !== -1 || newNote.indexOf('b') !== -1) {
+        VF.Accidental.applyAccidentals([voice], `D`);
+        noteX += 15;
+      }
       new VF.Formatter().joinVoices([voice]).format([voice], noteX);
       voice.draw(context, stave);
     }
@@ -233,6 +236,7 @@
 
       function parse_note(note) {
         let note_str = note['note'];
+        note_str = note_str.charAt(0);
         switch (note['alter']) {
           case 1:
             note_str += '#';

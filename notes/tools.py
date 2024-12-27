@@ -85,5 +85,16 @@ def generate_notes(lowest_note, highest_note, include_crazy_notes=False):
     return compiled
 
 
+def generate_notes_from_str(notes_str):
+    from notes.models import Note
 
+    compiled = []
 
+    for note_info in notes_str.split(';'):
+        note_str, altar_str, octave_str = note_info.split(' ')
+        note, created = Note.objects.get_or_create(note=note_str, octave=int(octave_str), alter=int(altar_str))
+        if created:
+            note.save()
+        compiled.append(note)
+
+    return compiled
