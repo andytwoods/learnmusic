@@ -1,18 +1,76 @@
-<div class="row justify-content-center align-items-center text-center">
-  <div class="col-1">
-    <button class="btn btn-primary input-button" id="trumpet-b1">1</button>
-  </div>
-  <div class="col-1">
-    <button class="btn btn-primary input-button" id="trumpet-b2">2</button>
-  </div>
-  <div class="col-1">
-    <button class="btn btn-primary input-button" id="trumpet-b3">3</button>
-  </div>
+<style>
+  .input-button {
+    min-width: 70px;
+    background-color: white; /* Default white background */
+    color: black; /* Default black text */
+    border: 2px solid black; /* Optional: Add a black border */
+    transition: all 0.3s ease; /* Smooth transition */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.4);"
+  }
 
-  <div class="col-12 text-center mt-3">
-    <button class="btn btn-secondary" id='answer' style="width:40%;">buzz (space)</button>
+  .input-button:hover {
+    background-color: gray; /* Change to gray when hovered */
+    color: white; /* Text turns white on hover */
+    border-color: gray; /* Optional: border changes to gray */
+  }
+</style>
+
+<div id='trumpet-bottom' class="row justify-content-center align-items-center text-center">
+  <div class="col">
+    <button class="btn btn-primary rounded-pill btn-lg input-button m-2 p-3 trumpet-b1" data-valve="1">1</button>
+    <button class="btn btn-primary rounded-pill btn-lg input-button m-2 p-3 trumpet-b2" data-valve="2">2</button>
+    <button class="btn btn-primary rounded-pill btn-lg input-button m-2 p-3 trumpet-b3" data-valve="3">3</button>
   </div>
 </div>
+
+<div class="row justify-content-center align-items-center text-center">
+  <div class="col-12 text-center mt-3">
+    <button class="btn btn-secondary btn-lg mt-5" id='answer' style="width:100%;">buzz (space)</button>
+  </div>
+</div>
+
+<div id='trumpet-right' style="display:none;" class="col-3 text-left">
+  <div>
+    <button class="btn btn-primary rounded-pill btn-lg input-button my-3  p-4 trumpet-b3" data-valve="3">3</button>
+  </div>
+  <div>
+    <button class="btn btn-primary rounded-pill btn-lg input-button my-3 p-4 trumpet-b2" data-valve="2">2</button>
+  </div>
+    <div>
+    <button class="btn btn-primary rounded-pill btn-lg input-button my-3 p-4 trumpet-b1" data-valve="1">1</button>
+  </div>
+</div>
+
+<script>
+  const orientation_manager = (function () {
+    let api = {};
+    let placeholder, trumpet_right, trumpet_bottom;
+
+    function setup(){
+      if (placeholder) return
+      placeholder = document.getElementById('right-of-sheet-placeholder');
+      trumpet_right = document.getElementById('trumpet-right');
+      trumpet_bottom = document.getElementById('trumpet-bottom');
+
+      placeholder.parentElement.replaceChild(trumpet_right, placeholder);
+    }
+
+    api.align_right = function () {
+      setup();
+      trumpet_right.style.display = 'block';
+      trumpet_bottom.style.display = 'none';
+    }
+
+    api.align_bottom = function () {
+      setup();
+      trumpet_right.style.display = 'none';
+      trumpet_bottom.style.display = 'block';
+    }
+
+    return api;
+  }())
+  orientation_manager.align_right();
+</script>
 
 <script>
   const instrument_manager = (function () {
@@ -54,9 +112,9 @@
           }
       }
       if (el) {
-        const element = document.getElementById(el);
-        if (is_active) element.classList.add('active');
-        else element.classList.remove('active');
+        const elements = Array.from(document.getElementsByClassName(el));
+        if (is_active) elements.forEach(el => el.classList.add('active'));
+        else elements.forEach(el => el.classList.remove('active'));
 
       }
     }
@@ -67,12 +125,25 @@
       var buttons_down = [];
       for (var i = 0; i < buttons.length; i++) {
         if (buttons[i].classList.contains('active')) {
-          buttons_down.push(buttons[i].id.replace('trumpet-b', ''));
+          const valve = buttons[i].dataset.valve;
+          if (buttons_down.indexOf(valve) === -1) buttons_down.push(valve);
         }
       }
+      buttons_down.sort();
+
       const keys_pressed = buttons_down.join('+') || '';
-      const correct = getCorrectKeysPressed().indexOf(keys_pressed) !== -1;
-      trial_manager.answer(correct);
+      const correct_keys = getCorrectKeysPressed();
+      const correct = correct_keys.indexOf(keys_pressed) !== -1;
+      let error_message;
+      if (!correct) {
+        error_message = correct_keys.join(", ");
+        if (error_message.length === 0) error_message = 'all up!'
+        error_message = "Correct answer:\n" + error_message + '\n\nYou pressed:\n'
+        if (keys_pressed.length > 0) {
+          error_message += keys_pressed;
+        } else error_message += 'all up!';
+      }
+      trial_manager.answer(correct, error_message);
     }
 
     function getCorrectKeysPressed() {

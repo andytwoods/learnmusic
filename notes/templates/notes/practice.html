@@ -14,7 +14,7 @@
     #sheet {
       width: 100%; /* Container takes full width */
       height: 250px; /* Define the height for the stave */
-      border: 1px solid #ccc; /* Optional: Add a border */
+
       display: flex;
       justify-content: center; /* Horizontally center the stave */
       align-items: center; /* Vertically center the stave */
@@ -25,78 +25,6 @@
       display: block; /* Ensure no extra spaces due to inline SVG behavior */
     }
 
-    .draggable-box {
-      display: flex;
-      flex-direction: column; /* Stack buttons vertically */
-      justify-content: space-around; /* Space evenly between buttons */
-      align-items: center; /* Center-align buttons horizontally in the container */
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 150px; /* Adjust width for vertical layout */
-      height: 300px; /* Make the box taller to fit vertical buttons */
-      background: #fff;
-      border: 2px solid #ccc;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      cursor: grab;
-    }
-
-    .drag-handle {
-      width: 100%;
-      top: -30px;
-      left: -30px;
-      cursor: grab; /* Show a grab cursor */
-      text-align: left;
-      border-radius: 6px 6px 0 0; /* Rounded corners only at the top */
-    }
-
-    .trumpet {
-      width: 90%;
-      height: 30%;
-      margin: 10px;
-      border-radius: 50%;
-    }
-
-    /* Buttons inside the box */
-    .draggable-box button {
-      padding: 10px 20px;
-      border: none;
-      background-color: #3478f6;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .draggable-box button:hover {
-      top: -30px;
-      left: -30px;
-    }
-
-    /* Resize/rotate handles (for resizing and rotating the box) */
-    .resize-handle {
-      width: 10px;
-      height: 10px;
-      position: absolute;
-    }
-
-    .resize-handle.br { /* Bottom-Right handle */
-      bottom: -5px;
-      right: -5px;
-      cursor: se-resize;
-    }
-
-    .resize-handle.rotate { /* Rotate handle */
-      top: -30px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 15px;
-      height: 15px;
-      border-radius: 50%;
-      cursor: grab;
-    }
   </style>
 {% endblock css %}
 
@@ -112,18 +40,32 @@
 {% block content %}
   <h2>Practice</h2>
 
-  <div class="row">
-    <div class="col-12">
-      <h5>Trumpet note/fingering learning tool</h5>
-    </div>
-    <div class="col-12 align-self-center text-center">
-
-      <div id="sheet"></div>
-    </div>
-
+  <div id='error-message'
+       class="h-50 position-fixed top-50 start-50 translate-buttom text-center bg-danger text-white p-4 rounded shadow"
+       style="z-index: 1050; display: none;">
+    <h2>m i s t a k e</h2>
+    <p id="correct-answer"></p>
   </div>
 
-  {% include 'notes/instruments/trumpet.html' %}
+  <div class="card">
+    <div class="card-header text-center">
+      <h5>Trumpet Note/Fingering Learning Tool</h5>
+    </div>
+
+    <div class="card-body">
+      <div class="row mt-5">
+        <div class="col-9 align-self-center text-center">
+
+          <div id="sheet"></div>
+        </div>
+        <div id="right-of-sheet-placeholder"></div>
+
+      </div>
+      {% include 'notes/instruments/trumpet.html' %}
+
+    </div>
+  </div>
+
 
 
   {{ progress|json_script:"progress-data" }}
@@ -184,7 +126,7 @@
       // Add notes to a voice and render
       const voice = new VF.Voice({num_beats: 1, beat_value: 4});
       voice.addTickables([note]);
-      if(newNote.indexOf('#') !== -1 || newNote.indexOf('b') !== -1) {
+      if (newNote.indexOf('#') !== -1 || newNote.indexOf('b') !== -1) {
         VF.Accidental.applyAccidentals([voice], `D`);
         noteX += 15;
       }
@@ -211,19 +153,75 @@
       let current_note;
       let progress_data;
 
-      api.answer = function (answer) {
-        console.log(answer);
-        //sendListToBackend([current_note, correct])
-        api.start();
+      const timer = (function () {
+        let api = {};
+        let start = undefined;
+
+        api.start = function () {
+          start = performance.now();
+        }
+        api.stop = function () {
+          const rt = performance.now() - start;
+          return rt.toFixed(0)
+        }
+
+        return api;
+      }());
+
+      const error_message_manager = (function () {
+        let api = {};
+        let callback;
+        const error_message_el = document.getElementById('error-message');
+        const correct_answer_el = document.getElementById('correct-answer');
+
+        api.stop = function () {
+          error_message_el.style.display = 'none';
+          callback();
+          callback = undefined;
+        }
+
+        api.start = function (message, _callback) {
+          callback = _callback;
+          correct_answer_el.innerText = message;
+          error_message_el.style.display = 'block';
+        }
+
+        return api;
+      }());
+
+
+      let locked = false;
+
+      api.answer = function (answer, mistake_message) {
+        if (locked) {
+          error_message_manager.stop();
+          return;
+        }
+        locked = true;
+        const rt = timer.stop();
+        current_note['reaction_time_log'].push(rt);
+        current_note['correct'].push(answer);
+        current_note['n'] += 1;
+
+        if (answer === true) {
+          api.start();
+          locked = false;
+        } else error_message_manager.start(mistake_message, () => {
+          api.start();
+          locked = false;
+        });
       }
 
       api.setProgress = function (_progress_data) {
         progress_data = _progress_data;
+        progress_data.forEach(note => {
+          note['reaction_time_log'] = [];
+          note['correct'] = [];
+        })
       }
 
 
       function sortAndRandomizeByN() {
-        console.log(progress_data)
         return progress_data.slice().sort((a, b) => {
           if (a.n !== b.n) {
             return a.n - b.n;
@@ -257,6 +255,7 @@
         current_note = sortAndRandomizeByN()[0];
         const parsed_note = parse_note(current_note);
         document.current_note = parsed_note;
+        timer.start();
         updateNote(parsed_note);
       }
 
