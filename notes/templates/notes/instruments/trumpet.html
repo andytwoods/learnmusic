@@ -10,7 +10,7 @@
   </div>
 
   <div class="col-12 text-center mt-3">
-    <button class="btn btn-secondary" id='answer' style="width:40%;">buzz</button>
+    <button class="btn btn-secondary" id='answer' style="width:40%;">buzz (space)</button>
   </div>
 </div>
 
@@ -62,6 +62,7 @@
     }
 
     function answered() {
+
       const buttons = document.getElementsByClassName('input-button');
       var buttons_down = [];
       for (var i = 0; i < buttons.length; i++) {
@@ -69,17 +70,22 @@
           buttons_down.push(buttons[i].id.replace('trumpet-b', ''));
         }
       }
-      const answer_given = buttons_down.join('+');
-      const correct_answer = instrument_data[document.current_note];
+      const keys_pressed = buttons_down.join('+') || '';
+      const correct = getCorrectKeysPressed().indexOf(keys_pressed) !== -1;
+      trial_manager.answer(correct);
+    }
 
-      console.log(answer_given === correct_answer, answer_given, correct_answer);
-
-
+    function getCorrectKeysPressed() {
+      let current_note = document.current_note;
+      if (current_note in instrument_data) return instrument_data[current_note];
+      const equiv_notes = getEnharmonicEquivalents(current_note);
+      for (const equiv_note of equiv_notes) {
+        if (equiv_note in instrument_data) return instrument_data[equiv_note];
+      }
+      throw new Error("No correct answer found for note " + current_note + ", for trumpet");
     }
 
     document.getElementById('answer').addEventListener('click', answered);
-
-
     return api;
   }());
 </script>

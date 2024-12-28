@@ -201,22 +201,20 @@
         document.getElementById('progress-data').textContent
       );
 
-      trialmananger.setProgress(progress_data);
-      trialmananger.start();
+      trial_manager.setProgress(progress_data);
+      trial_manager.start();
     });
 
-    const trialmananger = (function () {
+    const trial_manager = (function () {
       let api = {};
 
       let current_note;
       let progress_data;
 
       api.answer = function (answer) {
-        const note = answer.id;
-        const correct = note === current_note.note;
-        console.log(correct, answer)
+        console.log(answer);
         //sendListToBackend([current_note, correct])
-        //trialmananger.start();
+        api.start();
       }
 
       api.setProgress = function (_progress_data) {
