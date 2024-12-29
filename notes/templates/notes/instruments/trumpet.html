@@ -1,6 +1,6 @@
 <style>
   .input-button {
-    min-width: 70px;
+    min-width: 85px;
     background-color: white; /* Default white background */
     color: black; /* Default black text */
     border: 2px solid black; /* Optional: Add a black border */
@@ -138,7 +138,7 @@
       if (!correct) {
         error_message = correct_keys.join(", ");
         if (error_message.length === 0) error_message = 'all up!'
-        error_message = "Correct answer:\n" + error_message + '\n\nYou pressed:\n'
+        error_message = "Correct answer: " + error_message + '\nYou pressed: '
         if (keys_pressed.length > 0) {
           error_message += keys_pressed;
         } else error_message += 'all up!';

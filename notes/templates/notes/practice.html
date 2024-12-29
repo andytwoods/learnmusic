@@ -38,16 +38,33 @@
 {% endblock %}
 
 {% block content %}
-  <h2>Practice</h2>
+
+  <style>
+  .mw-md-75 {
+    max-width: 100%;
+  }
+
+  @media (min-width: 768px) {
+    .mw-md-75 {
+      max-width: 75%;
+    }
+  }
+
+  @media (min-width: 992px) {
+    .mw-md-75 {
+      max-width: 50%;
+    }
+  }
+</style>
 
   <div id='error-message'
-       class="h-50 position-fixed top-50 start-50 translate-buttom text-center bg-danger text-white p-4 rounded shadow"
-       style="z-index: 1050; display: none;">
+       class="position-fixed start-50 translate-middle-x text-center bg-danger text-white p-2 rounded shadow"
+       style="z-index: 1050; top: 5%; display: none;">
     <h2>m i s t a k e</h2>
     <p id="correct-answer"></p>
   </div>
 
-  <div class="card">
+  <div class="card mw-md-75" >
     <div class="card-header text-center">
       <h5>Trumpet Note/Fingering Learning Tool</h5>
     </div>
