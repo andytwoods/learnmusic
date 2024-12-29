@@ -40,22 +40,22 @@
 {% block content %}
 
   <style>
-  .mw-md-75 {
-    max-width: 100%;
-  }
-
-  @media (min-width: 768px) {
     .mw-md-75 {
-      max-width: 75%;
+      max-width: 100%;
     }
-  }
 
-  @media (min-width: 992px) {
-    .mw-md-75 {
-      max-width: 50%;
+    @media (min-width: 768px) {
+      .mw-md-75 {
+        max-width: 75%;
+      }
     }
-  }
-</style>
+
+    @media (min-width: 992px) {
+      .mw-md-75 {
+        max-width: 50%;
+      }
+    }
+  </style>
 
   <div id='error-message'
        class="position-fixed start-50 translate-middle-x text-center bg-danger text-white p-2 rounded shadow"
@@ -64,12 +64,15 @@
     <p id="correct-answer"></p>
   </div>
 
-  <div class="card mw-md-75" >
+  <div class="card mw-md-75">
     <div class="card-header text-center">
       <h5>Trumpet Note/Fingering Learning Tool</h5>
     </div>
 
-    <div class="card-body">
+    <div class="card-body position-relative">
+      <div id="counter" class="position-absolute top-0 start-0 p-2 m-2">
+        <span id="counter-value"></span>
+      </div>
       <div class="row mt-5">
         <div class="col-9 align-self-center text-center">
 
@@ -155,6 +158,35 @@
 
   <script>
 
+    const countdown_manager = (function () {
+      let api = {};
+
+      let remainingTime;
+
+      // Update the counter value immediately when starting
+      const counterSpan = document.getElementById("counter-value");
+
+      api.start = function (durationInSeconds) {
+        if (remainingTime !== undefined) return;
+        remainingTime = durationInSeconds;
+        counterSpan.textContent = remainingTime;
+
+        const intervalId = setInterval(() => {
+          remainingTime--;
+          counterSpan.textContent = remainingTime;
+
+          // Check if timer is finished
+          if (remainingTime <= 0) {
+            clearInterval(intervalId);
+            counterSpan.textContent = "Time's up!";
+          }
+        }, 1000);
+
+      }
+
+      return api;
+    }());
+
     document.addEventListener("DOMContentLoaded", function () {
       const progress_data = JSON.parse(
         document.getElementById('progress-data').textContent
@@ -214,6 +246,7 @@
           error_message_manager.stop();
           return;
         }
+        countdown_manager.start(120);
         locked = true;
         const rt = timer.stop();
         current_note['reaction_time_log'].push(rt);
