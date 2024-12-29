@@ -1,19 +1,17 @@
 import json
-from wsgiref.util import request_uri
 
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
-from django.urls import reverse_lazy, reverse
-from django.views.generic import UpdateView
+from django.urls import reverse
 
-from notes import tools
 from notes.forms import LearningScenarioForm
-from notes.models import LearningScenario
+from notes.models import LearningScenario, Instrument
+from notes.tools import generate_notes
+
 
 @login_required
 def notes_home(request):
-
     context = {
         'learningscenarios': LearningScenario.objects.filter(user=request.user)
     }
@@ -40,25 +38,50 @@ def edit_learning_scenario(request, pk: int):
     if not form:
         form = LearningScenarioForm(instance=model)
 
-    context = {'form': form,}
+    context = {'form': form,
+               'learningscenario_pk': model.pk}
 
     return render(request, 'notes/learning_scenario_edit.html', context=context)
 
+def edit_learning_scenario_notes(request, pk: int):
+    ls:LearningScenario = LearningScenario.objects.get(id=pk)
 
-def practice(request, learningscenario_id:int):
+    # not sure why request.POST does not suffice. Perhaps cos JSON sent
+    if request.method == 'POST':
+        received = json.loads(request.body)
+        notes_added = received['added']
+        notes_removed = received['removed']
+        ls.edit_notes(added=notes_added, removed=notes_removed)
+        return JsonResponse({'success': True}, status=200)
+
+    lowest_note, highest_note = Instrument.get_instrument_range(ls.instrument.name)
+    context = {'notes': ls.simple_vocab(),
+               'all_notes': [str(note) for note in generate_notes(lowest_note, highest_note)]}
+
+    return render(request, 'notes/learning_scenario_edit_vocab.html', context=context)
+
+
+def practice(request, learningscenario_id: int):
     learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
     context = {
         'learningscenario_id': learningscenario_id,
-        'progress': learningscenario.progress_latest_serialised()
+        #'progress_id':
+        'progress': learningscenario.progress_latest_serialised(),
     }
     return render(request, 'notes/practice.html', context=context)
 
-def practice_data(request, learningscenario_id:int):
-    json_data = json.loads(request.body)
-    tools.process_answers(json_data.get('data'))
+
+def practice_data(request, learningscenario_id: int):
+    learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
+
+    #process_answers(request.body)
+
+    def process_answers(self, str_json_data):
+        json_data = json.loads(str_json_data).get('data')
+
+
     return JsonResponse({'success': True})
 
 
 def instrument_data(request, instrument):
-
     return None

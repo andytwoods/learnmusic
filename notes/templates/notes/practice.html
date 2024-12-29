@@ -64,7 +64,7 @@
     <p id="correct-answer"></p>
   </div>
 
-  <div class="card mw-md-75">
+  <div class="card mw-md-75 mx-auto mt-3">
     <div class="card-header text-center">
       <h5>Trumpet Note/Fingering Learning Tool</h5>
     </div>
@@ -94,7 +94,7 @@
   <script>
 
 
-    function sendListToBackend(list) {
+    function sendResultsToBackend(data) {
 
       // Sending the POST request to the backend
       const response = fetch("{% url 'practice-data' learningscenario_id=learningscenario_id %}", {
@@ -103,7 +103,7 @@
           'Content-Type': 'application/json',
           'X-CSRFToken': "{{ csrf_token }}"
         },
-        body: JSON.stringify({data: list}) // Convert the list to JSON format
+        body: JSON.stringify(data) // Convert the list to JSON format
       });
 
     }
@@ -129,21 +129,15 @@
 
 
     function updateNote(newNote) {
-      console.log(newNote)
-      // Clear the SVG context to remove previous notes
       renderer.getContext().svg.innerHTML = "";
-
-      // Redraw the stave
+      
       stave.setContext(context);
       stave.draw();
 
-      let noteX = staveWidth / 2; // Calculate the horizontal center of the stave
-
-      // Create a single note using the passed `newNote`
+      let noteX = staveWidth / 2; 
+      
       const note = new VF.StaveNote({keys: [newNote], duration: "q", align_center: true})
-
-
-      // Add notes to a voice and render
+      
       const voice = new VF.Voice({num_beats: 1, beat_value: 4});
       voice.addTickables([note]);
       if (newNote.indexOf('#') !== -1 || newNote.indexOf('b') !== -1) {
@@ -163,7 +157,6 @@
 
       let remainingTime;
 
-      // Update the counter value immediately when starting
       const counterSpan = document.getElementById("counter-value");
 
       api.start = function (durationInSeconds) {
@@ -174,8 +167,7 @@
         const intervalId = setInterval(() => {
           remainingTime--;
           counterSpan.textContent = remainingTime;
-
-          // Check if timer is finished
+          
           if (remainingTime <= 0) {
             clearInterval(intervalId);
             counterSpan.textContent = "Time's up!";
@@ -246,12 +238,16 @@
           error_message_manager.stop();
           return;
         }
-        countdown_manager.start(120);
+
         locked = true;
         const rt = timer.stop();
         current_note['reaction_time_log'].push(rt);
         current_note['correct'].push(answer);
         current_note['n'] += 1;
+        
+        sendResultsToBackend(progress_data);
+
+        countdown_manager.start(120);
 
         if (answer === true) {
           api.start();

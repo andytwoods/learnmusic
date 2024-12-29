@@ -1,11 +1,10 @@
+import json
+
 
 def populate_vocab(octave: int, lowest_note: str, highest_note: str):
     from notes.models import Note
     return Note.objects.filter(octave__in=[3,4])
 
-
-def process_answers(json_data):
-    pass
 
 
 notes = [

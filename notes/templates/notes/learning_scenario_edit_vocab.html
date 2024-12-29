@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block javascript %}
+  {{ block.super }}
+  <script src="{% static 'js/vexflow.js' %}"></script>
+{% endblock javascript %}
+
+{% block title %}
+  Edit Learning Scenario Notes
+{% endblock %}
+
+{% block content %}
+  <h2>Edit Learning Scenario Notes</h2>
+  <p>Select the notes you want to practice</p>
+  <button class="btn btn-primary" onclick="update_backend()">Save</button>
+  {{ notes|json_script:"notes-data" }}
+  {{ all_notes|json_script:"all-notes-data" }}
+  <div id="output"></div>
+
+  <script>
+    function update_backend() {
+
+      // Sending the POST request to the backend
+
+      fetch(window.location.href, {
+        method: 'POST', // HTTP method
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': "{{ csrf_token }}"
+        },
+        body: JSON.stringify(window.selected_notes())
+      })
+        .then(data => {
+          window.location.reload();
+        })
+
+
+    }
+  </script>
+
+  <script>
+    // Set up VexFlow
+    document.addEventListener("DOMContentLoaded", function () {
+
+      // Set up VexFlow
+      const VF = Vex.Flow;
+      const div = document.getElementById("output");
+      const renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
+
+      // Get the width of the parent div dynamically
+      const parentWidth = div.offsetWidth;
+
+      // Configure renderer dimensions based on parent div width
+      renderer.resize(parentWidth, 1000); // Adjust height as needed
+      const context = renderer.getContext();
+
+      // Function to render staves and notes dynamically
+      const updateNotes = (notes, selected) => {
+        // Clear previous rendering
+        context.clear();
+
+        const notesPerStave = 10;
+        let yPosition = 40; // Initial vertical position
+
+        for (let i = 0; i < notes.length; i += notesPerStave) {
+          // Create a new stave
+          const stave = new VF.Stave(10, yPosition, parentWidth - 20); // Adjust width for margins
+          stave.addClef("treble").setContext(context).draw();
+
+          // Get the slice of notes for this stave
+          const staveNotes = notes.slice(i, i + notesPerStave).map((note, index) => {
+
+            const staveNote = new VF.StaveNote({keys: [note], duration: "w"});
+
+            // Add accidental if present
+            if (note.indexOf("b") !== -1) {
+              staveNote.addModifier(new VF.Accidental("#"), 0);
+            } else if (note.indexOf("#") !== -1) {
+              staveNote.addModifier(new VF.Accidental("b"), 0);
+            }
+
+            if (selected[i + index]) {
+              staveNote.setStyle({fillStyle: "black"});
+            } else {
+              staveNote.setStyle({fillStyle: "lightgray"});
+            }
+
+            return staveNote;
+          });
+
+          // Create a voice and format the notes
+          const voice = new VF.Voice({num_beats: staveNotes.length, beat_value: 1});
+          voice.addTickables(staveNotes);
+
+          const formatter = new VF.Formatter().joinVoices([voice]).format([voice], parentWidth - 40);
+          voice.draw(context, stave);
+
+          // Adjust vertical position for the next stave
+          yPosition += 120;
+        }
+        addNoteInteractivity(notes, selected);
+      };
+
+      const addNoteInteractivity = (notes, selected) => {
+        const noteHeads = context.svg.querySelectorAll(".vf-notehead");
+
+        noteHeads.forEach((noteHead, index) => {
+
+          const associatedNote = notes[index];
+          noteHead.setAttribute("data-note", associatedNote);
+
+          noteHead.addEventListener("click", () => {
+
+            selected[index] = !selected[index];
+            const has_been_selected = selected[index];
+
+            noteHead.style.fill = selected[index] ? "black" : "lightgray";
+
+            const recoveredNote = noteHead.getAttribute("data-note");
+
+            if (has_been_selected) {
+              rolling_selection.push(recoveredNote);
+            } else {
+              rolling_selection.splice(rolling_selection.indexOf(recoveredNote), 1);
+            }
+
+          });
+        });
+      };
+
+      window.selected_notes = function () {
+
+        const uniqueToSelectedAtStart = selected_at_start.filter(
+          element => !rolling_selection.includes(element)
+        );
+
+        const uniqueToRollingSelection = rolling_selection.filter(
+          element => !selected_at_start.includes(element)
+        );
+
+        return {
+          'added': uniqueToRollingSelection,
+          'removed': uniqueToSelectedAtStart
+        }
+      }
+
+
+      const notes_data = JSON.parse(
+        document.getElementById('notes-data').textContent
+      );
+      const all_notes_data = JSON.parse(
+        document.getElementById('all-notes-data').textContent
+      );
+
+      let selected_at_start = [];
+      let rolling_selection = [];
+
+      function setup() {
+        let notes = [];
+        let is_selected = [];
+        for (let i = 0; i < all_notes_data.length; i++) {
+          const all_note = all_notes_data[i];
+          const split_note = all_note.split(" ");
+          let note = split_note[0];
+          if (split_note[1] === "-1") note += 'b'
+          else if (split_note[1] === "1") note += '#'
+          note += '/' + split_note[2];
+          notes.push(note);
+          is_selected.push(notes_data.indexOf(all_note) !== -1);
+          if (notes_data.indexOf(all_note) !== -1) {
+            selected_at_start.push(note);
+            rolling_selection.push(note)
+          }
+
+        }
+        updateNotes(notes, is_selected);
+      }
+
+      setup();
+
+    });
+
+
+  </script>
+{% endblock content %}

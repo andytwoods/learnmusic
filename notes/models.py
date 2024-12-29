@@ -1,3 +1,4 @@
+import json
 from collections import namedtuple
 from typing import Any
 
@@ -68,9 +69,19 @@ class Note(models.Model):
 
     @classmethod
     def get_from_str(cls, note_str: str):
-        note_str, alter_str, octave_str = note_str.split(' ')
+        if "/" in note_str:
+            note_str, octave_str = note_str.split('/')
+            alter_str = "0"
+            if 'b' in note_str:
+                alter_str = "-1"
+            elif '#' in note_str:
+                alter_str = "1"
+            note_str = note_str[0]
+        else:
+            note_str, alter_str, octave_str = note_str.split(' ')
         note = Note.objects.get(note=note_str, octave=int(octave_str), alter=int(alter_str))
         return note
+
 
 
 class ClefChoices(models.TextChoices):
@@ -92,6 +103,11 @@ class Instrument(models.Model):
         ("Trumpet", "Intermediate", "F 1 3", "C 0 5", ClefChoices.TREBLE),
         ("Trumpet", "Advanced", "F 1 3", "C 0 6", ClefChoices.TREBLE),
     )
+
+    @staticmethod
+    def get_instrument_range(instrument_name: str, level:str='Advanced'):
+        instrument = Instrument.objects.get(name=instrument_name, level=level)
+        return [instrument.lowest_note, instrument.highest_note]
 
     def __str__(self):
         return f"{self.name} {self.level}"
@@ -122,8 +138,10 @@ class Instrument(models.Model):
                              choices=LevelChoices.choices,
                              default=LevelChoices.BEGINNER)
     clef = models.CharField(max_length=64, choices=ClefChoices.choices, default=ClefChoices.TREBLE)
-    lowest_note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name='instrument_lowest_note', null=True, blank=True)
-    highest_note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name='instrument_highest_note', null=True, blank=True)
+    lowest_note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name='instrument_lowest_note', null=True,
+                                    blank=True)
+    highest_note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name='instrument_highest_note', null=True,
+                                     blank=True)
     notes_str = models.CharField(max_length=512, default='')
 
 
@@ -155,13 +173,29 @@ class LearningScenario(TimeStampedModel):
     def progress_latest_serialised(self):
         progress = []
         for note in self.vocabulary.all():
-
             noterecord: NoteRecord = (NoteRecord.
                                       objects.
                                       filter(learning_scheme=self, note=note).select_related('note').
                                       latest('created'))
             progress.append(noterecord.serialise())
         return progress
+
+    def simple_vocab(self):
+        vocab = [str(note) for note in self.vocabulary.all()]
+        return vocab
+
+    def edit_notes(self, added, removed):
+        for note_str in added:
+            note = Note.get_from_str(note_str)
+            self.vocabulary.add(note)
+        for note_str in removed:
+            note = Note.get_from_str(note_str)
+            self.vocabulary.remove(note)
+
+class NoteRecordPackage(TimeStampedModel):
+    learning_scenario = models.ForeignKey(LearningScenario, on_delete=models.CASCADE)
+    notes = models.ManyToManyField('NoteRecord')
+    log = models.JSONField(null=True, blank=True)
 
 
 class NoteRecord(TimeStampedModel):
@@ -186,5 +220,3 @@ class NoteRecord(TimeStampedModel):
             record: NoteRecord = cls(note=note, learning_scheme=learningscenario)
             records.append(record)
         NoteRecord.objects.bulk_create(records)
-
-

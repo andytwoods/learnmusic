@@ -55,3 +55,4 @@ function getEnharmonicEquivalents(noteString) {
 
     return result;
 }
+
