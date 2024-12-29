@@ -55,8 +55,10 @@ def edit_learning_scenario_notes(request, pk: int):
         return JsonResponse({'success': True}, status=200)
 
     lowest_note, highest_note = Instrument.get_instrument_range(ls.instrument.name)
-    context = {'notes': ls.simple_vocab(),
-               'all_notes': [str(note) for note in generate_notes(lowest_note, highest_note)]}
+
+    all_notes = [str(note) for note in generate_notes(lowest_note=lowest_note, highest_note=highest_note)]
+
+    context = {'notes': ls.simple_vocab(), 'all_notes': all_notes}
 
     return render(request, 'notes/learning_scenario_edit_vocab.html', context=context)
 

@@ -34,12 +34,11 @@ def generate_notes(lowest_note, highest_note, include_crazy_notes=False):
     start_alter = lowest_note.alter
     end_alter = highest_note.alter
 
-    current_note = start_note
     current_octave = start_octave
 
     compiled = []
 
-    note_list = 'ABCDEFG'
+    note_list = 'CDEFGAB'
     note_i = note_list.index(start_note)
 
     alter_list = [-1, 0, 1]
@@ -50,19 +49,13 @@ def generate_notes(lowest_note, highest_note, include_crazy_notes=False):
     while not reached_end:
 
         current_note = note_list[note_i]
-        note_i+=1
-        if current_note=="G":
-            note_i = 0
-            current_octave+=1
-
         is_last_octave = current_octave >= end_octave
 
         while alter_i <= 2:
             alter = alter_list[alter_i]
             alter_i += 1
-            if is_last_octave and current_note == end_note and alter_i > end_alter_i:
+            if is_last_octave and current_note == end_note:
                 reached_end = True
-                break
 
             if not include_crazy_notes:
                 if current_note == 'E' and alter == 1:
@@ -81,7 +74,12 @@ def generate_notes(lowest_note, highest_note, include_crazy_notes=False):
 
         alter_i=0
 
-    return compiled
+        note_i+=1
+        if current_note == "B":
+            note_i = 0
+            current_octave+=1
+
+    return compiled[1:-1]
 
 
 def generate_notes_from_str(notes_str):

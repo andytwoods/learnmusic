@@ -12,7 +12,7 @@
 
 {% block content %}
   <h2>Edit Learning Scenario Notes</h2>
-  <p>Select the notes you want to practice</p>
+  <p>Select the notes you want to practice, including enharmonics</p>
   <button class="btn btn-primary" onclick="update_backend()">Save</button>
   {{ notes|json_script:"notes-data" }}
   {{ all_notes|json_script:"all-notes-data" }}
@@ -60,7 +60,8 @@
         // Clear previous rendering
         context.clear();
 
-        const notesPerStave = 10;
+        let notesPerStave = 10;
+        if(parentWidth<800) notesPerStave = 6
         let yPosition = 40; // Initial vertical position
 
         for (let i = 0; i < notes.length; i += notesPerStave) {
@@ -71,13 +72,13 @@
           // Get the slice of notes for this stave
           const staveNotes = notes.slice(i, i + notesPerStave).map((note, index) => {
 
-            const staveNote = new VF.StaveNote({keys: [note], duration: "w"});
+            const staveNote = new VF.StaveNote({keys: [note], duration: "1"});
 
             // Add accidental if present
             if (note.indexOf("b") !== -1) {
-              staveNote.addModifier(new VF.Accidental("#"), 0);
-            } else if (note.indexOf("#") !== -1) {
               staveNote.addModifier(new VF.Accidental("b"), 0);
+            } else if (note.indexOf("#") !== -1) {
+              staveNote.addModifier(new VF.Accidental("#"), 0);
             }
 
             if (selected[i + index]) {
@@ -152,6 +153,7 @@
       const all_notes_data = JSON.parse(
         document.getElementById('all-notes-data').textContent
       );
+      console.log(all_notes_data)
 
       let selected_at_start = [];
       let rolling_selection = [];
@@ -177,6 +179,7 @@
         updateNotes(notes, is_selected);
       }
 
+      // doing it this way for encapsulation and keeping scope pure
       setup();
 
     });

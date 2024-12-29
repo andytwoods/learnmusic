@@ -16,6 +16,11 @@ class TestTools(TestCase):
         notes = generate_notes(start_note, end_note, include_crazy_notes=True)
         self.assertEqual(len(notes), 19)
 
+        start_note = NoteFactory(note='F', alter=1, octave=3)
+        end_note = NoteFactory(note='C', alter=0, octave=6)
+        notes = generate_notes(start_note, end_note, include_crazy_notes=True)
+        print(notes)
+
     def test_generate_notes_from_str(self):
         notes_str = 'C 0 4;D 0 4;E 0 4;F 0 4;G 0 4;A 0 4;Bb -1 4;B 0 4;C 0 5;D 0 5;E 0 5;F 0 5;G 0 5'
         notes = generate_notes_from_str(notes_str)
