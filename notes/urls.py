@@ -6,9 +6,9 @@ from notes import views
 
 urlpatterns = [
     path("", views.notes_home, name="notes-home"),
-    path("new-learning-scenario/", views.new_learning_scenario, name='new-learning-scenario'),
-    path("edit-learning-scenario/<int:pk>/",views.edit_learning_scenario, name='edit-learning-scenario'),
-    path("edit-learning-scenario-notes/<int:pk>/", views.edit_learning_scenario_notes,
+    path("new-learning-scenario/", views.new_learningscenario, name='new-learning-scenario'),
+    path("edit-learning-scenario/<int:pk>/",views.edit_learningscenario, name='edit-learning-scenario'),
+    path("edit-learning-scenario-notes/<int:pk>/", views.edit_learningscenario_notes,
          name='edit-learning-scenario-notes'),
 
     path("practice/<int:learningscenario_id>/",views.practice, name='practice'),

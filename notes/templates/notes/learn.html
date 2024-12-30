@@ -21,13 +21,18 @@
               {{ learningscenario.clef }}
               Some quick example text to build on the card title and make up the bulk of the card's content.
             </p>
+             <div class="card-footer text-muted small">
+               Last practiced: <span class="badge rounded-pill bg-secondary">{{ learningscenario.last_practiced }}</span>
+               <br>
+               Days-old: <span class="badge rounded-pill bg-secondary">{{ learningscenario.days_old }}</span>
+          </div>
           </div>
         </div>
       </div>
     {% endfor %}
   </div>
   <a href="{% url 'new-learning-scenario' %}" class="btn btn-primary btn-lg">
-    Set up a new learning scenario
+    <i class="fas fa-plus"></i> Set up a new learning scenario
   </a>
 
 

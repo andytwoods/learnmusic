@@ -13,20 +13,20 @@ from notes.tools import generate_notes
 @login_required
 def notes_home(request):
     context = {
-        'learningscenarios': LearningScenario.objects.filter(user=request.user)
+        'learningscenarios': LearningScenario.objects.filter(user=request.user).order_by('-created'),
     }
     return render(request, 'notes/learn.html', context=context)
 
 
 @login_required
-def new_learning_scenario(request):
+def new_learningscenario(request):
     scenario = LearningScenario(user=request.user)
     scenario.save()
     return redirect(reverse('edit-learning-scenario', kwargs={'pk': scenario.id}))
 
 
 @login_required
-def edit_learning_scenario(request, pk: int):
+def edit_learningscenario(request, pk: int):
     model = LearningScenario.objects.get(id=pk)
     form = None
     if request.POST:
@@ -41,10 +41,11 @@ def edit_learning_scenario(request, pk: int):
     context = {'form': form,
                'learningscenario_pk': model.pk}
 
-    return render(request, 'notes/learning_scenario_edit.html', context=context)
+    return render(request, 'notes/learningscenario_edit.html', context=context)
 
-def edit_learning_scenario_notes(request, pk: int):
-    ls:LearningScenario = LearningScenario.objects.get(id=pk)
+
+def edit_learningscenario_notes(request, pk: int):
+    ls: LearningScenario = LearningScenario.objects.get(id=pk)
 
     # not sure why request.POST does not suffice. Perhaps cos JSON sent
     if request.method == 'POST':
@@ -60,15 +61,15 @@ def edit_learning_scenario_notes(request, pk: int):
 
     context = {'notes': ls.simple_vocab(), 'all_notes': all_notes}
 
-    return render(request, 'notes/learning_scenario_edit_vocab.html', context=context)
+    return render(request, 'notes/learningscenario_edit_vocab.html', context=context)
 
 
 def practice(request, learningscenario_id: int):
-    learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
+    package, serialised_notes = LearningScenario.progress_latest_serialised(learningscenario_id)
     context = {
         'learningscenario_id': learningscenario_id,
-        #'progress_id':
-        'progress': learningscenario.progress_latest_serialised(),
+        'package_id': package.id,
+        'progress': serialised_notes,
     }
     return render(request, 'notes/practice.html', context=context)
 
@@ -76,11 +77,10 @@ def practice(request, learningscenario_id: int):
 def practice_data(request, learningscenario_id: int):
     learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
 
-    #process_answers(request.body)
+    # process_answers(request.body)
 
     def process_answers(self, str_json_data):
         json_data = json.loads(str_json_data).get('data')
-
 
     return JsonResponse({'success': True})
 

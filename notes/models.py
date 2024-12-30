@@ -1,5 +1,6 @@
 import json
 from collections import namedtuple
+from django.utils import timezone
 from typing import Any
 
 from click.core import batch
@@ -162,23 +163,39 @@ class LearningScenario(TimeStampedModel):
             else:
                 notes = tools.generate_notes_from_str(self.instrument.notes_str)
 
-            NoteRecord.generate_records(notes, self)
-
             self.vocabulary.add(*notes)
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.user} {self.instrument}'
 
-    def progress_latest_serialised(self):
+    def last_practiced(self):
+        try:
+            date_last_practiced = NoteRecordPackage.objects.filter(learningscenario=self).last().created
+            difference = timezone.now() - date_last_practiced
+        except AttributeError:
+            return "Never"
+        if difference.days == 0:
+            return "Today"
+        return difference.days
+
+    def days_old(self):
+        difference = timezone.now() - self.created
+        return difference.days
+
+    @staticmethod
+    def progress_latest_serialised(learningscenario_id: int):
+
+        package = NoteRecordPackage.objects.filter(learningscenario_id=learningscenario_id).last()
+        if package:
+            noterecords = package.noterecords.all()
+        else:
+            package, noterecords = NoteRecordPackage.generate_package(learningscenario_id)
+
         progress = []
-        for note in self.vocabulary.all():
-            noterecord: NoteRecord = (NoteRecord.
-                                      objects.
-                                      filter(learning_scheme=self, note=note).select_related('note').
-                                      latest('created'))
+        for noterecord in noterecords:
             progress.append(noterecord.serialise())
-        return progress
+        return package, progress
 
     def simple_vocab(self):
         vocab = [str(note) for note in self.vocabulary.all()]
@@ -192,15 +209,10 @@ class LearningScenario(TimeStampedModel):
             note = Note.get_from_str(note_str)
             self.vocabulary.remove(note)
 
-class NoteRecordPackage(TimeStampedModel):
-    learning_scenario = models.ForeignKey(LearningScenario, on_delete=models.CASCADE)
-    notes = models.ManyToManyField('NoteRecord')
-    log = models.JSONField(null=True, blank=True)
-
 
 class NoteRecord(TimeStampedModel):
     note = models.ForeignKey(Note, on_delete=models.CASCADE)
-    learning_scheme = models.ForeignKey(LearningScenario, on_delete=models.CASCADE)
+    learningscenario = models.ForeignKey(LearningScenario, on_delete=models.CASCADE)
     reaction_time = models.PositiveIntegerField(null=True, blank=True)
     n = models.PositiveIntegerField(default=0)
 
@@ -213,10 +225,24 @@ class NoteRecord(TimeStampedModel):
             'n': self.n,
         }
 
+
+class NoteRecordPackage(TimeStampedModel):
+    learningscenario = models.ForeignKey(LearningScenario, on_delete=models.CASCADE)
+    noterecords = models.ManyToManyField(NoteRecord)
+    log_minimal = models.TextField(null=True, blank=True)
+    log = models.JSONField(null=True, blank=True)
+
     @classmethod
-    def generate_records(cls, notes, learningscenario: LearningScenario):
+    def generate_package(cls, learningscenario_id: int):
         records = []
-        for note in notes:
-            record: NoteRecord = cls(note=note, learning_scheme=learningscenario)
+        learningscenario = LearningScenario.objects.get(id=learningscenario_id)
+        for note in Note.objects.filter(learningscenario=learningscenario):
+            record: NoteRecord = NoteRecord(note=note, learningscenario=learningscenario)
             records.append(record)
         NoteRecord.objects.bulk_create(records)
+
+        package: NoteRecordPackage = NoteRecordPackage(learningscenario=learningscenario)
+        package.save()
+        package.noterecords.set(records)
+
+        return package, records
