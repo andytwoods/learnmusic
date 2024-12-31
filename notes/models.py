@@ -167,7 +167,7 @@ class LearningScenario(TimeStampedModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f'{self.user} {self.instrument}'
+        return f'{self.id}'
 
     def last_practiced(self):
         try:
@@ -184,17 +184,37 @@ class LearningScenario(TimeStampedModel):
         return difference.days
 
     @staticmethod
+    def check_younger_than_24hrs(created):
+        difference = timezone.now() - created
+        return difference.days < 1
+
+    @staticmethod
     def progress_latest_serialised(learningscenario_id: int):
 
         package = NoteRecordPackage.objects.filter(learningscenario_id=learningscenario_id).last()
-        if package:
+        if package and LearningScenario.check_younger_than_24hrs(package.created):
             noterecords = package.noterecords.all()
         else:
             package, noterecords = NoteRecordPackage.generate_package(learningscenario_id)
 
         progress = []
+
+        def note_key(nr):
+            return f"{nr['note']} {nr['alter']} {nr['octave']}"
+
+        old_noterecords = {}
+        if package.log:
+            for old_noterecord in package.log:
+                old_noterecords[note_key(old_noterecord)] = old_noterecord
+
         for noterecord in noterecords:
-            progress.append(noterecord.serialise())
+            fresh_noterecord = noterecord.serialise()
+            existing_nr_data = old_noterecords.get(note_key(fresh_noterecord), None)
+            if existing_nr_data:
+                progress.append(existing_nr_data)
+            else:
+                progress.append(fresh_noterecord)
+
         return package, progress
 
     def simple_vocab(self):
@@ -225,12 +245,24 @@ class NoteRecord(TimeStampedModel):
             'n': self.n,
         }
 
+    def __str__(self):
+        return f"{self.note} --- {self.created.strftime('%Y-%m-%d')}"
+
 
 class NoteRecordPackage(TimeStampedModel):
     learningscenario = models.ForeignKey(LearningScenario, on_delete=models.CASCADE)
     noterecords = models.ManyToManyField(NoteRecord)
     log_minimal = models.TextField(null=True, blank=True)
     log = models.JSONField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.learningscenario} {self.created}"
+
+    def user(self):
+        return self.learningscenario.user
+
+    def instrument(self):
+        return self.learningscenario.instrument
 
     @classmethod
     def generate_package(cls, learningscenario_id: int):
@@ -246,3 +278,9 @@ class NoteRecordPackage(TimeStampedModel):
         package.noterecords.set(records)
 
         return package, records
+
+    def process_answers(self, json_data):
+        self.log = json_data
+        self.save()
+
+

@@ -1,10 +1,10 @@
 import json
+import random
 
 
 def populate_vocab(octave: int, lowest_note: str, highest_note: str):
     from notes.models import Note
-    return Note.objects.filter(octave__in=[3,4])
-
+    return Note.objects.filter(octave__in=[3, 4])
 
 
 notes = [
@@ -22,6 +22,8 @@ notes = [
     "G",
     "G♯ / A♭"
 ]
+
+
 def generate_notes(lowest_note, highest_note, include_crazy_notes=False):
     from notes.models import Note
 
@@ -72,12 +74,12 @@ def generate_notes(lowest_note, highest_note, include_crazy_notes=False):
                 note.save()
             compiled.append(note)
 
-        alter_i=0
+        alter_i = 0
 
-        note_i+=1
+        note_i += 1
         if current_note == "B":
             note_i = 0
-            current_octave+=1
+            current_octave += 1
 
     return compiled[1:-1]
 
@@ -95,3 +97,15 @@ def generate_notes_from_str(notes_str):
         compiled.append(note)
 
     return compiled
+
+
+def compile_notes_per_skilllevel(notes):
+    per_skilllevel = {'beginner': [], 'intermediate': [], 'advanced': []}
+    for note in notes:
+        rt = 1500 + random.randint(0, 1000)
+        for sk in ['beginner', 'intermediate', 'advanced']:
+            per_skilllevel[sk].append({'note': note['note'],
+                                       'octave': note['octave'],
+                                       'alter': note['alter'], 'rt': rt})
+            rt -= random.randint(0, 500) + 500
+    return per_skilllevel

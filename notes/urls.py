@@ -12,6 +12,7 @@ urlpatterns = [
          name='edit-learning-scenario-notes'),
 
     path("practice/<int:learningscenario_id>/",views.practice, name='practice'),
-    path("practice-data/<int:learningscenario_id>/", views.practice_data, name='practice-data'),
+    path("practice-data/<int:package_id>/", views.practice_data, name='practice-data'),
 
+    path("practice/graph/<int:learningscenario_id>/", views.learningscenario_graph, name='learningscenario_graph'),
 ]

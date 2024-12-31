@@ -6,8 +6,8 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 
 from notes.forms import LearningScenarioForm
-from notes.models import LearningScenario, Instrument
-from notes.tools import generate_notes
+from notes.models import LearningScenario, Instrument, NoteRecordPackage
+from notes.tools import generate_notes, compile_notes_per_skilllevel
 
 
 @login_required
@@ -74,16 +74,30 @@ def practice(request, learningscenario_id: int):
     return render(request, 'notes/practice.html', context=context)
 
 
-def practice_data(request, learningscenario_id: int):
-    learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
+def practice_data(request, package_id: int):
+    learningscenario: NoteRecordPackage = NoteRecordPackage.objects.get(id=package_id)
 
-    # process_answers(request.body)
-
-    def process_answers(self, str_json_data):
-        json_data = json.loads(str_json_data).get('data')
+    json_data = json.loads(request.body)
+    learningscenario.process_answers(json_data)
 
     return JsonResponse({'success': True})
 
 
 def instrument_data(request, instrument):
     return None
+
+
+def learningscenario_graph(request, learningscenario_id):
+    package, serialised_notes = LearningScenario.progress_latest_serialised(learningscenario_id)
+
+    rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
+                                              for n in serialised_notes])
+
+    context = {
+        'learningscenario_id': learningscenario_id,
+        'package_id': package.id,
+        'progress': serialised_notes,
+        'rt_per_sk': rt_per_sl,
+    }
+    print(context)
+    return render(request, 'notes/learningscenario_graph.html', context=context)

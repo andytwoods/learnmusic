@@ -70,7 +70,9 @@
     </div>
 
     <div class="card-body position-relative">
-      <div id="counter" class="position-absolute top-0 start-0 p-2 m-2">
+      <div id="counter" style="display: none" class="text-secondary position-absolute top-0 start-0 p-2 m-2">
+        <a href="{% url 'learningscenario_graph' learningscenario_id=learningscenario_id %}" class="btn text-start p-0 mx-0 text-secondary">Stop and see your results</a>
+<br>
         <span id="counter-value"></span>
       </div>
       <div class="row mt-5">
@@ -97,7 +99,7 @@
     function sendResultsToBackend(data) {
 
       // Sending the POST request to the backend
-      const response = fetch("{% url 'practice-data' learningscenario_id=learningscenario_id %}", {
+      const response = fetch("{% url 'practice-data' package_id=package_id %}", {
         method: 'POST', // HTTP method
         headers: {
           'Content-Type': 'application/json',
@@ -130,14 +132,14 @@
 
     function updateNote(newNote) {
       renderer.getContext().svg.innerHTML = "";
-      
+
       stave.setContext(context);
       stave.draw();
 
-      let noteX = staveWidth / 2; 
-      
+      let noteX = staveWidth / 2;
+
       const note = new VF.StaveNote({keys: [newNote], duration: "q", align_center: true})
-      
+
       const voice = new VF.Voice({num_beats: 1, beat_value: 4});
       voice.addTickables([note]);
       if (newNote.indexOf('#') !== -1 || newNote.indexOf('b') !== -1) {
@@ -161,13 +163,15 @@
 
       api.start = function (durationInSeconds) {
         if (remainingTime !== undefined) return;
+        if(durationInSeconds === undefined) durationInSeconds = 120;
+        document.getElementById('counter').style.display = 'block';
         remainingTime = durationInSeconds;
         counterSpan.textContent = remainingTime;
 
         const intervalId = setInterval(() => {
           remainingTime--;
           counterSpan.textContent = remainingTime;
-          
+
           if (remainingTime <= 0) {
             clearInterval(intervalId);
             counterSpan.textContent = "Time's up!";
@@ -185,7 +189,7 @@
       );
 
       trial_manager.setProgress(progress_data);
-      trial_manager.start();
+      trial_manager.next();
     });
 
     const trial_manager = (function () {
@@ -244,21 +248,23 @@
         current_note['reaction_time_log'].push(rt);
         current_note['correct'].push(answer);
         current_note['n'] += 1;
-        
-        sendResultsToBackend(progress_data);
 
-        countdown_manager.start(120);
+        countdown_manager.start();
+
+        const pruned_progress_data = progress_data.filter(note => note['n'] > 0);
+        sendResultsToBackend(pruned_progress_data);
 
         if (answer === true) {
-          api.start();
+          api.next();
           locked = false;
         } else error_message_manager.start(mistake_message, () => {
-          api.start();
+          api.next();
           locked = false;
         });
       }
 
       api.setProgress = function (_progress_data) {
+        //console.log(_progress_data)
         progress_data = _progress_data;
         progress_data.forEach(note => {
           note['reaction_time_log'] = [];
@@ -297,7 +303,7 @@
         return note_str;
       }
 
-      api.start = function () {
+      api.next = function () {
         current_note = sortAndRandomizeByN()[0];
         const parsed_note = parse_note(current_note);
         document.current_note = parsed_note;
