@@ -11,3 +11,33 @@
   background-color: #f2dede;
   border-color: #eed3d7;
 }
+
+#sheet {
+  width: 100%; /* Container takes full width */
+  height: 250px; /* Define the height for the stave */
+
+  display: flex;
+  justify-content: center; /* Horizontally center the stave */
+  align-items: center; /* Vertically center the stave */
+}
+
+/* Ensure the SVG dynamically adjusts */
+svg {
+  display: block; /* Ensure no extra spaces due to inline SVG behavior */
+}
+
+.mw-md-75 {
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  .mw-md-75 {
+    max-width: 75%;
+  }
+}
+
+@media (min-width: 992px) {
+  .mw-md-75 {
+    max-width: 50%;
+  }
+}

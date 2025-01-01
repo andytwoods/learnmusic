@@ -2,9 +2,14 @@
 {% load static %}
 
 {% block content %}
-  <h2>Learning Scenario Graph</h2>
-<div class="row mt-5">
-  {{ block.super }}
+  <div class="align-items-center">
+    <h2 class="me-2 mb-0">Learning session results</h2>
+    <span class="badge rounded-pill bg-primary">
+  {{ package.created|date:"M j, g:i A" }}
+</span>
+  </div>
+  <div class="row mt-5">
+    {{ block.super }}
 
   </div>
 {% endblock content %}

@@ -109,3 +109,18 @@ def compile_notes_per_skilllevel(notes):
                                        'alter': note['alter'], 'rt': rt})
             rt -= random.randint(0, 500) + 500
     return per_skilllevel
+
+
+def generate_progress_from_str_notes(notes_str):
+    notes = notes_str.split(';')
+    progress = []
+    for note_str in notes:
+        note, alter, octave = note_str.split(' ')
+        note_info = {'note': note,
+                     'alter': int(alter),
+                     'octave': int(octave),
+                     'n': 0,
+                     'reaction_time': None,
+                     }
+        progress.append(note_info)
+    return progress

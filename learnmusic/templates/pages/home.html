@@ -1,3 +1,233 @@
 {% extends "base.html" %}
 
+{% block css %}
+  {{ block.super }}
+  <style>
+    #instrumentLevelButton {
+      transition: background-color 0.3s, color 0.3s, opacity 0.3s; /* Smooth transitions */
+      opacity: 0.5; /* Slightly transparent while disabled */
+    }
 
+    #instrumentLevelButton:disabled {
+      background-color: #6c757d !important; /* Keep it gray while disabled */
+      color: white !important; /* Text remains white for consistency */
+      opacity: 0.5; /* Disabled button appears semi-transparent */
+      cursor: not-allowed; /* Show disabled cursor */
+    }
+
+    #instrumentLevelButton:not(:disabled) {
+      opacity: 1; /* Fully visible when enabled */
+    }
+  </style>
+{% endblock css %}
+
+{% block body %}
+
+  {% include 'navbar.html' %}
+
+  {% include 'messages.html' %}
+
+  <!-- Hero Section -->
+  <section class="bg-primary text-white text-center py-5">
+    <div class="container">
+      <h1 class="display-4">Master Your Notes, Master the Stage</h1>
+      <p class="lead">A practice tool for musicians <b>at any stage</b> to improve their note recognition and playing
+        skills—quickly and effectively.</p>
+      <a href="#" class="btn btn-light btn-lg">Get Started</a>
+    </div>
+  </section>
+
+  <section class="py-5">
+    <div class="container">
+      <h2>Have a go now!</h2>
+      {{ instruments|json_script:"instruments-data" }}
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          const instruments = JSON.parse(
+            document.getElementById('instruments-data').textContent
+          );
+
+          // Get references to the dropdown elements
+          const instrumentDropdownMenu = document.getElementById('instrumentDropdownMenu');
+          const instrumentButton = document.getElementById('instrumentButton');
+          const instrumentLevelDropdownMenu = document.getElementById('instrumentLevelDropdownMenu');
+          const instrumentLevelButton = document.getElementById('instrumentLevelButton');
+
+          // Populate the instrument-dropdown with keys of the instruments object
+          for (const instrument in instruments) {
+            const item = document.createElement('li');
+            const link = document.createElement('button');
+            link.className = 'dropdown-item';
+            link.type = 'button';
+            link.textContent = instrument;
+            link.addEventListener('click', function () {
+              // Update the main dropdown button text and populate the levels dropdown
+              instrumentButton.textContent = instrument;
+
+              // Enable and Populate the level dropdown
+              populateInstrumentLevels(instrument, instruments[instrument]);
+
+              // Enable the level dropdown
+              instrumentLevelButton.disabled = false;
+            });
+            item.appendChild(link);
+            instrumentDropdownMenu.appendChild(item);
+          }
+
+          // Function to populate the instrument-level dropdown
+          function populateInstrumentLevels(instrument, levels) {
+            // Clear existing levels
+            instrumentLevelDropdownMenu.innerHTML = '';
+
+            // Add levels to the dropdown
+            levels.forEach(level => {
+              const item = document.createElement('li');
+              const link = document.createElement('button');
+              link.className = 'dropdown-item';
+              link.type = 'button';
+              link.textContent = level.level;
+              link.addEventListener('click', function () {
+                instrumentLevelButton.textContent = level.level;
+                const url = window.location.origin + "/practice/" + instrument + "/" + level.level + "/";
+                loadIframe(url);
+              });
+              item.appendChild(link);
+              instrumentLevelDropdownMenu.appendChild(item);
+            });
+          }
+        });
+
+        function loadIframe(src) {
+          // Get the container where the iframe will be added
+          const container = document.getElementById("iframe-container");
+
+          // Clear any existing content in the container (optional)
+          container.innerHTML = "";
+
+          // Create the iframe element
+          const iframe = document.createElement("iframe");
+
+          // Set iframe attributes
+          iframe.src = src;
+          iframe.style.width = "100%"; // Take the full width of the parent
+          iframe.style.height = "600px"; // Take the full height of the parent
+          iframe.style.border = "none"; // Remove the border for a clean look
+          iframe.onload = function () {
+            try {
+              const iframeContent = iframe.contentWindow.document.body;
+              iframe.style.height = iframeContent.scrollHeight + 20 + "px"; // Adjust the height based on content
+            } catch (err) {
+              console.error("Unable to adjust iframe height due to cross-origin restrictions:", err);
+            }
+          };
+          // Append the iframe within the container
+          container.appendChild(iframe);
+        }
+      </script>
+
+
+      <!-- Instrument Dropdown -->
+      <div class="container">
+        <div class="d-flex align-items-center gap-2">
+          <!-- Instrument Dropdown -->
+          <div class="col-auto">
+            <div class="dropdown" id="instrument-dropdown">
+              <button class="btn btn-primary dropdown-toggle" type="button" id="instrumentButton"
+                      data-bs-toggle="dropdown" aria-expanded="false">
+                Select your instrument
+              </button>
+              <ul class="dropdown-menu" id="instrumentDropdownMenu">
+                <!-- Items will be dynamically populated -->
+              </ul>
+            </div>
+          </div>
+
+          <!-- Instrument Level Dropdown -->
+          <div class="col-auto">
+            <div class="dropdown" id="instrument-level-dropdown">
+              <button class="btn btn-secondary dropdown-toggle" type="button" id="instrumentLevelButton"
+                      data-bs-toggle="dropdown" aria-expanded="false" disabled>
+                What level do you play at?
+              </button>
+              <ul class="dropdown-menu" id="instrumentLevelDropdownMenu">
+                <!-- Items will be dynamically populated -->
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div id="iframe-container">
+            <!-- The iframe will be added here dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-5">
+    <div class="container">
+      <div class="text-center mb-4">
+        <h2>Why Choose Our App?</h2>
+        <p class="text-muted">Everything you need to improve your skills as a musician.</p>
+      </div>
+      <div class="row">
+        <div class="col-md-4">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+              <h5 class="card-title"><i class="bi bi-music-note"></i> Quick Note Practice</h5>
+              <p class="card-text">Engaging exercises to help you play notes faster and more accurately.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+              <h5 class="card-title"><i class="bi bi-bar-chart"></i> Track Your Progress</h5>
+              <p class="card-text">Get detailed insights and analytics on your improvement journey.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+              <h5 class="card-title"><i class="bi bi-question-circle"></i> Personalized Challenges</h5>
+              <p class="card-text">Tailored exercises that match your skill level and musical goals.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section id="testimonials" class="bg-light py-5">
+    <div class="container">
+      <div class="text-center mb-4">
+        <h2>What Users Say</h2>
+        <p class="text-muted">Join thousands of musicians who’ve improved their skills!</p>
+      </div>
+      <div class="row">
+        <div class="col-md-4">
+          <blockquote class="blockquote">
+            <p>"This app has transformed the way I practice guitar notes."</p>
+            <footer class="blockquote-footer">Sara T., Guitarist</footer>
+          </blockquote>
+        </div>
+        <div class="col-md-4">
+          <blockquote class="blockquote">
+            <p>"I’ve never been more confident playing the piano. Thank you!"</p>
+            <footer class="blockquote-footer">John D., Pianist</footer>
+          </blockquote>
+        </div>
+        <div class="col-md-4">
+          <blockquote class="blockquote">
+            <p>"Perfect for beginners and experienced musicians alike."</p>
+            <footer class="blockquote-footer">Anna K., Violinist</footer>
+          </blockquote>
+        </div>
+      </div>
+    </div>
+  </section>
+
+{% endblock body %}

@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block javascript %}
+  {{ block.super }}
+  <script src="{% static 'js/vexflow.js' %}"></script>
+{% endblock javascript %}
+
+{% block title %}
+  Child Page Title
+{% endblock %}
+
+{% block content %}
+
+  <div id='error-message'
+       class="position-fixed start-50 translate-middle-x text-center bg-danger text-white p-2 rounded shadow"
+       style="z-index: 1050; top: 5%; display: none;">
+    <h2>m i s t a k e</h2>
+    <p id="correct-answer"></p>
+  </div>
+
+  <div class="card mw-md-75 mx-auto mt-3">
+    <div class="card-header text-center">
+      <h5>Trumpet note trainer</h5>
+    </div>
+
+    <div class="card-body position-relative">
+      <div id="counter" style="display: none" class="text-secondary position-absolute top-0 start-0 p-2 m-2">
+        {% if learningscenario_id %}
+        <a href="{% url 'learningscenario_graph' learningscenario_id=learningscenario_id %}"
+           class="btn text-start p-0 mx-0 text-secondary">Stop and see your results</a>
+        {% endif %}
+        <br>
+        <span id="counter-value"></span>
+      </div>
+      <div class="row mt-5">
+        <div class="col-9 align-self-center text-center">
+
+          <div id="sheet"></div>
+        </div>
+        <div id="right-of-sheet-placeholder"></div>
+
+      </div>
+      {% include 'notes/instruments/trumpet.html' %}
+
+    </div>
+  </div>
+
+  {{ progress|json_script:"progress-data" }}
+
+
+  <script>
+
+    function sendResultsToBackend(data) {
+
+      // Sending the POST request to the backend
+      {% if package_id %}
+      const response = fetch("{% url 'practice-data' package_id=package_id %}", {
+        method: 'POST', // HTTP method
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': "{{ csrf_token }}"
+        },
+        body: JSON.stringify(data) // Convert the list to JSON format
+      });
+      {% endif %}
+
+    }
+  </script>
+  <script>
+
+    const VF = Vex.Flow;  // Reference VexFlow library
+    const div = document.getElementById("sheet");
+    const containerWidth = div.clientWidth;
+    const staveWidth = 200; //
+
+    // Initialize VexFlow renderer
+    const renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
+    renderer.resize(containerWidth, 200);  // Resize the SVG
+
+    const context = renderer.getContext();  // Get the rendering context
+
+    const startX = (containerWidth - staveWidth) / 2; // Calculate the starting point for centering
+    const stave = new VF.Stave(startX, 40, staveWidth);
+    stave.addClef("treble");  // Add a Treble Clef
+    stave.setContext(context); // Attach the context to the stave
+    stave.draw(context);       // Draw the stave
+
+
+    function updateNote(newNote) {
+      renderer.getContext().svg.innerHTML = "";
+
+      stave.setContext(context);
+      stave.draw();
+
+      let noteX = staveWidth / 2;
+
+      const note = new VF.StaveNote({keys: [newNote], duration: "q", align_center: true})
+
+      const voice = new VF.Voice({num_beats: 1, beat_value: 4});
+      voice.addTickables([note]);
+      if (newNote.indexOf('#') !== -1 || newNote.indexOf('b') !== -1) {
+        VF.Accidental.applyAccidentals([voice], `D`);
+        noteX += 15;
+      }
+      new VF.Formatter().joinVoices([voice]).format([voice], noteX);
+      voice.draw(context, stave);
+    }
+
+  </script>
+
+  <script>
+
+    const countdown_manager = (function () {
+      let api = {};
+
+      let remainingTime;
+
+      const counterSpan = document.getElementById("counter-value");
+
+      api.start = function (durationInSeconds) {
+        if (remainingTime !== undefined) return;
+        if (durationInSeconds === undefined) durationInSeconds = 120;
+        document.getElementById('counter').style.display = 'block';
+        remainingTime = durationInSeconds;
+        counterSpan.textContent = remainingTime;
+
+        const intervalId = setInterval(() => {
+          remainingTime--;
+          counterSpan.textContent = remainingTime;
+
+          if (remainingTime <= 0) {
+            clearInterval(intervalId);
+            counterSpan.textContent = "Time's up!";
+          }
+        }, 1000);
+
+      }
+
+      return api;
+    }());
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const progress_data = JSON.parse(
+        document.getElementById('progress-data').textContent
+      );
+      if(progress_data!==undefined) {
+        trial_manager.setProgress(progress_data);
+        trial_manager.next();
+      }
+    });
+
+    const trial_manager = (function () {
+      let api = {};
+
+      let current_note;
+      let progress_data;
+
+      const timer = (function () {
+        let api = {};
+        let start = undefined;
+
+        api.start = function () {
+          start = performance.now();
+        }
+        api.stop = function () {
+          const rt = performance.now() - start;
+          return rt.toFixed(0)
+        }
+
+        return api;
+      }());
+
+      const error_message_manager = (function () {
+        let api = {};
+        let callback;
+        const error_message_el = document.getElementById('error-message');
+        const correct_answer_el = document.getElementById('correct-answer');
+
+        api.stop = function () {
+          error_message_el.style.display = 'none';
+          callback();
+          callback = undefined;
+        }
+
+        api.start = function (message, _callback) {
+          callback = _callback;
+          correct_answer_el.innerText = message;
+          error_message_el.style.display = 'block';
+        }
+
+        return api;
+      }());
+
+
+      let locked = false;
+
+      api.answer = function (answer, mistake_message) {
+        if (locked) {
+          error_message_manager.stop();
+          return;
+        }
+
+        locked = true;
+        const rt = timer.stop();
+        current_note['reaction_time_log'].push(rt);
+        current_note['correct'].push(answer);
+        current_note['n'] += 1;
+
+        countdown_manager.start();
+
+        const pruned_progress_data = progress_data.filter(note => note['n'] > 0);
+        sendResultsToBackend(pruned_progress_data);
+
+        if (answer === true) {
+          api.next();
+          locked = false;
+        } else error_message_manager.start(mistake_message, () => {
+          api.next();
+          locked = false;
+        });
+      }
+
+      api.setProgress = function (_progress_data) {
+        progress_data = _progress_data;
+        progress_data.forEach(note => {
+          note['reaction_time_log'] = [];
+          note['correct'] = [];
+        })
+      }
+
+
+      function sortAndRandomizeByN() {
+        return progress_data.slice().sort((a, b) => {
+          if (a.n !== b.n) {
+            return a.n - b.n;
+          }
+          return Math.random() - 0.5;
+        });
+      }
+
+      function parse_note(note) {
+        let note_str = note['note'];
+        note_str = note_str.charAt(0);
+        switch (note['alter']) {
+          case 1:
+            note_str += '#';
+            break;
+          case -1:
+            note_str += 'b';
+            break;
+          case 2:
+            note_str += '##';
+            break;
+          case -2:
+            note_str += 'bb';
+            break;
+        }
+        note_str += '/' + note['octave'];
+        return note_str;
+      }
+
+      api.next = function () {
+        current_note = sortAndRandomizeByN()[0];
+        const parsed_note = parse_note(current_note);
+        document.current_note = parsed_note;
+        timer.start();
+        updateNote(parsed_note);
+      }
+
+
+      return api;
+    }());
+  </script>
+{% endblock content %}

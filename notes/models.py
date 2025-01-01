@@ -70,6 +70,8 @@ class Note(models.Model):
 
     @classmethod
     def get_from_str(cls, note_str: str):
+        if note_str is None:
+            return None
         if "/" in note_str:
             note_str, octave_str = note_str.split('/')
             alter_str = "0"
@@ -100,9 +102,9 @@ class LevelChoices(models.TextChoices):
 
 class Instrument(models.Model):
     BASE_INSTRUMENTS = (
-        ("Trumpet", "Beginner", None, None, ClefChoices.TREBLE, 'C 0 4;D 0 4;E 0 4;F 0 4;G 0 4;A 0 4;Bb -1 4;B 0 4'),
-        ("Trumpet", "Intermediate", "F 1 3", "C 0 5", ClefChoices.TREBLE),
-        ("Trumpet", "Advanced", "F 1 3", "C 0 6", ClefChoices.TREBLE),
+        ("Trumpe", "Beginner", None, None, ClefChoices.TREBLE, 'C 0 4;D 0 4;E 0 4;F 0 4;G 0 4;A 0 4;Bb -1 4;B 0 4'),
+        ("Trumpe", "Intermediate", "F 1 3", "C 0 5", ClefChoices.TREBLE),
+        ("Trumpe", "Advanced", "F 1 3", "C 0 6", ClefChoices.TREBLE),
     )
 
     @staticmethod
@@ -127,9 +129,11 @@ class Instrument(models.Model):
                 highest_note=Note.get_from_str(instrument_info[3]),
                 clef=instrument_info[4],
             )
-            if len(instrument_info) >= 5:
+            if len(instrument_info) > 5:
                 instrument.notes_str = instrument_info[5]
-
+            else:
+                notes = [str(note) for note in tools.generate_notes(instrument.lowest_note, instrument.highest_note)]
+                instrument.notes_str = ';'.join(notes)
             instruments.append(instrument)
 
         Instrument.objects.bulk_create(instruments)

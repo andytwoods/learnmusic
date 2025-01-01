@@ -7,7 +7,7 @@ from django.urls import reverse
 
 from notes.forms import LearningScenarioForm
 from notes.models import LearningScenario, Instrument, NoteRecordPackage
-from notes.tools import generate_notes, compile_notes_per_skilllevel
+from notes.tools import generate_notes, compile_notes_per_skilllevel, generate_progress_from_str_notes
 
 
 @login_required
@@ -73,6 +73,15 @@ def practice(request, learningscenario_id: int):
     }
     return render(request, 'notes/practice.html', context=context)
 
+def practice_try(request, instrument: str, level: str):
+    instrument_instance = Instrument.objects.get(name=instrument, level=level)
+    serialised_notes = generate_progress_from_str_notes(instrument_instance.notes_str)
+
+    context = {
+        'progress': serialised_notes,
+        'instrument_id': instrument_instance.id,
+    }
+    return render(request, 'notes/practice_try.html', context=context)
 
 def practice_data(request, package_id: int):
     learningscenario: NoteRecordPackage = NoteRecordPackage.objects.get(id=package_id)
@@ -96,6 +105,7 @@ def learningscenario_graph(request, learningscenario_id):
     context = {
         'learningscenario_id': learningscenario_id,
         'package_id': package.id,
+        'package': package,
         'progress': serialised_notes,
         'rt_per_sk': rt_per_sl,
     }
