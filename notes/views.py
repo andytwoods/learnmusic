@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 
 from notes.forms import LearningScenarioForm
+from notes.instruments import instrument_answers
 from notes.models import LearningScenario, Instrument, NoteRecordPackage
 from notes.tools import generate_notes, compile_notes_per_skilllevel, generate_progress_from_str_notes
 
@@ -66,10 +67,15 @@ def edit_learningscenario_notes(request, pk: int):
 
 def practice(request, learningscenario_id: int):
     package, serialised_notes = LearningScenario.progress_latest_serialised(learningscenario_id)
+
+    instrument_instance: Instrument = package.instrument()
+    answers = instrument_answers[instrument_instance.name][instrument_instance.clef]
+
     context = {
         'learningscenario_id': learningscenario_id,
         'package_id': package.id,
         'progress': serialised_notes,
+        'answers_json': answers,
     }
     return render(request, 'notes/practice.html', context=context)
 
@@ -77,9 +83,12 @@ def practice_try(request, instrument: str, level: str):
     instrument_instance = Instrument.objects.get(name=instrument, level=level)
     serialised_notes = generate_progress_from_str_notes(instrument_instance.notes_str)
 
+    answers = instrument_answers[instrument_instance.name][instrument_instance.clef]
+
     context = {
         'progress': serialised_notes,
         'instrument_id': instrument_instance.id,
+        'answers_json': answers,
     }
     return render(request, 'notes/practice_try.html', context=context)
 

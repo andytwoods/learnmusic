@@ -14,7 +14,7 @@ class NoteAdmin(admin.ModelAdmin):
 # Custom Admin for Instrument
 @admin.register(Instrument)
 class InstrumentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'level', 'clef', 'lowest_note', 'highest_note')  # Key fields to display
+    list_display = ('id', 'name', 'level', 'clef', 'lowest_note', 'highest_note', 'notes_str', )  # Key fields to display
     list_filter = ('level', 'clef')  # Filters for level and clef
     search_fields = ('name',)  # Searchable by instrument name
     ordering = ('name', 'level')  # Sorting by name and level

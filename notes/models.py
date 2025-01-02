@@ -14,7 +14,6 @@ from notes import tools
 
 User = get_user_model()
 
-from learnmusic import users
 
 
 class Note(models.Model):
@@ -75,16 +74,20 @@ class Note(models.Model):
         if "/" in note_str:
             note_str, octave_str = note_str.split('/')
             alter_str = "0"
-            if 'b' in note_str:
-                alter_str = "-1"
-            elif '#' in note_str:
-                alter_str = "1"
-            note_str = note_str[0]
         else:
             note_str, alter_str, octave_str = note_str.split(' ')
-        note = Note.objects.get(note=note_str, octave=int(octave_str), alter=int(alter_str))
-        return note
 
+        if 'b' in note_str:
+            alter_str = "-1"
+        elif '#' in note_str:
+            alter_str = "1"
+        note_str = note_str[0]
+
+
+        note, created = Note.objects.get_or_create(note=note_str, octave=int(octave_str), alter=int(alter_str))
+        if created:
+            note.save()
+        return note
 
 
 class ClefChoices(models.TextChoices):
@@ -101,14 +104,10 @@ class LevelChoices(models.TextChoices):
 
 
 class Instrument(models.Model):
-    BASE_INSTRUMENTS = (
-        ("Trumpe", "Beginner", None, None, ClefChoices.TREBLE, 'C 0 4;D 0 4;E 0 4;F 0 4;G 0 4;A 0 4;Bb -1 4;B 0 4'),
-        ("Trumpe", "Intermediate", "F 1 3", "C 0 5", ClefChoices.TREBLE),
-        ("Trumpe", "Advanced", "F 1 3", "C 0 6", ClefChoices.TREBLE),
-    )
+
 
     @staticmethod
-    def get_instrument_range(instrument_name: str, level:str='Advanced'):
+    def get_instrument_range(instrument_name: str, level: str = 'Advanced'):
         instrument = Instrument.objects.get(name=instrument_name, level=level)
         return [instrument.lowest_note, instrument.highest_note]
 
@@ -120,23 +119,28 @@ class Instrument(models.Model):
         return cls.objects.get(name=instrument_name)
 
     def create_default_instruments(*args, **kwargs):
-        instruments = []
-        for instrument_info in Instrument.BASE_INSTRUMENTS:
-            instrument: Instrument = Instrument(
-                name=instrument_info[0],
-                level=instrument_info[1],
-                lowest_note=Note.get_from_str(instrument_info[2]),
-                highest_note=Note.get_from_str(instrument_info[3]),
-                clef=instrument_info[4],
-            )
-            if len(instrument_info) > 5:
-                instrument.notes_str = instrument_info[5]
-            else:
-                notes = [str(note) for note in tools.generate_notes(instrument.lowest_note, instrument.highest_note)]
-                instrument.notes_str = ';'.join(notes)
-            instruments.append(instrument)
+        generated_instruments = []
+        from . import instruments
+        for instrument_nam, instrument_infos in instruments.instruments.items():
 
-        Instrument.objects.bulk_create(instruments)
+            for level, info in instrument_infos.items():
+
+                instrument: Instrument = Instrument(
+                    name=instrument_nam,
+                    level=level,
+                    lowest_note=Note.get_from_str(info['lowest_note']),
+                    highest_note=Note.get_from_str(info['highest_note']),
+                    clef=info['clef'],
+                    notes_str=info['notes']
+                )
+                if not instrument.notes_str:
+                    if instrument.lowest_note is None or instrument.highest_note is None:
+                        raise Exception("issue with instruments.py")
+                    notes = tools.generate_notes(instrument.lowest_note, instrument.highest_note, json=True)
+                    instrument.notes_str = ';'.join(notes)
+                generated_instruments.append(instrument)
+
+        Instrument.objects.bulk_create(generated_instruments)
 
     name = models.CharField(max_length=64)
     level = models.CharField(max_length=64,
@@ -286,5 +290,3 @@ class NoteRecordPackage(TimeStampedModel):
     def process_answers(self, json_data):
         self.log = json_data
         self.save()
-
-

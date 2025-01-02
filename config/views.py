@@ -1,5 +1,6 @@
 from django.shortcuts import render
 
+from notes.instruments import instrument_answers
 from notes.models import Instrument
 
 
@@ -16,5 +17,6 @@ def home(request):
                            'clef': instrument.clef
                            }
         instruments_info[instrument.name].append(instrument_info)
+
     context = {'instruments': instruments_info}
     return render(request, template_name="pages/home.html", context=context)

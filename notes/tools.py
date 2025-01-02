@@ -1,6 +1,8 @@
 import json
 import random
 
+from mypy.build import process_stale_scc
+
 
 def populate_vocab(octave: int, lowest_note: str, highest_note: str):
     from notes.models import Note
@@ -24,9 +26,8 @@ notes = [
 ]
 
 
-def generate_notes(lowest_note, highest_note, include_crazy_notes=False):
+def generate_notes(lowest_note, highest_note, include_crazy_notes=False, json=False):
     from notes.models import Note
-
     start_note = lowest_note.note
     end_note = highest_note.note
 
@@ -69,10 +70,15 @@ def generate_notes(lowest_note, highest_note, include_crazy_notes=False):
                 elif current_note == 'C' and alter == -1:
                     continue
 
-            note, created = Note.objects.get_or_create(note=current_note, octave=current_octave, alter=alter)
-            if created:
-                note.save()
-            compiled.append(note)
+            # print(current_note, alter, current_octave)
+            if json:
+                note = Note(note=current_note, octave=current_octave, alter=alter)
+                compiled.append(str(note))
+            else:
+                note, created = Note.objects.get_or_create(note=current_note, octave=current_octave, alter=alter)
+                if created:
+                    note.save()
+                compiled.append(note)
 
         alter_i = 0
 
