@@ -22,7 +22,7 @@
 
   <div class="card mw-md-75 mx-auto mt-3">
     <div class="card-header text-center">
-      <h5>Trumpet note trainer</h5>
+      <h5>{{ instrument }} note trainer</h5>
     </div>
 
     <div class="card-body position-relative">
@@ -42,13 +42,21 @@
         <div id="right-of-sheet-placeholder"></div>
 
       </div>
-      {% include 'notes/instruments/trumpet.html' %}
+      {% include instrument_template %}
 
     </div>
   </div>
 
   {{ progress|json_script:"progress-data" }}
 
+
+  <script>
+      document.addEventListener("DOMContentLoaded", function () {
+      getInstrumentData('{{ answers_json }}', function (_instrument_data) {
+        document.instrument_data = _instrument_data;
+      });
+    });
+  </script>
 
   <script>
 

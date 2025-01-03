@@ -1,6 +1,5 @@
 from django.shortcuts import render
 
-from notes.instruments import instrument_answers
 from notes.models import Instrument
 
 

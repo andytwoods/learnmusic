@@ -1,0 +1,54 @@
+{% extends 'notes/instruments/trumpet.html' %}
+
+{% block button_css %}
+  <style>
+    .input-button {
+      min-width: 70px;
+      background-color: white; /* Default white background */
+      color: black; /* Default black text */
+      border: 2px solid black; /* Optional: Add a black border */
+      transition: all 0s ease; /* Smooth transition */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    .input-button:hover {
+      background-color: gray; /* Change to gray when hovered */
+      color: white; /* Text turns white on hover */
+      border-color: gray; /* Optional: border changes to gray */
+    }
+  </style>
+{% endblock button_css %}
+
+{% block keys %}
+
+  <div>
+    <button class="btn btn-primary btn-lg input-button my-1 p-3 trumpet-b7" data-valve="7">7</button>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-lg input-button my-1  p-3 trumpet-b6" data-valve="6">6</button>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-lg input-button my-1 p-3 trumpet-b5" data-valve="5">5</button>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-lg input-button my-1 p-3 trumpet-b4" data-valve="4">4</button>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-lg input-button my-1  p-3 trumpet-b3" data-valve="3">3</button>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-lg input-button my-1 p-3 trumpet-b2" data-valve="2">2</button>
+  </div>
+  <div>
+    <button class="btn btn-primary btn-lg input-button my-1 p-3 trumpet-b1" data-valve="1">1</button>
+  </div>
+
+{% endblock keys %}
+
+{% block constants %}
+  <script>
+    window.keys = '1234567';
+    window.nothing_selected = '0';
+    window.error_message = 'You selected: ';
+  </script>
+{% endblock constants %}

@@ -1,7 +1,7 @@
 function getInstrumentData(instrument, callback) {
 
 // Fetch JSON from the URL
-    fetch('/static/instruments/' + instrument + '.json')
+    fetch('/static/instruments/' + instrument)
         .then((response) => {
             if (!response.ok) {
                 throw new Error('Network response was not ok ' + response.statusText);

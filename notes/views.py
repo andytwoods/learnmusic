@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 
 from notes.forms import LearningScenarioForm
-from notes.instruments import instrument_answers
+from notes.instruments import instrument_infos
 from notes.models import LearningScenario, Instrument, NoteRecordPackage
 from notes.tools import generate_notes, compile_notes_per_skilllevel, generate_progress_from_str_notes
 
@@ -65,32 +65,41 @@ def edit_learningscenario_notes(request, pk: int):
     return render(request, 'notes/learningscenario_edit_vocab.html', context=context)
 
 
+def common_context(instrument: Instrument):
+    instrument_info = instrument_infos[instrument.name.lower()]
+    return {'answers_json': instrument_info['clef'][instrument.clef],
+            'instrument_template': 'notes/instruments/' + instrument_info['answer_template'],
+            'instrument': instrument.name
+            }
+
+
 def practice(request, learningscenario_id: int):
     package, serialised_notes = LearningScenario.progress_latest_serialised(learningscenario_id)
-
     instrument_instance: Instrument = package.instrument()
-    answers = instrument_answers[instrument_instance.name][instrument_instance.clef]
 
     context = {
         'learningscenario_id': learningscenario_id,
         'package_id': package.id,
         'progress': serialised_notes,
-        'answers_json': answers,
     }
+    context.update(common_context(instrument_instance))
+
     return render(request, 'notes/practice.html', context=context)
+
 
 def practice_try(request, instrument: str, level: str):
     instrument_instance = Instrument.objects.get(name=instrument, level=level)
     serialised_notes = generate_progress_from_str_notes(instrument_instance.notes_str)
 
-    answers = instrument_answers[instrument_instance.name][instrument_instance.clef]
-
     context = {
         'progress': serialised_notes,
         'instrument_id': instrument_instance.id,
-        'answers_json': answers,
     }
+
+    context.update(common_context(instrument_instance))
+
     return render(request, 'notes/practice_try.html', context=context)
+
 
 def practice_data(request, package_id: int):
     learningscenario: NoteRecordPackage = NoteRecordPackage.objects.get(id=package_id)
