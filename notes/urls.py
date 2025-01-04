@@ -13,9 +13,11 @@ urlpatterns = [
 
     path("practice/<int:learningscenario_id>/",views.practice, name='practice'),
 
-    path('practice/<str:instrument>/<str:level>/', views.practice_try, name='practice-try'),
+    path('practice-try/<str:instrument>/<str:clef>/<str:level>/', views.practice_try, name='practice-try'),
 
     path("practice-data/<int:package_id>/", views.practice_data, name='practice-data'),
 
-    path("practice/graph/<int:learningscenario_id>/", views.learningscenario_graph, name='learningscenario_graph'),
+    path("practice-graph/<int:learningscenario_id>/", views.learningscenario_graph, name='learningscenario_graph'),
+    path("learningscenario_graph_try/<str:instrument>/<str:clef>/<str:level>/",
+         views.learningscenario_graph_try, name='learningscenario_graph_try'),
 ]

@@ -67,8 +67,9 @@ def edit_learningscenario_notes(request, pk: int):
 
 def common_context(instrument: Instrument):
     instrument_info = instrument_infos[instrument.name.lower()]
-    return {'answers_json': instrument_info['clef'][instrument.clef],
+    return {'answers_json': instrument_info['answers'],
             'instrument_template': 'notes/instruments/' + instrument_info['answer_template'],
+            'clef': instrument.clef.lower(),
             'instrument': instrument.name
             }
 
@@ -87,16 +88,25 @@ def practice(request, learningscenario_id: int):
     return render(request, 'notes/practice.html', context=context)
 
 
-def practice_try(request, instrument: str, level: str):
-    instrument_instance = Instrument.objects.get(name=instrument, level=level)
+def practice_try(request, instrument: str, clef:str, level: str):
+    instrument_instance = Instrument.objects.get(name=instrument, level=level, clef=clef.upper())
     serialised_notes = generate_progress_from_str_notes(instrument_instance.notes_str)
 
     context = {
         'progress': serialised_notes,
         'instrument_id': instrument_instance.id,
+        'level': level,
     }
 
     context.update(common_context(instrument_instance))
+
+    rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
+                                              for n in serialised_notes])
+    graph_context = {
+        'progress': serialised_notes,
+        'rt_per_sk': rt_per_sl,
+    }
+    context.update(graph_context)
 
     return render(request, 'notes/practice_try.html', context=context)
 
@@ -122,10 +132,32 @@ def learningscenario_graph(request, learningscenario_id):
 
     context = {
         'learningscenario_id': learningscenario_id,
-        'package_id': package.id,
+        # 'package_id': package.id,
         'package': package,
         'progress': serialised_notes,
         'rt_per_sk': rt_per_sl,
     }
-    print(context)
+
     return render(request, 'notes/learningscenario_graph.html', context=context)
+
+def learningscenario_graph_try(request, instrument: str, clef: str, level: str):
+
+    if request.method == 'POST':
+        serialised_notes = json.loads(request.body)
+    else:
+        instrument_instance = Instrument.objects.get(name=instrument, clef=clef.upper(), level=level)
+        serialised_notes = generate_progress_from_str_notes(instrument_instance.notes_str)
+
+    rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
+                                              for n in serialised_notes])
+
+    context = {
+        #'learningscenario_id': learningscenario_id,
+        # 'package_id': package.id,
+        'package': None,
+        'progress': serialised_notes,
+        'rt_per_sk': rt_per_sl,
+    }
+
+    return render(request, 'notes/learningscenario_graph_try.html', context=context)
+

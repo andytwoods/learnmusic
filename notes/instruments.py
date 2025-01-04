@@ -43,9 +43,13 @@ instruments = {"Trumpet": {
 instrument_infos = {
     'trumpet': {
         'answer_template': 'trumpet.html',
-        'clef': {'TREBLE': 'trumpet.json'}},
+        'answers': 'trumpet.json',
+        'clef': ['TREBLE',]
+    },
     'trombone': {
         'answer_template': 'trombone.html',
-        'clef': {'TREBLE': 'trombone_treble.json',
-                 'BASS': 'trombone_bass.json'}},
+        'answers': 'trombone.json',
+        'clef': ['TREBLE', 'BASS',]
+    },
 }
+

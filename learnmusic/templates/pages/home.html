@@ -88,7 +88,7 @@
               link.textContent = level.level;
               link.addEventListener('click', function () {
                 instrumentLevelButton.textContent = level.level;
-                const url = window.location.origin + "/practice/" + instrument + "/" + level.level + "/";
+                const url = window.location.origin + "/{{ practice_url }}/" + instrument + "/treble/" + level.level + "/";
                 loadIframe(url);
               });
               item.appendChild(link);

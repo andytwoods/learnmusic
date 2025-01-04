@@ -107,7 +107,7 @@
         if (is_active) elements.forEach(el => el.classList.add('active'));
         else elements.forEach(el => el.classList.remove('active'));
       } else if (key === ' ') {
-        if (!is_active) {
+        if (is_active) {
           answered();
         }
       }

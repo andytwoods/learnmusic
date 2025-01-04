@@ -1,10 +1,48 @@
 {% extends 'notes/practice.html' %}
+{% load static %}
 
-{% block content %}
-  {{ block.super }}
-{% endblock content %}
+{% block see_results %}
+
+  <button id="see-results"
+          class="btn btn-secondary btn-xs text-start p-0 m-0">Stop and see your results
+  </button>
+  <script>
+    document.getElementById('see-results').addEventListener('click', () => {
+      const pruned_progress_data = trial_manager.pruned_progress_data()
+
+      fetch("{% url 'learningscenario_graph_try' instrument clef level %}", {
+        method: 'POST', // HTTP method
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': "{{ csrf_token }}"
+        },
+        body: JSON.stringify(pruned_progress_data) // Convert the list to JSON format
+      })
+        .then(response => {
+          if (response.redirected) {
+            // If the backend sends a redirect, navigate to the returned location
+            window.location.href = response.url;
+          } else {
+            return response.text(); // Get the response as text (full HTML in this case)
+          }
+        })
+        .then(data => {
+          if (data) {
+            document.open();
+            document.write(data);
+            document.close();
+          }
+        })
+        .catch(error => {
+          console.error("Error:", error);
+        });
+    })
+  </script>
+
+{% endblock see_results %}
+
+
 
 
 {% block navbar %}{% endblock navbar %}
-
 {% block messages %}{% endblock messages %}
