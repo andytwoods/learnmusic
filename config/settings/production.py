@@ -1,6 +1,5 @@
 # ruff: noqa: E501
 from .base import *  # noqa: F403
-from .base import DATABASES
 from .base import INSTALLED_APPS
 from .base import REDIS_URL
 from .base import env
@@ -16,6 +15,7 @@ ALLOWED_HOSTS = ['learnmusic.applikuapp.com', ]
 # ------------------------------------------------------------------------------
 
 DATABASES = {"default": env.db(),}
+DATABASES["default"]["ATOMIC_REQUESTS"] = True
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)
 
 # CACHES
