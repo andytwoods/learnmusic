@@ -14,6 +14,8 @@ ALLOWED_HOSTS = ['learnmusic.applikuapp.com', ]
 
 # DATABASES
 # ------------------------------------------------------------------------------
+
+DATABASES = {"default": env.db(),}
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)
 
 # CACHES
