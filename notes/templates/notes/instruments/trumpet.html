@@ -98,6 +98,17 @@
       buttonlogic(event.key, false);
     })
 
+    // Touch start = press event
+    button.addEventListener('touchstart', function (event) {
+      event.preventDefault(); // Prevent unintended screen interactions
+      buttonlogic(button.dataset.key, true);
+    });
+
+    // Touch end = release event
+    button.addEventListener('touchend', function () {
+      buttonlogic(button.dataset.key, false);
+    });
+
     function buttonlogic(key, is_active) {
       let el;
 
@@ -132,7 +143,7 @@
       if (!correct) {
         error_message = correct_keys.join(", ");
         if (error_message.length === 0) error_message = window.nothing_selected
-        error_message = "Correct answer: " + error_message + '\n'+ window.error_message +': '
+        error_message = "Correct answer: " + error_message + '\n' + window.error_message + ': '
         if (keys_pressed.length > 0) {
           error_message += keys_pressed;
         } else error_message += window.nothing_selected;
