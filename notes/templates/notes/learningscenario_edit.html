@@ -9,9 +9,9 @@
 
 {% block content %}
   <h2>Create/edit Learning Scenario</h2>
-  <p>Please select your instrument. The level you select will determine the range of notes you will
+  <p>Please Ïselect your instrument. The level you select will determine the range of notes you will
     practice with (this can be edited anytime).</p>
   {% crispy form %}
   <a href="{% url 'edit-learning-scenario-notes' pk=learningscenario_pk %}">Edit notes</a>
-  
+
 {% endblock content %}

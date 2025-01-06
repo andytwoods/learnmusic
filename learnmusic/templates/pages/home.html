@@ -38,7 +38,8 @@
   </section>
 
   <section class="py-5">
-    Ï<div class="container">
+    Ï
+    <div class="container">
       <h2>Have a go now!</h2>
       {{ instruments|json_script:"instruments-data" }}
       <script>
@@ -128,7 +129,7 @@
 
       <!-- Instrument Dropdown -->
       <div class="container">
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2">
           <!-- Instrument Dropdown -->
           <div class="col-auto">
             <div class="dropdown" id="instrument-dropdown">
