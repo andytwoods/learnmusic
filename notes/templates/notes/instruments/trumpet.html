@@ -9,25 +9,18 @@
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
     }
 
-    .input-button:hover {
-      background-color: gray; /* Change to gray when hovered */
-      color: white; /* Text turns white on hover */
-      border-color: gray; /* Optional: border changes to gray */
+    .active {
+      background-color:black!important;
     }
   </style>
 {% endblock button_css %}
 
-<div id='trumpet-bottom' class="row justify-content-center align-items-center text-center">
-  <div class="col">
-    <button class="btn btn-primary rounded-pill btn-lg input-button m-2 p-3 trumpet-b1" data-valve="1">1</button>
-    <button class="btn btn-primary rounded-pill btn-lg input-button m-2 p-3 trumpet-b2" data-valve="2">2</button>
-    <button class="btn btn-primary rounded-pill btn-lg input-button m-2 p-3 trumpet-b3" data-valve="3">3</button>
-  </div>
-</div>
 
 <div class="row justify-content-center align-items-center text-center">
   <div class="col-12 text-center mt-3">
-    <button class="btn btn-secondary btn-lg mt-5" id='answer' style="width:100%;">buzz (space)</button>
+    <button class="btn btn-secondary input-button btn-lg mt-5" id='answer' data-valve="answer" style="width:100%;">buzz
+      (space)
+    </button>
   </div>
 </div>
 
@@ -35,13 +28,13 @@
 <div id='trumpet-right' style="display:none;" class="col-3 text-left">
   {% block keys %}
     <div>
-      <button class="btn btn-primary rounded-pill btn-lg input-button my-3  p-4 trumpet-b3" data-valve="3">3</button>
+      <button class="rounded-pill input-button my-3  p-4 trumpet-b3" data-valve="3">3</button>
     </div>
     <div>
-      <button class="btn btn-primary rounded-pill btn-lg input-button my-3 p-4 trumpet-b2" data-valve="2">2</button>
+      <button class="rounded-pill input-button my-3 p-4 trumpet-b2" data-valve="2">2</button>
     </div>
     <div>
-      <button class="btn btn-primary rounded-pill btn-lg input-button my-3 p-4 trumpet-b1" data-valve="1">1</button>
+      <button class="rounded-pill input-button my-3 p-4 trumpet-b1" data-valve="1">1</button>
     </div>
   {% endblock keys %}
 </div>
@@ -63,13 +56,13 @@
     api.align_right = function () {
       setup();
       trumpet_right.style.display = 'block';
-      trumpet_bottom.style.display = 'none';
+      //trumpet_bottom.style.display = 'none';
     }
 
     api.align_bottom = function () {
       setup();
       trumpet_right.style.display = 'none';
-      trumpet_bottom.style.display = 'block';
+      //trumpet_bottom.style.display = 'block';
     }
 
     return api;
@@ -89,53 +82,37 @@
   const instrument_manager = (function () {
     let api = {};
 
-    // Listen for keydown events (when a key is pressed)
-    document.addEventListener('keydown', function (event) {
-      buttonlogic(event.key, true);
-    });
 
-    document.addEventListener('keyup', function (event) {
-      buttonlogic(event.key, false);
-    })
-
-    const activeTouches = new Map(); // Track active touches
-
-    document.querySelectorAll('.button').forEach((button) => {
-      // Track pointer down
-      button.addEventListener('pointerdown', (event) => {
-        activeTouches.set(event.pointerId, button); // Map pointer ID to button
-        buttonlogic(button.dataset.key, true); // Trigger button logic
+    document.querySelectorAll('.input-button').forEach((button) => {
+      button.addEventListener('pointerdown', () => {
+        buttonlogic(button.dataset.valve, true); // Trigger button logic
       });
 
       // Track pointer up
-      button.addEventListener('pointerup', (event) => {
-        if (activeTouches.has(event.pointerId)) {
-          buttonlogic(button.dataset.key, false); // Trigger button release logic
-          activeTouches.delete(event.pointerId); // Remove pointer from tracking
-        }
+      button.addEventListener('pointerup', () => {
+        buttonlogic(button.dataset.valve, false); // Trigger button release logic
       });
 
       // Handle pointer cancellation (e.g., user drags away)
-      button.addEventListener('pointercancel', (event) => {
-        if (activeTouches.has(event.pointerId)) {
-          buttonlogic(button.dataset.key, false);
-          activeTouches.delete(event.pointerId);
-        }
+      button.addEventListener('pointercancel', () => {
+        buttonlogic(button.dataset.valve, false);
       });
     });
 
     function buttonlogic(key, is_active) {
       let el;
-
       if (window.keys.indexOf(key) !== -1) {
         el = 'trumpet-b' + key;
         const elements = Array.from(document.getElementsByClassName(el));
-        if (is_active) elements.forEach(el => el.classList.add('active'));
-        else elements.forEach(el => el.classList.remove('active'));
-      } else if (key === ' ') {
-        if (is_active) {
-          answered();
-        }
+        if (is_active) elements.forEach(el => {
+          el.classList.add('active')
+        });
+        else elements.forEach(el => {
+          el.classList.remove('active')
+        })
+
+      } else if (key === 'answer') {
+        if(is_active) answered();
       }
     }
 
@@ -149,6 +126,7 @@
           if (buttons_down.indexOf(valve) === -1) buttons_down.push(valve);
         }
       }
+
       buttons_down.sort();
 
       const keys_pressed = buttons_down.join('+') || '';
