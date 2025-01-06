@@ -98,35 +98,63 @@
       buttonlogic(event.key, false);
     })
 
-// Touch start = press event
-    button.addEventListener('touchstart', function (event) {
-      event.preventDefault(); // Prevent unintended screen interactions
+// Function to store touch associations with buttons
+    const activeTouches = new Map(); // Map<identifier, button>
 
-      // Loop through all active touches
-      Array.from(event.touches).forEach(touch => {
-        // Get the button being touched using coordinates
-        const touchedButton = document.elementFromPoint(touch.clientX, touch.clientY);
+    /**
+     * Touch start event handler
+     */
+    document.querySelectorAll('.button').forEach((button) => {
+      button.addEventListener('touchstart', function (event) {
+        event.preventDefault(); // Prevent unintended interactions like scrolling
 
-        if (touchedButton && touchedButton.classList.contains('button')) {
-          // Trigger button logic for this touch
-          buttonlogic(touchedButton.dataset.key, true);
-        }
+        // Loop through each new touch
+        Array.from(event.changedTouches).forEach((touch) => {
+          // Check if this touch is on a button
+          if (!activeTouches.has(touch.identifier)) {
+            // Store the association between the touch and the button
+            activeTouches.set(touch.identifier, button);
+
+            // Trigger button logic for this button being "pressed"
+            buttonlogic(button.dataset.key, true);
+          }
+        });
       });
-    });
 
-// Touch end = release event
-    button.addEventListener('touchend', function (event) {
-      event.preventDefault();
+      /**
+       * Touch end event handler
+       */
+      button.addEventListener('touchend', function (event) {
+        event.preventDefault(); // Prevent unintended interactions like scrolling
 
-      // Loop through all current touches again
-      Array.from(event.changedTouches).forEach(touch => {
-        // Get the button being released using coordinates
-        const releasedButton = document.elementFromPoint(touch.clientX, touch.clientY);
+        // Loop through each ending touch
+        Array.from(event.changedTouches).forEach((touch) => {
+          // Check if this touch corresponds to a button
+          const touchedButton = activeTouches.get(touch.identifier);
+          if (touchedButton) {
+            // Trigger button logic for this button being "released"
+            buttonlogic(touchedButton.dataset.key, false);
 
-        if (releasedButton && releasedButton.classList.contains('button')) {
-          // Trigger button logic for this touch
-          buttonlogic(releasedButton.dataset.key, false);
-        }
+            // Remove the association between the touch and the button
+            activeTouches.delete(touch.identifier);
+          }
+        });
+      });
+
+      /**
+       * (Optional) Touch cancel handler to clean up if touch is interrupted
+       */
+      button.addEventListener('touchcancel', function (event) {
+        event.preventDefault();
+
+        // Loop through each cancelled touch
+        Array.from(event.changedTouches).forEach((touch) => {
+          const touchedButton = activeTouches.get(touch.identifier);
+          if (touchedButton) {
+            buttonlogic(touchedButton.dataset.key, false);
+            activeTouches.delete(touch.identifier);
+          }
+        });
       });
     });
 
