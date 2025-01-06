@@ -98,15 +98,36 @@
       buttonlogic(event.key, false);
     })
 
-    // Touch start = press event
+// Touch start = press event
     button.addEventListener('touchstart', function (event) {
       event.preventDefault(); // Prevent unintended screen interactions
-      buttonlogic(button.dataset.key, true);
+
+      // Loop through all active touches
+      Array.from(event.touches).forEach(touch => {
+        // Get the button being touched using coordinates
+        const touchedButton = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        if (touchedButton && touchedButton.classList.contains('button')) {
+          // Trigger button logic for this touch
+          buttonlogic(touchedButton.dataset.key, true);
+        }
+      });
     });
 
-    // Touch end = release event
-    button.addEventListener('touchend', function () {
-      buttonlogic(button.dataset.key, false);
+// Touch end = release event
+    button.addEventListener('touchend', function (event) {
+      event.preventDefault();
+
+      // Loop through all current touches again
+      Array.from(event.changedTouches).forEach(touch => {
+        // Get the button being released using coordinates
+        const releasedButton = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        if (releasedButton && releasedButton.classList.contains('button')) {
+          // Trigger button logic for this touch
+          buttonlogic(releasedButton.dataset.key, false);
+        }
+      });
     });
 
     function buttonlogic(key, is_active) {
