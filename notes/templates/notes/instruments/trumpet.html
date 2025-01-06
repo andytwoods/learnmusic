@@ -98,63 +98,29 @@
       buttonlogic(event.key, false);
     })
 
-// Function to store touch associations with buttons
-    const activeTouches = new Map(); // Map<identifier, button>
+    const activeTouches = new Map(); // Track active touches
 
-    /**
-     * Touch start event handler
-     */
     document.querySelectorAll('.button').forEach((button) => {
-      button.addEventListener('touchstart', function (event) {
-        event.preventDefault(); // Prevent unintended interactions like scrolling
-
-        // Loop through each new touch
-        Array.from(event.changedTouches).forEach((touch) => {
-          // Check if this touch is on a button
-          if (!activeTouches.has(touch.identifier)) {
-            // Store the association between the touch and the button
-            activeTouches.set(touch.identifier, button);
-
-            // Trigger button logic for this button being "pressed"
-            buttonlogic(button.dataset.key, true);
-          }
-        });
+      // Track pointer down
+      button.addEventListener('pointerdown', (event) => {
+        activeTouches.set(event.pointerId, button); // Map pointer ID to button
+        buttonlogic(button.dataset.key, true); // Trigger button logic
       });
 
-      /**
-       * Touch end event handler
-       */
-      button.addEventListener('touchend', function (event) {
-        event.preventDefault(); // Prevent unintended interactions like scrolling
-
-        // Loop through each ending touch
-        Array.from(event.changedTouches).forEach((touch) => {
-          // Check if this touch corresponds to a button
-          const touchedButton = activeTouches.get(touch.identifier);
-          if (touchedButton) {
-            // Trigger button logic for this button being "released"
-            buttonlogic(touchedButton.dataset.key, false);
-
-            // Remove the association between the touch and the button
-            activeTouches.delete(touch.identifier);
-          }
-        });
+      // Track pointer up
+      button.addEventListener('pointerup', (event) => {
+        if (activeTouches.has(event.pointerId)) {
+          buttonlogic(button.dataset.key, false); // Trigger button release logic
+          activeTouches.delete(event.pointerId); // Remove pointer from tracking
+        }
       });
 
-      /**
-       * (Optional) Touch cancel handler to clean up if touch is interrupted
-       */
-      button.addEventListener('touchcancel', function (event) {
-        event.preventDefault();
-
-        // Loop through each cancelled touch
-        Array.from(event.changedTouches).forEach((touch) => {
-          const touchedButton = activeTouches.get(touch.identifier);
-          if (touchedButton) {
-            buttonlogic(touchedButton.dataset.key, false);
-            activeTouches.delete(touch.identifier);
-          }
-        });
+      // Handle pointer cancellation (e.g., user drags away)
+      button.addEventListener('pointercancel', (event) => {
+        if (activeTouches.has(event.pointerId)) {
+          buttonlogic(button.dataset.key, false);
+          activeTouches.delete(event.pointerId);
+        }
       });
     });
 
