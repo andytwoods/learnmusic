@@ -55,6 +55,7 @@ function generate_graph() {
             updatedStavelines: filteredStavelines,
         };
     }
+
     const outliers_removed = removeOutliers(data, staveLines);
     data = outliers_removed.updatedData;
     staveLines = outliers_removed.updatedStavelines;
@@ -185,12 +186,33 @@ function generate_graph() {
         },
     };
 
-   const config = {
+    const config = {
         type: "scatter",
         data: chartData,
         options: {
             responsive: true,
             plugins: {
+                addPointLabelsPlugin: {
+                    id: "addPointLabels",
+                    afterDatasetDraw(chart, args, options) {
+                        const {ctx} = chart;
+                        const datasetIndex = chart.data.datasets.length - 1; // Scatter dataset
+                        const meta = chart.getDatasetMeta(datasetIndex);
+
+                        meta.data.forEach((point, index) => {
+                            const {x, y} = point.tooltipPosition();
+                            const label = chart.data.labels[index];
+                            ctx.save();
+                            ctx.font = "12px Arial";
+                            ctx.fillStyle = "#000"; // Label color
+                            ctx.textAlign = "center";
+                            ctx.textBaseline = "top";
+                            ctx.fillText(label, x, y + 12); // Position label below the circle
+                            ctx.restore();
+                        });
+                    },
+                },
+
                 legend: {
                     display: true,
                 },
@@ -205,38 +227,6 @@ function generate_graph() {
                         },
                     },
                 },
-            },
-            onClick: function (evt, activeElements) {
-                const points = staveChart.getElementsAtEventForMode(
-                    evt,
-                    "nearest",
-                    { intersect: true },
-                    false
-                );
-
-                if (points.length) {
-                    const index = points[0].index; // Get the index of the clicked point
-                    const selectedData = data[index];
-
-                    // Show the confirmation for removal
-                    const remove = confirm(
-                        `Do you want to remove the selected point?\nNote: ${selectedData.note}\nTime: ${selectedData.time}ms`
-                    );
-
-                    if (remove) {
-                        // Remove the point from both data and staveLines
-                        data.splice(index, 1);
-                        staveLines.splice(index, 1);
-
-                        // Update the chart
-                        staveChart.data.labels = data.map((d) => `${d.note}`);
-                        staveChart.data.datasets[0].data = data.map((d) => ({
-                            x: notePositions[d.note],
-                            y: d.time,
-                        }));
-                        staveChart.update();
-                    }
-                }
             },
             scales: {
                 x: {

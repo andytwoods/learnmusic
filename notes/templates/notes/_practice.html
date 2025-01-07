@@ -228,7 +228,7 @@
 
         const pruned_progress_data = api.pruned_progress_data();
         sendResultsToBackend(pruned_progress_data);
-        console.log('checking ans')
+
         if (answer === true) {
           setTimeout(function () {
             api.next();
