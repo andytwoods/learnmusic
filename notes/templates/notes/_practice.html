@@ -11,7 +11,7 @@
   Child Page Title
 {% endblock %}
 
-{% block content %}
+{% block body %}
 
   <div id='error-message'
        class="position-fixed start-50 translate-middle-x text-center bg-danger text-white p-2 rounded shadow"
@@ -20,7 +20,7 @@
     <p id="correct-answer"></p>
   </div>
 
-  <div class="card mw-md-75 mx-auto mt-3">
+  <div class="card w-100 mw-md-75 mx-auto pb-5">
     <div class="card-header text-center">
       <h5>{{ instrument }} note trainer</h5>
     </div>
@@ -164,6 +164,8 @@
     const trial_manager = (function () {
       let api = {};
 
+      const ITI = 50;
+
       let current_note;
       let progress_data;
 
@@ -226,14 +228,13 @@
 
         const pruned_progress_data = api.pruned_progress_data();
         sendResultsToBackend(pruned_progress_data);
-
+        console.log('checking ans')
         if (answer === true) {
           setTimeout(function () {
-
             api.next();
             locked = false;
-          },500);
-        } else error_message_manager.start(mistake_message, () => {
+          }, ITI);
+        } else error_message_manager.start(mistake_message, function(){
           api.next();
           locked = false;
         });
@@ -290,4 +291,4 @@
       return api;
     }());
   </script>
-{% endblock content %}
+{% endblock body %}

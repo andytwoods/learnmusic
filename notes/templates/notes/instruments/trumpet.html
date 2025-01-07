@@ -16,8 +16,8 @@
 {% endblock button_css %}
 
 
-<div class="row justify-content-center align-items-center text-center">
-  <div class="col-12 text-center mt-3">
+<div class="row w-100 ustify-content-center align-items-center text-center">
+  <div class="col-12 w-100 text-center mt-3">
     <button class="btn btn-secondary input-button btn-lg mt-5" id='answer' data-valve="answer" style="width:100%;">buzz
       (space)
     </button>
@@ -82,7 +82,6 @@
   const instrument_manager = (function () {
     let api = {};
 
-
     document.querySelectorAll('.input-button').forEach((button) => {
       button.addEventListener('pointerdown', () => {
         buttonlogic(button.dataset.valve, true); // Trigger button logic
@@ -112,7 +111,9 @@
         })
 
       } else if (key === 'answer') {
-        if(is_active) answered();
+        if(is_active) {
+          answered();
+        }
       }
     }
 
@@ -154,7 +155,6 @@
       throw new Error("No correct answer found for note " + current_note + ", for trumpet");
     }
 
-    document.getElementById('answer').addEventListener('click', answered);
     return api;
   }());
 </script>
