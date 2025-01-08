@@ -1,16 +1,21 @@
 {% block button_css %}
   <style>
     .input-button {
+      position: relative;
       min-width: 85px;
       background-color: white; /* Default white background */
       color: black; /* Default black text */
       border: 2px solid black; /* Optional: Add a black border */
-      transition: all 0s ease; /* Smooth transition */
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    .valve {
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4), /* Standard shadow */ inset 0 1px 2px rgba(255, 255, 255, 0.6); /* Inner sheen shadow */
+      border-radius: 50%;
     }
 
     .active {
-      background-color:black!important;
+      background-color: black !important;
+      color: white !important;
     }
   </style>
 {% endblock button_css %}
@@ -19,7 +24,6 @@
 <div class="row w-100 ustify-content-center align-items-center text-center">
   <div class="col-12 w-100 text-center mt-3">
     <button class="btn btn-secondary input-button btn-lg mt-5" id='answer' data-valve="answer" style="width:100%;">buzz
-      (space)
     </button>
   </div>
 </div>
@@ -27,17 +31,44 @@
 
 <div id='trumpet-right' style="display:none;" class="col-3 text-left">
   {% block keys %}
-    <div>
-      <button class="rounded-pill input-button my-3  p-4 trumpet-b3" data-valve="3">3</button>
-    </div>
-    <div>
-      <button class="rounded-pill input-button my-3 p-4 trumpet-b2" data-valve="2">2</button>
-    </div>
-    <div>
-      <button class="rounded-pill input-button my-3 p-4 trumpet-b1" data-valve="1">1</button>
-    </div>
+    <button class="valve rounded-pill input-button my-3  p-4 trumpet-b3" data-valve="3">3</button>
+    <button class="valve rounded-pill input-button my-3 p-4 trumpet-b2" data-valve="2">2</button>
+    <button class="valve rounded-pill input-button my-3 p-4 trumpet-b1" data-valve="1">1</button>
   {% endblock keys %}
 </div>
+
+{% block instrument_modify %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+      const valves_container = document.getElementById('trumpet-right');
+      const valves = valves_container.children;
+      const gap = 10;
+
+      const instrument_input_position = document.getElementById('instrument-input-position');
+      instrument_input_position.style.display = 'block';
+      instrument_input_position.addEventListener('input', align_valves);
+
+      function align_valves(event) {
+        const value = event ? event.target.value : parseInt(instrument_input_position.value);
+        for (let i = 0; i < valves.length; i++) {
+          valves[i].style.right = (i * gap * (12 - value)).toString() + 'px';
+        }
+      }
+
+      align_valves();
+
+      valves_container.style.opacity = '0';
+      valves_container.style.display = 'block';
+
+      setTimeout(function () {
+        valves_container.style.transition = 'opacity 100ms ease-in';
+        valves_container.style.opacity = '1';
+      }, 200);
+    });
+  </script>
+{% endblock instrument_modify %}
+
 
 <script>
   const orientation_manager = (function () {
@@ -55,13 +86,14 @@
 
     api.align_right = function () {
       setup();
-      trumpet_right.style.display = 'block';
+      // note that we unhide the below when we reposition the valves vertically
+      //trumpet_right.style.display = 'block';
       //trumpet_bottom.style.display = 'none';
     }
 
     api.align_bottom = function () {
       setup();
-      trumpet_right.style.display = 'none';
+      //trumpet_right.style.display = 'none';
       //trumpet_bottom.style.display = 'block';
     }
 
@@ -82,7 +114,15 @@
   const instrument_manager = (function () {
     let api = {};
 
+    document.addEventListener('keydown', function (event) {
+      buttonlogic(event.key, true);
+    });
+    document.addEventListener('keyup', function (event) {
+      buttonlogic(event.key, false);
+    });
+
     document.querySelectorAll('.input-button').forEach((button) => {
+
       button.addEventListener('pointerdown', () => {
         buttonlogic(button.dataset.valve, true); // Trigger button logic
       });
@@ -111,7 +151,7 @@
         })
 
       } else if (key === 'answer') {
-        if(is_active) {
+        if (is_active) {
           answered();
         }
       }

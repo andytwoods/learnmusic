@@ -21,10 +21,11 @@
   </div>
 
   <div class="card w-100 mw-md-75 mx-auto pb-5">
-    <div class="card-header text-center">
+    <div class="card-header d-flex justify-content-between align-items-center">
       <h5>{{ instrument }} note trainer</h5>
+      <input type="range" id="instrument-input-position" class="form-range" style="width: 150px; display: none;" min="0"
+             max="10">
     </div>
-
     <div class="card-body position-relative">
       <div id="counter" style="display: none" class="text-secondary position-absolute top-0 start-0 p-2 m-2">
         {% block see_results %}
@@ -234,7 +235,7 @@
             api.next();
             locked = false;
           }, ITI);
-        } else error_message_manager.start(mistake_message, function(){
+        } else error_message_manager.start(mistake_message, function () {
           api.next();
           locked = false;
         });

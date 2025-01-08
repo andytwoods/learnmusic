@@ -12,34 +12,20 @@
     }
 
     .active {
-      background-color:black!important;
+      background-color: black !important;
     }
   </style>
 {% endblock button_css %}
 
 {% block keys %}
 
-  <div>
-    <button class="input-button my-1 p-3 trumpet-b7" data-valve="7">7</button>
-  </div>
-  <div>
-    <button class="input-button my-1  p-3 trumpet-b6" data-valve="6">6</button>
-  </div>
-  <div>
-    <button class="input-button my-1 p-3 trumpet-b5" data-valve="5">5</button>
-  </div>
-  <div>
-    <button class="input-button my-1 p-3 trumpet-b4" data-valve="4">4</button>
-  </div>
-  <div>
-    <button class="input-button my-1  p-3 trumpet-b3" data-valve="3">3</button>
-  </div>
-  <div>
-    <button class="input-button my-1 p-3 trumpet-b2" data-valve="2">2</button>
-  </div>
-  <div>
-    <button class="input-button my-1 p-3 trumpet-b1" data-valve="1">1</button>
-  </div>
+  <button class="valve input-button my-1 p-3 trumpet-b7" data-valve="7">7</button>
+  <button class="valve input-button my-1  p-3 trumpet-b6" data-valve="6">6</button>
+  <button class="valve input-button my-1 p-3 trumpet-b5" data-valve="5">5</button>
+  <button class="valve input-button my-1 p-3 trumpet-b4" data-valve="4">4</button>
+  <button class="valve input-button my-1  p-3 trumpet-b3" data-valve="3">3</button>
+  <button class="valve input-button my-1 p-3 trumpet-b2" data-valve="2">2</button>
+  <button class="valve input-button my-1 p-3 trumpet-b1" data-valve="1">1</button>
 
 {% endblock keys %}
 
@@ -50,3 +36,16 @@
     window.error_message = 'You selected: ';
   </script>
 {% endblock constants %}
+
+{% block instrument_modify %}
+  <script>
+    const valves_container = document.getElementById('trumpet-right');
+    valves_container.style.opacity = '0';
+    valves_container.style.display = 'block';
+    setTimeout(function () {
+      console.log(22)
+      valves_container.style.transition = 'opacity 100ms ease-in';
+      valves_container.style.opacity = '1';
+    }, 200);
+  </script>
+{% endblock instrument_modify %}
