@@ -53,7 +53,7 @@
       function align_valves(event) {
         const value = event ? event.target.value : parseInt(instrument_input_position.value);
         for (let i = 0; i < valves.length; i++) {
-          valves[i].style.right = (i * gap * (12 - value)+20).toString() + 'px';
+          valves[i].style.right = (i * gap * (12 - value) + 20).toString() + 'px';
         }
       }
 
@@ -113,89 +113,97 @@
 
 <script>
   const instrument_manager = (function () {
-    let api = {};
+        let api = {};
 
-    document.addEventListener('keydown', function (event) {
-      buttonlogic(event.key, true);
-    });
-    document.addEventListener('keyup', function (event) {
-      buttonlogic(event.key, false);
-    });
-
-    document.querySelectorAll('.input-button').forEach((button) => {
-
-      button.addEventListener('pointerdown', () => {
-        buttonlogic(button.dataset.valve, true); // Trigger button logic
-      });
-
-      // Track pointer up
-      button.addEventListener('pointerup', () => {
-        buttonlogic(button.dataset.valve, false); // Trigger button release logic
-      });
-
-      // Handle pointer cancellation (e.g., user drags away)
-      button.addEventListener('pointercancel', () => {
-        buttonlogic(button.dataset.valve, false);
-      });
-    });
-
-    function buttonlogic(key, is_active) {
-      let el;
-      if (window.keys.indexOf(key) !== -1) {
-        el = 'trumpet-b' + key;
-        const elements = Array.from(document.getElementsByClassName(el));
-        if (is_active) elements.forEach(el => {
-          el.classList.add('active')
+        document.addEventListener('keydown', function (event) {
+          buttonlogic(event.key, true);
         });
-        else elements.forEach(el => {
-          el.classList.remove('active')
-        })
+        document.addEventListener('keyup', function (event) {
+          buttonlogic(event.key, false);
+        });
 
-      } else if (key === 'answer') {
-        if (is_active) {
-          answered();
+        document.querySelectorAll('.input-button').forEach((button) => {
+
+          button.addEventListener('pointerdown', () => {
+            buttonlogic(button.dataset.valve); // Trigger button logic
+          });
+
+        });
+
+        function buttonlogic(key) {
+          if (window.keys.indexOf(key) !== -1) {
+
+            button_state(key);
+
+          } else if (key === 'answer') {
+            answered();
+          }
         }
-      }
-    }
 
-    function answered() {
 
-      const buttons = document.getElementsByClassName('input-button');
-      var buttons_down = [];
-      for (var i = 0; i < buttons.length; i++) {
-        if (buttons[i].classList.contains('active')) {
-          const valve = buttons[i].dataset.valve;
-          if (buttons_down.indexOf(valve) === -1) buttons_down.push(valve);
+        function button_state(key, is_active) {
+          let el = 'trumpet-b' + key;
+          const elements = Array.from(document.getElementsByClassName(el));
+
+          elements.forEach(el => {
+              if (el.classList.contains('active')) {
+                el.classList.remove('active');
+              } else {
+                el.classList.add('active');
+              }
+            }
+          )
         }
+
+        function reset_valves() {
+          Array.from(document.getElementsByClassName('valve')).forEach(function (el) {
+            el.classList.remove('active');
+          })
+        }
+
+        function answered() {
+
+          const buttons = document.getElementsByClassName('input-button');
+          var buttons_down = [];
+          for (var i = 0; i < buttons.length; i++) {
+            if (buttons[i].classList.contains('active')) {
+              const valve = buttons[i].dataset.valve;
+              if (buttons_down.indexOf(valve) === -1) buttons_down.push(valve);
+            }
+          }
+          reset_valves();
+
+          buttons_down.sort();
+
+          const keys_pressed = buttons_down.join('+') || '';
+          const correct_keys = getCorrectKeysPressed();
+          const correct = correct_keys.indexOf(keys_pressed) !== -1;
+          let error_message;
+          if (!correct) {
+            error_message = correct_keys.join(", ");
+            if (error_message.length === 0) error_message = window.nothing_selected
+            error_message = "Correct answer: " + error_message + '\n' + window.error_message + ': '
+            if (keys_pressed.length > 0) {
+              error_message += keys_pressed;
+            } else error_message += window.nothing_selected;
+          }
+          trial_manager.answer(correct, error_message);
+        }
+
+        function getCorrectKeysPressed() {
+          let current_note = document.current_note;
+          if (current_note in document.instrument_data) return document.instrument_data[current_note];
+          const equiv_notes = getEnharmonicEquivalents(current_note);
+          for (const equiv_note of equiv_notes) {
+            if (equiv_note in document.instrument_data) return document.instrument_data[equiv_note];
+          }
+          throw new Error("No correct answer found for note " + current_note + ", for trumpet");
+        }
+
+        return api;
       }
 
-      buttons_down.sort();
-
-      const keys_pressed = buttons_down.join('+') || '';
-      const correct_keys = getCorrectKeysPressed();
-      const correct = correct_keys.indexOf(keys_pressed) !== -1;
-      let error_message;
-      if (!correct) {
-        error_message = correct_keys.join(", ");
-        if (error_message.length === 0) error_message = window.nothing_selected
-        error_message = "Correct answer: " + error_message + '\n' + window.error_message + ': '
-        if (keys_pressed.length > 0) {
-          error_message += keys_pressed;
-        } else error_message += window.nothing_selected;
-      }
-      trial_manager.answer(correct, error_message);
-    }
-
-    function getCorrectKeysPressed() {
-      let current_note = document.current_note;
-      if (current_note in document.instrument_data) return document.instrument_data[current_note];
-      const equiv_notes = getEnharmonicEquivalents(current_note);
-      for (const equiv_note of equiv_notes) {
-        if (equiv_note in document.instrument_data) return document.instrument_data[equiv_note];
-      }
-      throw new Error("No correct answer found for note " + current_note + ", for trumpet");
-    }
-
-    return api;
-  }());
+      ()
+    )
+  ;
 </script>
