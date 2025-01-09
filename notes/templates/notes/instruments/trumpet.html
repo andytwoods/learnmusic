@@ -179,6 +179,7 @@
           const keys_pressed = buttons_down.join('+') || '';
           const correct_keys = getCorrectKeysPressed();
           const correct = correct_keys.indexOf(keys_pressed) !== -1;
+
           let error_message;
           if (!correct) {
             error_message = correct_keys.join(", ");
