@@ -115,11 +115,14 @@
   const instrument_manager = (function () {
         let api = {};
 
+        let keys_pressed_by_finger = [];
         document.addEventListener('keydown', function (event) {
-          buttonlogic(event.key, true);
+          if(keys_pressed_by_finger.indexOf(event.key)!==-1) return
+          keys_pressed_by_finger.push(event.key);
+          buttonlogic(event.key);
         });
         document.addEventListener('keyup', function (event) {
-          buttonlogic(event.key, false);
+          keys_pressed_by_finger.splice(keys_pressed_by_finger.indexOf(event.key), 1);
         });
 
         document.querySelectorAll('.input-button').forEach((button) => {
@@ -132,16 +135,14 @@
 
         function buttonlogic(key) {
           if (window.keys.indexOf(key) !== -1) {
-
             button_state(key);
-
-          } else if (key === 'answer') {
+          } else if (key === 'answer' || key === ' ') {
             answered();
           }
         }
 
 
-        function button_state(key, is_active) {
+        function button_state(key) {
           let el = 'trumpet-b' + key;
           const elements = Array.from(document.getElementsByClassName(el));
 
