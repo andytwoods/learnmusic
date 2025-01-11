@@ -65,16 +65,23 @@ def edit_learningscenario_notes(request, pk: int):
     return render(request, 'notes/learningscenario_edit_vocab.html', context=context)
 
 
-def common_context(instrument: Instrument):
+def common_context(instrument: Instrument, sound:bool):
     instrument_info = instrument_infos[instrument.name.lower()]
+    if sound:
+        instrument_template = 'notes/instruments/mic_input.html'
+        score_css = 'justify-content-center'
+    else:
+        instrument_template = 'notes/instruments/' + instrument_info['answer_template']
+        score_css = ''
     return {'answers_json': instrument_info['answers'],
-            'instrument_template': 'notes/instruments/' + instrument_info['answer_template'],
+            'instrument_template': instrument_template,
             'clef': instrument.clef.lower(),
-            'instrument': instrument.name
+            'instrument': instrument.name,
+            'score_css': score_css,
             }
 
 
-def practice(request, learningscenario_id: int):
+def practice(request, learningscenario_id: int, sound:bool=False):
     package, serialised_notes = LearningScenario.progress_latest_serialised(learningscenario_id)
     instrument_instance: Instrument = package.instrument()
 
@@ -82,13 +89,14 @@ def practice(request, learningscenario_id: int):
         'learningscenario_id': learningscenario_id,
         'package_id': package.id,
         'progress': serialised_notes,
+        'sound': sound,
     }
-    context.update(common_context(instrument_instance))
+    context.update(common_context(instrument_instance, sound))
 
     return render(request, 'notes/practice.html', context=context)
 
 
-def practice_try(request, instrument: str, clef:str, level: str):
+def practice_try(request, instrument: str, clef:str, level: str, sound:bool=False):
     instrument_instance = Instrument.objects.get(name=instrument, level=level, clef=clef.upper())
     serialised_notes = generate_progress_from_str_notes(instrument_instance.notes_str)
 
@@ -96,9 +104,10 @@ def practice_try(request, instrument: str, clef:str, level: str):
         'progress': serialised_notes,
         'instrument_id': instrument_instance.id,
         'level': level,
+        'sound': sound,
     }
 
-    context.update(common_context(instrument_instance))
+    context.update(common_context(instrument_instance, sound))
 
     rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
                                               for n in serialised_notes])

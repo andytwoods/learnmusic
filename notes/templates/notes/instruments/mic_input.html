@@ -1,0 +1,138 @@
+{% load static %}
+
+
+<div class="row w-100 ustify-content-center align-items-center text-center">
+  <div class="col-12 w-100 text-center mt-3">
+    <button class="btn btn-secondary input-button btn-lg mt-5" id='answer' data-valve="answer" style="width:100%;">play!
+    </button>
+  </div>
+</div>
+
+<script type="module">
+  // this is adapted from https://ianjohnson.dev/pitchy/playground.html
+  // project from: https://github.com/ianprime0509/pitchy
+  import {PitchDetector} from "https://esm.sh/pitchy@4.1.0";
+
+  const history = [];
+  let historyLength = 100;
+
+  let minVolumeDecibels = -10;
+  let minClarityPercent = 95;
+  //lowest note on piano 27.5. Max 4186
+  let [minPitch, maxPitch] = [20, 5000];
+
+  let [overrideSampleRate, desiredSampleRate, sampleRate] = [false, 44100, null];
+  let inputBufferSize = 2048;
+
+  let micStream, analyserNode, detector, inputBuffer;
+
+  let intervalHandle;
+
+  function checkNote() {
+
+    const matchesConditions = ([pitch, clarity]) =>
+      pitch >= minPitch &&
+      pitch <= maxPitch &&
+      100 * clarity >= minClarityPercent;
+    const filteredHistory = history.filter(matchesConditions);
+    if (filteredHistory.length === 0) {
+      return;
+    }
+
+    let [lastPitch, lastClarityPercent] =
+      filteredHistory[filteredHistory.length - 1];
+    lastPitch = Math.round(lastPitch * 10) / 10;
+    lastPitch = lastPitch.toFixed(1);
+    lastClarityPercent = Math.round(lastClarityPercent * 1000) / 10;
+
+    const note = pitchToNote(lastPitch);
+    throttled_feedback(note);
+  }
+
+  const throttled_feedback = throttle(stave_manager.feedback_note, 20);
+
+  function pitchToNote(frequency) {
+    // Define reference point: A4 = 440 Hz
+    const A4_FREQUENCY = 440.0;
+    const A4_NOTE_NUMBER = 69; // MIDI note number for A4
+
+    // Define an array of all the note names in a single octave
+    const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+    // Calculate the note number
+    const noteNumber = Math.round(
+      12 * Math.log2(frequency / A4_FREQUENCY) + A4_NOTE_NUMBER
+    );
+
+    // Calculate the name and the octave
+    const noteIndex = noteNumber % 12;
+    const noteName = NOTES[noteIndex]; // Get the note name from the index
+    const octave = Math.floor(noteNumber / 12) - 1; // Octave adjustment
+
+    // Return the note name in "Note/Octave" format
+    return `${noteName}/${octave}`;
+  }
+
+  function updatePitch() {
+    if (!analyserNode || !detector || !sampleRate || !inputBuffer) return;
+
+    analyserNode.getFloatTimeDomainData(inputBuffer);
+    history.push(detector.findPitch(inputBuffer, sampleRate));
+    if (history.length > historyLength) {
+      history.shift();
+    }
+  }
+
+  function setUpdatePitchInterval(interval) {
+    if (intervalHandle !== undefined) {
+      clearInterval(intervalHandle);
+    }
+    intervalHandle = setInterval(() => {
+      updatePitch();
+      checkNote();
+    }, interval);
+  }
+
+  function resetAudioContext() {
+    sampleRate = analyserNode = inputBuffer = null;
+
+    const audioContextOptions = {};
+
+    const audioContext = new AudioContext(audioContextOptions);
+    sampleRate = audioContext.sampleRate;
+
+    analyserNode = new AnalyserNode(audioContext, {
+      fftSize: inputBufferSize,
+    });
+    audioContext.createMediaStreamSource(micStream).connect(analyserNode);
+    detector = PitchDetector.forFloat32Array(analyserNode.fftSize);
+    detector.minVolumeDecibels = minVolumeDecibels;
+    inputBuffer = new Float32Array(detector.inputLength);
+  }
+
+  document.getElementById("answer").addEventListener("click", () => {
+    resetAudioContext();
+  });
+  document.addEventListener("DOMContentLoaded", () => {
+    setUpdatePitchInterval(50);
+    navigator.mediaDevices.getUserMedia({audio: true}).then((stream) => {
+      micStream = stream;
+      resetAudioContext();
+    });
+  });
+
+</script>
+<script>
+  const instrument_manager = (function () {
+      let api = {};
+
+      function answered() {
+        const error_message = "add error message"
+        const correct = true;
+        trial_manager.answer(correct, error_message);
+      }
+
+      return api;
+    }()
+  );
+</script>
