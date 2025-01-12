@@ -1,7 +1,7 @@
 import json
 
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 
@@ -13,6 +13,14 @@ from notes.tools import generate_notes, compile_notes_per_skilllevel, generate_p
 
 @login_required
 def notes_home(request):
+    if request.htmx:
+        action = request.POST.get('action')
+        if action == 'delete':
+            learningscenario_id = request.POST.get('id')
+            LearningScenario.objects.get(id=learningscenario_id).delete()
+        else:
+            raise Exception("unknown action")
+        return HttpResponse('', status=200)
     context = {
         'learningscenarios': LearningScenario.objects.filter(user=request.user).order_by('-created'),
     }

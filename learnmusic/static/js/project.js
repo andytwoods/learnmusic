@@ -56,7 +56,7 @@ function getEnharmonicEquivalents(noteString) {
     return result;
 }
 
-function throttle (callback, limit) {
+function throttle(callback, limit) {
     var waiting = false;                      // Initially, we're not waiting
     return function () {                      // We return a throttled function
         if (!waiting) {                       // If we're not waiting
@@ -68,3 +68,21 @@ function throttle (callback, limit) {
         }
     }
 }
+
+
+document.addEventListener("htmx:confirm", function (e) {
+
+    // below breaks htmx sometimes
+    //if (!e.detail.target.hasAttribute('hx-confirm')) return
+
+    e.preventDefault()
+
+    Swal.fire({
+        title: "Proceed?",
+        text: `${e.detail.question}`
+    }).then(function (result) {
+        if (result.isConfirmed) {
+            e.detail.issueRequest(true);
+        }
+    })
+})
