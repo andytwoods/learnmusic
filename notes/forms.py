@@ -1,25 +1,35 @@
-# forms.py
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Submit
 from django import forms
-
-from .models import LearningScenario, Instrument
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Div, Field, Submit
+from .models import LearningScenario
 
 
 class LearningScenarioForm(forms.ModelForm):
-    # instrument = forms.ModelChoiceField(
-    #     queryset=Instrument.objects.all(),
-    #     empty_label="Select an Instrument",
-    #     widget=forms.Select(attrs={'class': 'dropdown'})
-    # )
+
     class Meta:
         model = LearningScenario
-        fields = ['instrument']
-
-        # Include fields you want in the form
+        fields = ['instrument', 'clef', 'key']
+        labels = {
+            'instrument': 'Instrument',
+            'clef': 'Clef',
+            'key': 'Instrument Key'
+        }
 
     def __init__(self, *args, **kwargs):
         super(LearningScenarioForm, self).__init__(*args, **kwargs)
+
+        # Crispy Forms for layout
         self.helper = FormHelper()
         self.helper.form_method = 'post'
-        self.helper.add_input(Submit('submit', 'Submit'))
+
+        # Modify layout to include the new field
+        self.helper.layout = Layout(
+            Field('instrument'),
+            Div(
+                Field('clef'),
+                Field('key'),
+                css_id='advanced-collapse',  # This div controls showing/hiding advanced fields
+                css_class='collapse'  # Hidden by default via Bootstrap's `.collapse`
+            ),
+            Submit('submit', 'Submit')
+        )

@@ -23,8 +23,8 @@ def notes_home(request):
 def new_learningscenario(request):
     scenario = LearningScenario(user=request.user)
     scenario.save()
-    return redirect(reverse('edit-learning-scenario', kwargs={'pk': scenario.id}))
-
+    url = reverse('edit-learning-scenario', kwargs={'pk': scenario.id})
+    return redirect(url + '?new=true')
 
 @login_required
 def edit_learningscenario(request, pk: int):
@@ -40,7 +40,9 @@ def edit_learningscenario(request, pk: int):
         form = LearningScenarioForm(instance=model)
 
     context = {'form': form,
-               'learningscenario_pk': model.pk}
+               'learningscenario_pk': model.pk,
+               'instruments_info': instrument_infos,
+               'new': request.GET.get('new', False),}
 
     return render(request, 'notes/learningscenario_edit.html', context=context)
 

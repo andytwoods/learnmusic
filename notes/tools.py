@@ -3,6 +3,8 @@ import random
 
 from mypy.build import process_stale_scc
 
+from notes.instruments import instruments
+
 
 def populate_vocab(octave: int, lowest_note: str, highest_note: str):
     from notes.models import Note
@@ -130,3 +132,31 @@ def generate_progress_from_str_notes(notes_str):
                      }
         progress.append(note_info)
     return progress
+
+
+def generate_instruments():
+    from notes.models import Instrument
+    from notes.models import Note
+
+    generated_instruments = []
+
+    for instrument_nam, instrument_infos in instruments.instruments.items():
+
+        for level, info in instrument_infos.items():
+
+            instrument: Instrument = Instrument(
+                name=instrument_nam,
+                level=level,
+                lowest_note=Note.get_from_str(info['lowest_note']),
+                highest_note=Note.get_from_str(info['highest_note']),
+                clef=info['clef'],
+                notes_str=info['notes']
+            )
+            if not instrument.notes_str:
+                if instrument.lowest_note is None or instrument.highest_note is None:
+                    raise Exception("issue with instruments.py")
+                notes = generate_notes(instrument.lowest_note, instrument.highest_note, json=True)
+                instrument.notes_str = ';'.join(notes)
+            generated_instruments.append(instrument)
+
+    Instrument.objects.bulk_create(generated_instruments)

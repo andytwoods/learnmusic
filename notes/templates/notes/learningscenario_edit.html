@@ -1,17 +1,122 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
-
+{% load widget_tweaks %} <!-- Load widget_tweaks -->
 
 {% block title %}
-  Create/edit Learning Scenario
+  Learning Scenario
 {% endblock %}
 
 {% block content %}
-  <h2>Create/edit Learning Scenario</h2>
-  <p>Please Ïselect your instrument. The level you select will determine the range of notes you will
-    practice with (this can be edited anytime).</p>
-  {% crispy form %}
-  <a href="{% url 'edit-learning-scenario-notes' pk=learningscenario_pk %}">Edit notes</a>
 
+  {{ instruments_info|json_script:"instruments-data" }}
+
+
+  <div class="row">
+    <div class="col-md-6">
+      <h2>Your Learning Scenario</h2>
+      <p>
+        Please select your instrument. The level you select will determine the range of notes you will
+        practice with. {% if new %}You can edit these notes after saving this form for the first time.{% else %}You can <a href="{% url 'edit-learning-scenario-notes' pk=learningscenario_pk %}">edit</a>
+        these notes.{% endif %}
+      </p>
+
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label for="id_instrument" class="form-label">Instrument</label>
+          <div>
+            {{ form.instrument|add_class:"form-control" }}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+
+        <!-- Toggle for Advanced Options -->
+        <button
+          class="btn btn-outline-primary mb-3 dropdown-toggle"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#advanced-collapse"
+          aria-expanded="false"
+          aria-controls="advanced-collapse">
+          Advanced Options
+        </button>
+
+        <!-- Advanced Options wrapped in a Bootstrap Card -->
+        <div id="advanced-collapse" class="collapse">
+          <div class="card">
+            <div class="card-body bg-light">
+              <!-- Clef Field -->
+              <div class="mb-3">
+                <label for="id_clef" class="form-label">Clef</label>
+                <div>
+                  {{ form.clef|add_class:"form-control" }}
+                </div>
+              </div>
+
+              <!-- Instrument Key Field -->
+              <div class="mb-3">
+                <label for="id_instrument_key" class="form-label">Key</label>
+                <div>
+                  {{ form.key|add_class:"form-control" }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <script>
+    const instruments_info = JSON.parse(
+      document.getElementById('instruments-data').textContent
+    );
+
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const instrumentSelect = document.getElementById('id_instrument');
+      const clefSelect = document.getElementById('id_clef');
+      const keySelect = document.getElementById('id_key');
+
+
+      const updateFields = () => {
+
+        const selectedInstrument = instrumentSelect.value;
+        let selectedInstrumentTextRaw = instrumentSelect.options[instrumentSelect.selectedIndex].text;
+        let selectedInstrumentText = selectedInstrumentTextRaw.split(" ").slice(0, -1).join(" ");
+        selectedInstrumentText = selectedInstrumentText.toLowerCase();
+
+        const instrumentInfo = instruments_info[selectedInstrumentText];
+        if (instrumentInfo) {
+          const clefs = instrumentInfo.clef; // Get clef options
+          const keys = instrumentInfo.common_keys; // Get key options
+          if (clefs.length > 0) {
+            const firstClef = clefs[0].toUpperCase(); // Get the first clef (convert to uppercase for comparison)
+            for (const option of clefSelect.options) {
+              if (option.value.toUpperCase() === firstClef) {
+                clefSelect.value = option.value; // Match found; set it as selected
+                break;
+              }
+            }
+          }
+
+          if (keys.length > 0) {
+            keySelect.value = keys[0];
+          }
+        }
+      };
+
+      // Event listener for instrument dropdown changes
+      instrumentSelect.addEventListener('change', updateFields);
+
+      // Initialize fields on page load if an instrument is preselected
+      updateFields();
+    });
+  </script>
 {% endblock content %}

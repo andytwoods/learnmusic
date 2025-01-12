@@ -1,3 +1,4 @@
+
 instruments = {"Trumpet": {
     "Beginner": {
         "lowest_note": None,
@@ -44,12 +45,13 @@ instrument_infos = {
     'trumpet': {
         'answer_template': 'trumpet.html',
         'answers': 'trumpet.json',
-        'clef': ['TREBLE',]
+        'clef': ['TREBLE',],
+        'common_keys': ['Bb', 'C', ],
     },
     'trombone': {
         'answer_template': 'trombone.html',
         'answers': 'trombone.json',
-        'clef': ['TREBLE', 'BASS',]
+        'clef': ['TREBLE', 'BASS',],
+        'common_keys': ['C', ],
     },
 }
-

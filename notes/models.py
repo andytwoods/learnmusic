@@ -15,7 +15,6 @@ from notes import tools
 User = get_user_model()
 
 
-
 class Note(models.Model):
 
     def create_default_notes(*args, **kwargs):
@@ -83,11 +82,33 @@ class Note(models.Model):
             alter_str = "1"
         note_str = note_str[0]
 
-
         note, created = Note.objects.get_or_create(note=note_str, octave=int(octave_str), alter=int(alter_str))
         if created:
             note.save()
         return note
+
+from django.db import models
+
+
+class NoteChoices(models.TextChoices):
+    A_flat = 'Ab', 'Ab'
+    A = 'A', 'A'
+    A_sharp = 'A#', 'A#'
+    B_flat = 'Bb', 'Bb'
+    B = 'B', 'B'
+    C = 'C', 'C'
+    C_sharp = 'C#', 'C#'
+    D_flat = 'Db', 'Db'
+    D = 'D', 'D'
+    D_sharp = 'D#', 'D#'
+    E_flat = 'Eb', 'Eb'
+    E = 'E', 'E'
+    E_sharp = 'E#', 'E#'
+    F = 'F', 'F'
+    F_sharp = 'F#', 'F#'
+    G_flat = 'Gb', 'Gb'
+    G = 'G', 'G'
+    G_sharp = 'G#', 'G#'
 
 
 class ClefChoices(models.TextChoices):
@@ -105,7 +126,6 @@ class LevelChoices(models.TextChoices):
 
 class Instrument(models.Model):
 
-
     @staticmethod
     def get_instrument_range(instrument_name: str, level: str = 'Advanced'):
         instrument = Instrument.objects.get(name=instrument_name, level=level)
@@ -119,28 +139,7 @@ class Instrument(models.Model):
         return cls.objects.get(name=instrument_name)
 
     def create_default_instruments(*args, **kwargs):
-        generated_instruments = []
-        from . import instruments
-        for instrument_nam, instrument_infos in instruments.instruments.items():
-
-            for level, info in instrument_infos.items():
-
-                instrument: Instrument = Instrument(
-                    name=instrument_nam,
-                    level=level,
-                    lowest_note=Note.get_from_str(info['lowest_note']),
-                    highest_note=Note.get_from_str(info['highest_note']),
-                    clef=info['clef'],
-                    notes_str=info['notes']
-                )
-                if not instrument.notes_str:
-                    if instrument.lowest_note is None or instrument.highest_note is None:
-                        raise Exception("issue with instruments.py")
-                    notes = tools.generate_notes(instrument.lowest_note, instrument.highest_note, json=True)
-                    instrument.notes_str = ';'.join(notes)
-                generated_instruments.append(instrument)
-
-        Instrument.objects.bulk_create(generated_instruments)
+        tools.generate_instruments()
 
     name = models.CharField(max_length=64)
     level = models.CharField(max_length=64,
@@ -159,6 +158,7 @@ class LearningScenario(TimeStampedModel):
     instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE, null=True, blank=True)
     vocabulary = models.ManyToManyField(Note)
     clef = models.CharField(max_length=64, choices=ClefChoices.choices, default=ClefChoices.TREBLE)
+    key = models.CharField(max_length=2, choices=NoteChoices.choices, default=NoteChoices.C)
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         # instrument can be null as we create a blank instence before user specifies this
