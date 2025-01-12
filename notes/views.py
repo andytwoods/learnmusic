@@ -83,6 +83,7 @@ def common_context(instrument: Instrument, sound:bool):
     else:
         instrument_template = 'notes/instruments/' + instrument_info['answer_template']
         score_css = ''
+
     return {'answers_json': instrument_info['answers'],
             'instrument_template': instrument_template,
             'clef': instrument.clef.lower(),
@@ -94,10 +95,11 @@ def common_context(instrument: Instrument, sound:bool):
 def practice(request, learningscenario_id: int, sound:bool=False):
     package, serialised_notes = LearningScenario.progress_latest_serialised(learningscenario_id)
     instrument_instance: Instrument = package.instrument()
-
+    learningscenario = LearningScenario.objects.get(id=learningscenario_id)
     context = {
         'learningscenario_id': learningscenario_id,
         'package_id': package.id,
+        'key': learningscenario.key,
         'progress': serialised_notes,
         'sound': sound,
     }
@@ -113,6 +115,7 @@ def practice_try(request, instrument: str, clef:str, level: str, sound:bool=Fals
     context = {
         'progress': serialised_notes,
         'instrument_id': instrument_instance.id,
+        'key': None,
         'level': level,
         'sound': sound,
     }

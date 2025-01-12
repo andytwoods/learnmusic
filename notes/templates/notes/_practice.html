@@ -22,7 +22,7 @@
 
   <div class="card w-100 mw-md-75 mx-auto pb-5">
     <div class="card-header d-flex justify-content-between align-items-center">
-      <h5>{{ instrument }} note trainer</h5>
+      <h5>{{ instrument }} note trainer{% if key %}, {{ key }}{% endif %}</h5>
       <input type="range" id="instrument-input-position" class="form-range" style="width: 150px; display: none;" min="0"
              max="10">
     </div>
