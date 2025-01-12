@@ -12,7 +12,7 @@ urlpatterns = [
          name='edit-learning-scenario-notes'),
 
     path("practice/<int:learningscenario_id>/", views.practice, name='practice'),
-    path("practice-sound/<int:learningscenario_id>/", views.practice, name='practice', kwargs={'sound': True}),
+    path("practice-sound/<int:learningscenario_id>/", views.practice, name='practice-sound', kwargs={'sound': True}),
 
     path('practice-try/<str:instrument>/<str:clef>/<str:level>/', views.practice_try, name='practice-try'),
     path('practice-sound-try/<str:instrument>/<str:clef>/<str:level>/', views.practice_try,
