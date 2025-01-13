@@ -41,7 +41,11 @@ def edit_learningscenario(request, pk: int):
     if request.POST:
         form = LearningScenarioForm(request.POST, instance=model)
         if form.is_valid():
-            form.save()
+            ls: LearningScenario = form.save(commit=False)
+            instrument = form.cleaned_data['instrument']
+            transposing_direction = instrument_infos[instrument].get('transposing_direction', 0)
+            ls.transposing_direction = transposing_direction
+            ls.save()
             return redirect(reverse('notes-home'))
 
     if not form:
@@ -100,6 +104,7 @@ def practice(request, learningscenario_id: int, sound:bool=False):
         'learningscenario_id': learningscenario_id,
         'package_id': package.id,
         'key': learningscenario.key,
+        'transosing_direction': learningscenario.transposing_direction,
         'progress': serialised_notes,
         'sound': sound,
     }
@@ -112,10 +117,14 @@ def practice_try(request, instrument: str, clef:str, level: str, sound:bool=Fals
     instrument_instance = Instrument.objects.get(name=instrument, level=level, clef=clef.upper())
     serialised_notes = generate_progress_from_str_notes(instrument_instance.notes_str)
 
+    instrument_info = instrument_infos[instrument.lower()]
+    keys = instrument_info.get('common_keys')
+
     context = {
         'progress': serialised_notes,
         'instrument_id': instrument_instance.id,
-        'key': None,
+        'key': keys[0],
+        'transosing_direction': instrument_info.get('transposing_direction', 0),
         'level': level,
         'sound': sound,
     }

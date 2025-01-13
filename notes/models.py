@@ -87,6 +87,7 @@ class Note(models.Model):
             note.save()
         return note
 
+
 from django.db import models
 
 
@@ -159,6 +160,10 @@ class LearningScenario(TimeStampedModel):
     vocabulary = models.ManyToManyField(Note)
     clef = models.CharField(max_length=64, choices=ClefChoices.choices, default=ClefChoices.TREBLE)
     key = models.CharField(max_length=2, choices=NoteChoices.choices, default=NoteChoices.C)
+    transposing_direction = models.IntegerField(default=0, validators=[
+        MinValueValidator(-1),
+        MaxValueValidator(1),
+    ])
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         # instrument can be null as we create a blank instence before user specifies this

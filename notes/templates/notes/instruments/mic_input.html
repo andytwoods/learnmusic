@@ -3,7 +3,7 @@
 
 <div class="row w-100 ustify-content-center align-items-center text-center">
   <div class="col-12 w-100 text-center mt-3">
-    <button class="btn btn-secondary input-button btn-lg mt-5" id='answer' data-valve="answer" style="width:100%;">play!
+    <button class="btn btn-secondary input-button btn-lg mt-5" id='answer' data-valve="answer" style="width:100%;">start playing!
     </button>
   </div>
 </div>
@@ -27,6 +27,32 @@
   let micStream, analyserNode, detector, inputBuffer;
 
   let intervalHandle;
+
+  const A4_FREQUENCY = 440.0;
+  const A4_NOTE_NUMBER = 69;
+
+  const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+  const KEY_SHIFT = function () {
+    const INSTRUMENT_KEY = '{{ key }}';
+    const TRANSPOSING_DIRECTION = '{{ transosing_direction }}'
+    let enharmonic_equivalents = getEnharmonicEquivalents(INSTRUMENT_KEY);
+    enharmonic_equivalents.push(INSTRUMENT_KEY);
+
+    let found_i;
+    for (let i = 0; i < enharmonic_equivalents.length; i++) {
+      if (enharmonic_equivalents[i] === INSTRUMENT_KEY) {
+        found_i = i;
+        break;
+      }
+    }
+    const c_i = 0;
+    const difference = found_i - c_i;
+    if (TRANSPOSING_DIRECTION === '-1'){
+      return difference;
+    }
+    return -1 * difference;
+  }();
 
   function checkNote() {
 
@@ -52,16 +78,10 @@
   const throttled_feedback = throttle(stave_manager.feedback_note, 20);
 
   function pitchToNote(frequency) {
-    // Define reference point: A4 = 440 Hz
-    const A4_FREQUENCY = 440.0;
-    const A4_NOTE_NUMBER = 69; // MIDI note number for A4
-
-    // Define an array of all the note names in a single octave
-    const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
     // Calculate the note number
     const noteNumber = Math.round(
-      12 * Math.log2(frequency / A4_FREQUENCY) + A4_NOTE_NUMBER
+      12 * Math.log2(frequency / A4_FREQUENCY) + A4_NOTE_NUMBER + KEY_SHIFT
     );
 
     // Calculate the name and the octave

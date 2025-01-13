@@ -37,11 +37,13 @@ function getEnharmonicEquivalents(noteString) {
         "B#": ["C"]
     };
 
+    if(noteString.indexOf('/')===-1) return enharmonics[noteString]
+
     // Parse the note and octave from VexFlow note string
     const regex = /^([A-Ga-g][#b]*)(\/\d)$/; // Matches notes like "A#/4", "Bb/4", etc.
     const match = noteString.match(regex);
     if (!match) {
-        throw new Error("Invalid note format");
+        throw new Error("Invalid note format: " + noteString);
     }
 
     const pitch = match[1]; // Note part (e.g., Bb, C#, etc.)
