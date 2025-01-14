@@ -55,7 +55,7 @@
         const value = event ? event.target.value : parseInt(instrument_input_position.value);
         for (let i = 0; i < valves.length; i++) {
           valves[i].style.right = (i * gap * (12 - value) + 20).toString() + 'px';
-          valves[i].style.top = -(.4 * i * gap * (12 - value)).toString() + 'px';
+          // valves[i].style.top = -(.4 * i * gap * (12 - value)).toString() + 'px';
         }
       }
 
