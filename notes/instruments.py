@@ -1,10 +1,9 @@
-
 instruments = {"Trumpet": {
     "Beginner": {
         "lowest_note": None,
         "highest_note": None,
         "clef": "TREBLE",
-        "notes": "C 0 4;D 0 4;E 0 4;F 0 4;G 0 4;A 0 4;Bb -1 4;B 0 4"
+        "notes": "C 0 4;D 0 4;E 0 4;F 0 4;G 0 4;A 0 4;B -1 4;B 0 4"
     },
     "Intermediate": {
         "lowest_note": "F 1 3",
@@ -24,7 +23,7 @@ instruments = {"Trumpet": {
             "lowest_note": None,
             "highest_note": None,
             "clef": "TREBLE",
-            "notes": "E 0 4;F 0 4;F# 0 4;G 0 4;Ab 0 4;A 0 4;Bb -1 4;B 0 4;C 0 4"
+            "notes": "E 0 4;F 0 4;F 1 4;G 0 4;A -1 4;A 0 4;B -1 4;B 0 4;C 0 4"
         },
         "Intermediate": {
             "lowest_note": "F 1 3",
@@ -45,14 +44,14 @@ instrument_infos = {
     'trumpet': {
         'answer_template': 'trumpet.html',
         'answers': 'trumpet.json',
-        'clef': ['TREBLE',],
+        'clef': ['TREBLE', ],
         'common_keys': ['Bb', 'C', ],
         'transposing_direction': -1
     },
     'trombone': {
         'answer_template': 'trombone.html',
         'answers': 'trombone.json',
-        'clef': ['TREBLE', 'BASS',],
+        'clef': ['TREBLE', 'BASS', ],
         'common_keys': ['C', ],
     },
 }

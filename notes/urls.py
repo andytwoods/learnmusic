@@ -23,4 +23,5 @@ urlpatterns = [
     path("practice-graph/<int:learningscenario_id>/", views.learningscenario_graph, name='learningscenario_graph'),
     path("learningscenario-graph-try/<str:instrument>/<str:clef>/<str:level>/",
          views.learningscenario_graph_try, name='learningscenario_graph_try'),
+
 ]

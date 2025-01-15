@@ -1,7 +1,4 @@
-import json
 import random
-
-from mypy.build import process_stale_scc
 
 from notes.instruments import instruments
 
@@ -160,3 +157,7 @@ def generate_instruments():
             generated_instruments.append(instrument)
 
     Instrument.objects.bulk_create(generated_instruments)
+
+# def add_vocab(learningscenario: LearningScenario):
+#     from notes.models import Note
+#     current_vocab = learningscenario.vocabulary.all()
