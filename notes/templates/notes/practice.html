@@ -385,8 +385,35 @@
         const learning_manager = (function () {
             let api = {};
 
+            const level = '{{ level }}';
+
             let current_note;
             let progress_data;
+
+
+            {% if level == 'beginner' %}
+
+                const beginner_manager = (function () {
+                    let api = {};
+
+                    api.next_note = function () {
+                        console.log(progress_data);
+
+                        const countNs = progress_data.reduce((sum, item) => sum + item.n, 0);
+                        const countCorrects = progress_data.reduce((sum, item) => {
+                            return sum + item.correct.filter(value => value === true).length;
+                        }, 0);
+                        const percentageCorrect = countCorrects / countNs * 100;
+
+                        console.log(countNs, countCorrects, percentageCorrect)
+                        return progress_data[0];
+                    }
+
+                    return api;
+
+                }());
+            {% endif %}
+
 
             api.setProgress = function (_progress_data) {
                 progress_data = _progress_data;
@@ -406,7 +433,12 @@
             }
 
             api.next_note = function () {
-                current_note = sortAndRandomizeByN()[0];
+                {% if level == 'beginner' %}
+                    current_note = beginner_manager.next_note();
+                {% else %}
+                    current_note = sortAndRandomizeByN()[0];
+                {% endif %}
+
                 return current_note;
             }
 

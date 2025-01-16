@@ -107,6 +107,7 @@ def practice(request, learningscenario_id: int, sound:bool=False):
         'transosing_direction': learningscenario.transposing_direction,
         'progress': serialised_notes,
         'sound': sound,
+        'level': learningscenario.instrument.level.lower(),
     }
     context.update(common_context(instrument_instance, sound))
 
@@ -125,8 +126,9 @@ def practice_try(request, instrument: str, clef:str, level: str, sound:bool=Fals
         'instrument_id': instrument_instance.id,
         'key': keys[0],
         'transosing_direction': instrument_info.get('transposing_direction', 0),
-        'level': level,
+        'level': level.lower(),
         'sound': sound,
+
     }
 
     context.update(common_context(instrument_instance, sound))
