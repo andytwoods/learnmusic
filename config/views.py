@@ -1,3 +1,4 @@
+from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
@@ -31,6 +32,7 @@ def home(request):
     return render(request, template_name="pages/home.html", context=context)
 
 
+@staff_member_required
 def test_rollbar(request):
     a = None
     a.hello()  # Creating an error with an invalid line of code
