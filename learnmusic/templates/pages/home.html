@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block css %}
   {{ block.super }}
@@ -28,8 +29,9 @@
   {% include 'messages.html' %}
 
   <!-- Hero Section -->
-  <section class="bg-primary text-white text-center py-5">
-    <div class="container">
+  <section class="custom-lander text-white text-center py-5">
+    <div class="overlay"></div>
+    <div class="container position-relative">
       <h1 class="display-4">Master Your Notes, Master the Stage</h1>
       <p class="lead">A practice tool for musicians <b>at any stage</b> to improve their note recognition and playing
         skills—quickly and effectively.</p>
@@ -206,8 +208,8 @@
       <div class="row">
         <div class="col-md-4">
           <blockquote class="blockquote">
-            <p>"This app has transformed the way I practice guitar notes."</p>
-            <footer class="blockquote-footer">Sara T., Guitarist</footer>
+            <p>"This app has transformed the way I practice trumpet notes."</p>
+            <footer class="blockquote-footer">Sara T., Trumpeter</footer>
           </blockquote>
         </div>
         <div class="col-md-4">
