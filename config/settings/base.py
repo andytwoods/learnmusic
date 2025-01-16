@@ -152,7 +152,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
-
+    'rollbar.contrib.django.middleware.RollbarNotifierMiddleware',
+    'config.settings.rollbar_custom_middleware.CustomRollbarNotifierMiddleware',
 ]
 
 # STATIC

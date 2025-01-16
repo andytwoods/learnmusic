@@ -157,5 +157,12 @@ LOGGING = {
     },
 }
 
+ROLLBAR = {
+    'access_token': '6397a754f27541708cd8686ad39acd9d',
+    'environment': 'development' if DEBUG else 'production',
+    'code_version': '1.0',
+    'root': BASE_DIR,
+}
+
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
