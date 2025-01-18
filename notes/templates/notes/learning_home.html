@@ -19,7 +19,7 @@
   <h2>Learning Manager</h2>
   <div class="row mb-3" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
     {% for learningscenario in learningscenarios %}
-      <div class="col-md-4" id="learningscenario-{{ learningscenario.id }}">
+      <div class="col-md-6" id="learningscenario-{{ learningscenario.id }}">
         <div class="card mb-4">
           <div class="card-body">
             <h5 class="card-title">

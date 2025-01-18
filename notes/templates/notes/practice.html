@@ -54,6 +54,7 @@
 
     {{ progress|json_script:"progress-data" }}
 
+    {{ instrument_notes|json_script:"instrument-notes-data" }}
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -240,219 +241,30 @@
 
     <script>
 
-        const countdown_manager = (function () {
-            let api = {};
-
-            let remainingTime;
-
-            const counterSpan = document.getElementById("counter-value");
-
-            api.start = function (durationInSeconds) {
-                if (remainingTime !== undefined) return;
-                if (durationInSeconds === undefined) durationInSeconds = 120;
-                document.getElementById('counter').style.display = 'block';
-                remainingTime = durationInSeconds;
-                counterSpan.textContent = remainingTime;
-
-                const intervalId = setInterval(() => {
-                    remainingTime--;
-                    counterSpan.textContent = remainingTime;
-
-                    if (remainingTime <= 0) {
-                        clearInterval(intervalId);
-                        counterSpan.textContent = "Time's up!";
-                    }
-                }, 1000);
-
-            }
-
-            return api;
-        }());
+        {% include 'js/countdown_manager.js' %}
 
         document.addEventListener("DOMContentLoaded", function () {
             const progress_data = JSON.parse(
                 document.getElementById('progress-data').textContent
             );
-            if (progress_data !== undefined) {
-                learning_manager.setProgress(progress_data);
-                trial_manager.next();
-            }
+
+            const instrument_notes_data = JSON.parse(
+                document.getElementById('instrument-notes-data').textContent
+            );
+
+            window.level = '{{ level }}';
+
+            session_manager.setProgress(progress_data);
+            session_manager.setNotes(instrument_notes_data);
+            trial_manager.next();
+
         });
 
-        const trial_manager = (function () {
-            let api = {};
+        {% include 'js/trial_manager.js' %}
+        {% include 'js/session_manager.js' %}
+        {% if level == 'beginner' %}
+            {% include 'js/learning_manager.js' %}
+        {% endif %}
 
-            const ITI = 50;
-
-            const timer = (function () {
-                let api = {};
-                let start = undefined;
-
-                api.start = function () {
-                    start = performance.now();
-                }
-                api.stop = function () {
-                    const rt = performance.now() - start;
-                    return rt.toFixed(0)
-                }
-
-                return api;
-            }());
-
-            const error_message_manager = (function () {
-                let api = {};
-                let callback;
-                const error_message_el = document.getElementById('error-message');
-                const correct_answer_el = document.getElementById('correct-answer');
-
-                api.stop = function () {
-                    error_message_el.style.display = 'none';
-                    callback();
-                    callback = undefined;
-                }
-
-                api.start = function (message, _callback) {
-                    callback = _callback;
-                    correct_answer_el.innerText = message;
-                    error_message_el.style.display = 'block';
-                }
-
-                return api;
-            }());
-
-
-            let locked = false;
-
-            api.answer = function (answer, mistake_message) {
-                if (locked) {
-                    error_message_manager.stop();
-                    return;
-                }
-
-                locked = true;
-                const rt = timer.stop();
-                learning_manager.update_data(rt, answer);
-
-                // this is NOT RT. Rather top left corner countdown.
-                countdown_manager.start();
-
-                const pruned_progress_data = learning_manager.data_for_backend();
-                sendResultsToBackend(pruned_progress_data);
-
-                if (answer === true) {
-                    setTimeout(function () {
-                        api.next();
-                        locked = false;
-                    }, ITI);
-                } else error_message_manager.start(mistake_message, function () {
-                    api.next();
-                    locked = false;
-                });
-            }
-
-            function parse_note(note) {
-                let note_str = note['note'];
-                note_str = note_str.charAt(0);
-                switch (note['alter']) {
-                    case 1:
-                        note_str += '#';
-                        break;
-                    case -1:
-                        note_str += 'b';
-                        break;
-                    case 2:
-                        note_str += '##';
-                        break;
-                    case -2:
-                        note_str += 'bb';
-                        break;
-                }
-                note_str += '/' + note['octave'];
-                return note_str;
-            }
-
-            api.next = function () {
-                const next_note = learning_manager.next_note();
-                const parsed_note = parse_note(next_note);
-                document.current_note = parsed_note;
-                timer.start();
-                stave_manager.updateNote(parsed_note);
-            }
-
-            return api;
-        }());
-
-        const learning_manager = (function () {
-            let api = {};
-
-            const level = '{{ level }}';
-
-            let current_note;
-            let progress_data;
-
-
-            {% if level == 'beginner' %}
-
-                const beginner_manager = (function () {
-                    let api = {};
-
-                    api.next_note = function () {
-                        console.log(progress_data);
-
-                        const countNs = progress_data.reduce((sum, item) => sum + item.n, 0);
-                        const countCorrects = progress_data.reduce((sum, item) => {
-                            return sum + item.correct.filter(value => value === true).length;
-                        }, 0);
-                        const percentageCorrect = countCorrects / countNs * 100;
-
-                        console.log(countNs, countCorrects, percentageCorrect)
-                        return progress_data[0];
-                    }
-
-                    return api;
-
-                }());
-            {% endif %}
-
-
-            api.setProgress = function (_progress_data) {
-                progress_data = _progress_data;
-                progress_data.forEach(note => {
-                    if (!note['reaction_time_log']) note['reaction_time_log'] = [];
-                    if (!note['correct']) note['correct'] = [];
-                })
-            }
-
-            function sortAndRandomizeByN() {
-                return progress_data.slice().sort((a, b) => {
-                    if (a.n !== b.n) {
-                        return a.n - b.n;
-                    }
-                    return Math.random() - 0.5;
-                });
-            }
-
-            api.next_note = function () {
-                {% if level == 'beginner' %}
-                    current_note = beginner_manager.next_note();
-                {% else %}
-                    current_note = sortAndRandomizeByN()[0];
-                {% endif %}
-
-                return current_note;
-            }
-
-            api.data_for_backend = function () {
-                return progress_data.filter(note => note['n'] > 0);
-            }
-
-            api.update_data = function (rt, answer) {
-                current_note['reaction_time_log'].push(rt);
-                current_note['correct'].push(answer);
-                current_note['n'] += 1;
-            }
-
-            return api;
-        }());
     </script>
 {% endblock body %}

@@ -8,7 +8,7 @@
   </button>
   <script>
     document.getElementById('see-results').addEventListener('click', () => {
-      const pruned_progress_data = learning_manager.data_for_backend();
+      const pruned_progress_data = session_manager.data_for_backend();
 
       fetch("{% url 'learningscenario_graph_try' instrument clef level %}", {
         method: 'POST', // HTTP method

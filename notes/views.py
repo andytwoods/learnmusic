@@ -24,7 +24,7 @@ def notes_home(request):
     context = {
         'learningscenarios': LearningScenario.objects.filter(user=request.user).order_by('-created'),
     }
-    return render(request, 'notes/learn.html', context=context)
+    return render(request, 'notes/learning_home.html', context=context)
 
 
 @login_required
@@ -43,7 +43,7 @@ def edit_learningscenario(request, pk: int):
         if form.is_valid():
             ls: LearningScenario = form.save(commit=False)
             instrument = form.cleaned_data['instrument']
-            transposing_direction = instrument_infos[instrument].get('transposing_direction', 0)
+            transposing_direction = instrument_infos[instrument].get('transposing_direction', [0,])[0]
             ls.transposing_direction = transposing_direction
             ls.save()
             return redirect(reverse('notes-home'))
@@ -93,6 +93,7 @@ def common_context(instrument: Instrument, sound:bool):
             'clef': instrument.clef.lower(),
             'instrument': instrument.name,
             'score_css': score_css,
+            'instrument_notes': instrument_info['notes'],
             }
 
 
@@ -104,7 +105,7 @@ def practice(request, learningscenario_id: int, sound:bool=False):
         'learningscenario_id': learningscenario_id,
         'package_id': package.id,
         'key': learningscenario.key,
-        'transosing_direction': learningscenario.transposing_direction,
+        'transposing_direction': learningscenario.transposing_direction,
         'progress': serialised_notes,
         'sound': sound,
         'level': learningscenario.instrument.level.lower(),
@@ -125,7 +126,7 @@ def practice_try(request, instrument: str, clef:str, level: str, sound:bool=Fals
         'progress': serialised_notes,
         'instrument_id': instrument_instance.id,
         'key': keys[0],
-        'transosing_direction': instrument_info.get('transposing_direction', 0),
+        'transposing_direction': instrument_info.get('transposing_direction', [0,])[0],
         'level': level.lower(),
         'sound': sound,
 
