@@ -241,30 +241,37 @@
 
     <script>
 
-        {% include 'js/countdown_manager.js' %}
-
-        document.addEventListener("DOMContentLoaded", function () {
-            const progress_data = JSON.parse(
-                document.getElementById('progress-data').textContent
-            );
-
-            const instrument_notes_data = JSON.parse(
-                document.getElementById('instrument-notes-data').textContent
-            );
-
-            window.level = '{{ level }}';
-
-            session_manager.setProgress(progress_data);
-            session_manager.setNotes(instrument_notes_data);
-            trial_manager.next();
-
+        window.progress_data = JSON.parse(
+            document.getElementById('progress-data').textContent
+        )
+        window.progress_data.forEach(note => {
+            if (!note['reaction_time_log']) note['reaction_time_log'] = [];
+            if (!note['correct']) note['correct'] = [];
         });
 
+        window.instrument_notes_data = JSON.parse(
+            document.getElementById('instrument-notes-data').textContent
+        );
+
+        {% include 'js/countdown_manager.js' %}
         {% include 'js/trial_manager.js' %}
         {% include 'js/session_manager.js' %}
         {% if level == 'beginner' %}
             {% include 'js/learning_manager.js' %}
+            //overriding here
+            session_manager.next_note = function () {
+                const next_note = learning_manager.next_note();
+                session_manager.current_note = next_note;
+                return next_note;
+            }
         {% endif %}
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            trial_manager.next();
+        });
+
 
     </script>
 {% endblock body %}
