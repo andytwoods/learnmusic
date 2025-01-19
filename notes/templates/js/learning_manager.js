@@ -12,16 +12,17 @@ const learning_manager = (function () {
         // Limit the calculation to the last 3 answers
         const recentCorrect = note.correct ? note.correct.slice(-3) : [];
 
-        const recentReactionTimes = note.reaction_time ? note.reaction_time.slice(-3) : [];
+        //const recentReactionTimes = note.reaction_time_log ? note.reaction_time_log.slice(-3) : [];
 
         const totalCorrect = recentCorrect.filter(val => val === true).length;
-        const avgReactionTime = recentReactionTimes.length > 0
-            ? recentReactionTimes.reduce((a, b) => a + b, 0) / recentReactionTimes.length
-            : Infinity;
+        //const avgReactionTime = recentReactionTimes.length > 0
+        //    ? recentReactionTimes.reduce((a, b) => parseInt(a) + parseInt(b), 0) / recentReactionTimes.length
+        //    : Infinity;
 
+        //console.log(recentCorrect, recentReactionTimes, totalCorrect, avgReactionTime);
         return (
-            totalCorrect >= masteryCorrectThreshold &&
-            avgReactionTime <= masteryReactionTimeThreshold
+            totalCorrect >= masteryCorrectThreshold
+            // && avgReactionTime <= masteryReactionTimeThreshold
         );
     }
 
@@ -57,8 +58,7 @@ const learning_manager = (function () {
             const masteredNotes = window.progress_data.filter(isMastered);
             const nonMasteredNotes = window.progress_data.filter(note => !isMastered(note));
             let nextNote;
-console.log(nonMasteredNotes);
-console.log(masteredNotes);
+console.log(masteredNotes, nonMasteredNotes);
             if (nonMasteredNotes.length > 0) {
                 const subset = nonMasteredNotes.slice(0, Math.min(3, nonMasteredNotes.length));
                 nextNote = weightedRandomNote(subset);

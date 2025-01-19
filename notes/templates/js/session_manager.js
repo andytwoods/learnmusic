@@ -25,9 +25,10 @@ const session_manager = (function () {
     }
 
     api.update_data = function (rt, answer) {
-        api.current_note['reaction_time_log'].push(rt);
+        console.log(rt, answer);
+        api.current_note['reaction_time_log'].push(parseInt(rt));
         api.current_note['correct'].push(answer);
-        api.current_note['n'] += 1;
+        api.current_note['n'] = parseInt(api.current_note['n']) + 1;
     }
 
     return api;

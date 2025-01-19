@@ -3,11 +3,6 @@ import random
 from notes.instruments import instruments
 
 
-def populate_vocab(octave: int, lowest_note: str, highest_note: str):
-    from notes.models import Note
-    return Note.objects.filter(octave__in=[3, 4])
-
-
 notes = [
     "A♭ / G♯",
     "A",
@@ -25,18 +20,23 @@ notes = [
 ]
 
 
-def generate_notes(lowest_note, highest_note, include_crazy_notes=False, json=False):
-    from notes.models import Note
-    start_note = lowest_note.note
-    end_note = highest_note.note
+def generate_notes(lowest_note, highest_note, include_crazy_notes=False):
 
-    start_octave = lowest_note.octave
-    end_octave = highest_note.octave
+    start_note, start_alter_str, start_octave_str = lowest_note.split(' ')
+    end_note, end_alter_str, end_octave_str = highest_note.split(' ')
 
-    start_alter = lowest_note.alter
-    end_alter = highest_note.alter
+    start_alter = int(start_alter_str)
+
+    start_octave = int(start_octave_str)
+    end_octave = int(end_octave_str)
 
     current_octave = start_octave
+
+    if len(start_note)> 1:
+        raise Exception('note should be 1 letter: ' + lowest_note)
+
+    if len(end_note)> 1:
+        raise Exception('note should be 1 letter: ' + highest_note)
 
     compiled = []
 
@@ -44,7 +44,7 @@ def generate_notes(lowest_note, highest_note, include_crazy_notes=False, json=Fa
     note_i = note_list.index(start_note)
 
     alter_list = [-1, 0, 1]
-    end_alter_i = alter_list.index(end_alter)
+
     alter_i = start_alter
 
     reached_end = False
@@ -69,15 +69,7 @@ def generate_notes(lowest_note, highest_note, include_crazy_notes=False, json=Fa
                 elif current_note == 'C' and alter == -1:
                     continue
 
-            # print(current_note, alter, current_octave)
-            if json:
-                note = Note(note=current_note, octave=current_octave, alter=alter)
-                compiled.append(str(note))
-            else:
-                note, created = Note.objects.get_or_create(note=current_note, octave=current_octave, alter=alter)
-                if created:
-                    note.save()
-                compiled.append(note)
+            compiled.append(f"{current_note} {alter} {current_octave}")
 
         alter_i = 0
 
@@ -87,21 +79,6 @@ def generate_notes(lowest_note, highest_note, include_crazy_notes=False, json=Fa
             current_octave += 1
 
     return compiled[1:-1]
-
-
-def generate_notes_from_str(notes_str):
-    from notes.models import Note
-
-    compiled = []
-
-    for note_info in notes_str.split(';'):
-        note_str, altar_str, octave_str = note_info.split(' ')
-        note, created = Note.objects.get_or_create(note=note_str, octave=int(octave_str), alter=int(altar_str))
-        if created:
-            note.save()
-        compiled.append(note)
-
-    return compiled
 
 
 def compile_notes_per_skilllevel(notes):
@@ -133,31 +110,38 @@ def generate_progress_from_str_notes(notes_str):
 
 def generate_instruments():
     from notes.models import Instrument
-    from notes.models import Note
 
     generated_instruments = []
 
-    for instrument_nam, instrument_infos in instruments.instruments.items():
+    for instrument_nam, instrument_infos in instruments.items():
 
         for level, info in instrument_infos.items():
 
             instrument: Instrument = Instrument(
                 name=instrument_nam,
                 level=level,
-                lowest_note=Note.get_from_str(info['lowest_note']),
-                highest_note=Note.get_from_str(info['highest_note']),
+                lowest_note=info['lowest_note'],
+                highest_note=info['highest_note'],
                 clef=info['clef'],
-                notes_str=info['notes']
+                notes=info['notes']
             )
-            if not instrument.notes_str:
+
+            if not instrument.notes:
                 if instrument.lowest_note is None or instrument.highest_note is None:
                     raise Exception("issue with instruments.py")
-                notes = generate_notes(instrument.lowest_note, instrument.highest_note, json=True)
-                instrument.notes_str = ';'.join(notes)
+                instrument.notes = ';'.join(generate_notes(instrument.lowest_note, instrument.highest_note))
+
+            if instrument.lowest_note is None or instrument.highest_note is None:
+                all_notes = instrument.notes.split(';')
+                if instrument.lowest_note is None:
+                    instrument.lowest_note = all_notes[0]
+                if instrument.highest_note is None:
+                    instrument.highest_note = all_notes[-1]
+
+            print(instrument.name, instrument.level, instrument.notes)
+
             generated_instruments.append(instrument)
 
     Instrument.objects.bulk_create(generated_instruments)
 
-# def add_vocab(learningscenario: LearningScenario):
-#     from notes.models import Note
-#     current_vocab = learningscenario.vocabulary.all()
+

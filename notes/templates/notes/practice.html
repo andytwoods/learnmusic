@@ -54,8 +54,6 @@
 
     {{ progress|json_script:"progress-data" }}
 
-    {{ instrument_notes|json_script:"instrument-notes-data" }}
-
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             getInstrumentData('{{ answers_json }}', function (_instrument_data) {
@@ -244,14 +242,6 @@
         window.progress_data = JSON.parse(
             document.getElementById('progress-data').textContent
         )
-        window.progress_data.forEach(note => {
-            if (!note['reaction_time_log']) note['reaction_time_log'] = [];
-            if (!note['correct']) note['correct'] = [];
-        });
-
-        window.instrument_notes_data = JSON.parse(
-            document.getElementById('instrument-notes-data').textContent
-        );
 
         {% include 'js/countdown_manager.js' %}
         {% include 'js/trial_manager.js' %}

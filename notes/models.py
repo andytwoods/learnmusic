@@ -1,115 +1,42 @@
-import json
-from collections import namedtuple
-from django.utils import timezone
 from typing import Any
-
-from click.core import batch
+from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.utils import timezone
 from model_utils.models import TimeStampedModel
-
-from django.contrib.auth import get_user_model
 
 from notes import tools
 
 User = get_user_model()
 
-
-class Note(models.Model):
-
-    def create_default_notes(*args, **kwargs):
-        notes = []
-        for octave in range(Note.LOWEST_OCTAVE, Note.HIGHEST_OCTAVE):
-            for note_info in Note.BASE_NOTES:
-                note = Note(note=note_info[0],
-                            alter=note_info[1],
-                            octave=octave)
-                notes.append(note)
-
-        Note.objects.bulk_create(notes)
-
-    BASE_NOTES = [
-        ('A', -1), ('A', 0), ('A', 1),
-        ('B', -1), ('B', 0),
-        ('C', 0), ('C', 1),
-        ('D', -1), ('D', 0), ('D', 1),
-        ('E', -1), ('E', 0),
-        ('F', 0), ('F', 1),
-        ('G', -1), ('G', 0), ('G', 1),
-    ]
-
-    class NoteChoices(models.TextChoices):
-        A = 'A'
-        B = 'B'
-        C = 'C'
-        D = 'D'
-        E = 'E'
-        F = 'F'
-        G = 'G'
-
-    class AlterChoices(models.IntegerChoices):
-        # DOUBLE_SHARP = 2
-        SHARP = 1
-        NATURAL = 0
-        FLAT = -1
-        # DOUBLE_FLAT = -2
-
-    LOWEST_OCTAVE = 0
-    HIGHEST_OCTAVE = 9
-
-    note = models.CharField(max_length=1, choices=NoteChoices.choices)
-    alter = models.IntegerField(choices=AlterChoices.choices, default=0)
-    octave = models.IntegerField(default=4,
-                                 validators=[MinValueValidator(LOWEST_OCTAVE),
-                                             MaxValueValidator(HIGHEST_OCTAVE)])
-
-    def __str__(self):
-        return f'{self.note} {self.alter} {self.octave}'
-
-    @classmethod
-    def get_from_str(cls, note_str: str):
-        if note_str is None:
-            return None
-        if "/" in note_str:
-            note_str, octave_str = note_str.split('/')
-            alter_str = "0"
-        else:
-            note_str, alter_str, octave_str = note_str.split(' ')
-
-        if 'b' in note_str:
-            alter_str = "-1"
-        elif '#' in note_str:
-            alter_str = "1"
-        note_str = note_str[0]
-
-        note, created = Note.objects.get_or_create(note=note_str, octave=int(octave_str), alter=int(alter_str))
-        if created:
-            note.save()
-        return note
-
-
-from django.db import models
+class InstrumentKeys(models.TextChoices):
+    A = "A", "A"
+    A_SHARP = "A#", "A#"
+    A_FLAT = "Ab", "Ab"
+    B = "B", "B"
+    B_FLAT = "Bb", "Bb"
+    C = "C", "C"
+    C_SHARP = "C#", "C#"
+    D = "D", "D"
+    D_SHARP = "D#", "D#"
+    D_FLAT = "Db", "Db"
+    E = "E", "E"
+    E_FLAT = "Eb", "Eb"
+    F = "F", "F"
+    F_SHARP = "F#", "F#"
+    G = "G", "G"
+    G_SHARP = "G#", "G#"
+    G_FLAT = "Gb", "Gb"
 
 
 class NoteChoices(models.TextChoices):
-    A_flat = 'Ab', 'Ab'
-    A = 'A', 'A'
-    A_sharp = 'A#', 'A#'
-    B_flat = 'Bb', 'Bb'
-    B = 'B', 'B'
-    C = 'C', 'C'
-    C_sharp = 'C#', 'C#'
-    D_flat = 'Db', 'Db'
-    D = 'D', 'D'
-    D_sharp = 'D#', 'D#'
-    E_flat = 'Eb', 'Eb'
-    E = 'E', 'E'
-    E_sharp = 'E#', 'E#'
-    F = 'F', 'F'
-    F_sharp = 'F#', 'F#'
-    G_flat = 'Gb', 'Gb'
-    G = 'G', 'G'
-    G_sharp = 'G#', 'G#'
+    A = 'A'
+    B = 'B'
+    C = 'C'
+    D = 'D'
+    E = 'E'
+    F = 'F'
+    G = 'G'
 
 
 class ClefChoices(models.TextChoices):
@@ -147,19 +74,17 @@ class Instrument(models.Model):
                              choices=LevelChoices.choices,
                              default=LevelChoices.BEGINNER)
     clef = models.CharField(max_length=64, choices=ClefChoices.choices, default=ClefChoices.TREBLE)
-    lowest_note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name='instrument_lowest_note', null=True,
-                                    blank=True)
-    highest_note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name='instrument_highest_note', null=True,
-                                     blank=True)
-    notes_str = models.CharField(max_length=512, default='')
+    lowest_note = models.CharField(max_length=20, blank=True)
+    highest_note = models.CharField(max_length=20, blank=True)
+    notes = models.CharField(max_length=1024, default='')
 
 
 class LearningScenario(TimeStampedModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE, null=True, blank=True)
-    vocabulary = models.ManyToManyField(Note)
+    notes = models.JSONField(null=True, blank=True)
     clef = models.CharField(max_length=64, choices=ClefChoices.choices, default=ClefChoices.TREBLE)
-    key = models.CharField(max_length=2, choices=NoteChoices.choices, default=NoteChoices.C)
+    key = models.CharField(max_length=2, choices=InstrumentKeys.choices, default=NoteChoices.C)
     transposing_direction = models.IntegerField(default=0, validators=[
         MinValueValidator(-1),
         MaxValueValidator(1),
@@ -167,16 +92,16 @@ class LearningScenario(TimeStampedModel):
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         # instrument can be null as we create a blank instence before user specifies this
-        if self.instrument and not self.vocabulary.exists():
+        if self.instrument and not self.notes:
             highest_note = self.instrument.highest_note
             lowest_note = self.instrument.lowest_note
             if highest_note and lowest_note:
                 notes = tools.generate_notes(highest_note=highest_note,
                                              lowest_note=lowest_note)
             else:
-                notes = tools.generate_notes_from_str(self.instrument.notes_str)
+                notes = tools.generate_notes_from_str(self.instrument.notes)
 
-            self.vocabulary.add(*notes)
+            self.notes = ';'.join(notes)
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -197,76 +122,51 @@ class LearningScenario(TimeStampedModel):
         return difference.days
 
     @staticmethod
-    def check_younger_than_24hrs(created):
-        difference = timezone.now() - created
-        return difference.days < 1
-
-    @staticmethod
     def progress_latest_serialised(learningscenario_id: int):
 
-        package = NoteRecordPackage.objects.filter(learningscenario_id=learningscenario_id).last()
-        if package and LearningScenario.check_younger_than_24hrs(package.created):
-            noterecords = package.noterecords.all()
-        else:
-            package, noterecords = NoteRecordPackage.generate_package(learningscenario_id)
+        package: NoteRecordPackage = NoteRecordPackage.objects.filter(learningscenario_id=learningscenario_id).last()
+        progress = package.log if package else None
 
-        progress = []
+        if package is None or package.older_than(1):
+            package = NoteRecordPackage.objects.create(learningscenario_id=learningscenario_id)
 
-        def note_key(nr):
-            return f"{nr['note']} {nr['alter']} {nr['octave']}"
-
-        old_noterecords = {}
-        if package.log:
-            for old_noterecord in package.log:
-                old_noterecords[note_key(old_noterecord)] = old_noterecord
-
-        for noterecord in noterecords:
-            fresh_noterecord = noterecord.serialise()
-            existing_nr_data = old_noterecords.get(note_key(fresh_noterecord), None)
-            if existing_nr_data:
-                progress.append(existing_nr_data)
-            else:
+        if progress is None:
+            progress = []
+            learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
+            for noterecord in learningscenario.notes.split(';'):
+                fresh_noterecord = NoteRecordPackage.serialise_note(noterecord)
                 progress.append(fresh_noterecord)
 
         return package, progress
 
-    def simple_vocab(self):
-        vocab = [str(note) for note in self.vocabulary.all()]
-        return vocab
-
     def edit_notes(self, added, removed):
         for note_str in added:
-            note = Note.get_from_str(note_str)
-            self.vocabulary.add(note)
+            self.notes.append(note_str)
         for note_str in removed:
-            note = Note.get_from_str(note_str)
-            self.vocabulary.remove(note)
-
-
-class NoteRecord(TimeStampedModel):
-    note = models.ForeignKey(Note, on_delete=models.CASCADE)
-    learningscenario = models.ForeignKey(LearningScenario, on_delete=models.CASCADE)
-    reaction_time = models.PositiveIntegerField(null=True, blank=True)
-    n = models.PositiveIntegerField(default=0)
-
-    def serialise(self):
-        return {
-            'note': self.note.note,
-            'octave': self.note.octave,
-            'alter': self.note.alter,
-            'reaction_time': self.reaction_time,
-            'n': self.n,
-        }
-
-    def __str__(self):
-        return f"{self.note} --- {self.created.strftime('%Y-%m-%d')}"
+            self.notes.remove(note_str)
 
 
 class NoteRecordPackage(TimeStampedModel):
     learningscenario = models.ForeignKey(LearningScenario, on_delete=models.CASCADE)
-    noterecords = models.ManyToManyField(NoteRecord)
-    log_minimal = models.TextField(null=True, blank=True)
     log = models.JSONField(null=True, blank=True)
+
+    def older_than(self, hours: int):
+        difference = timezone.now() - self.created
+        difference_in_hours = difference.total_seconds() / 3600
+        return difference_in_hours > hours
+
+    @staticmethod
+    def serialise_note(note_str):
+        note, alter, octave = note_str.split(' ')
+        return {
+            'note': note,
+            'octave': octave,
+            'alter': alter,
+            'reaction_time': '',
+            'n': 0,
+            'reaction_time_log': [],
+            'correct': [],
+        }
 
     def __str__(self):
         return f"{self.learningscenario} {self.created}"
@@ -276,21 +176,6 @@ class NoteRecordPackage(TimeStampedModel):
 
     def instrument(self):
         return self.learningscenario.instrument
-
-    @classmethod
-    def generate_package(cls, learningscenario_id: int):
-        records = []
-        learningscenario = LearningScenario.objects.get(id=learningscenario_id)
-        for note in Note.objects.filter(learningscenario=learningscenario):
-            record: NoteRecord = NoteRecord(note=note, learningscenario=learningscenario)
-            records.append(record)
-        NoteRecord.objects.bulk_create(records)
-
-        package: NoteRecordPackage = NoteRecordPackage(learningscenario=learningscenario)
-        package.save()
-        package.noterecords.set(records)
-
-        return package, records
 
     def process_answers(self, json_data):
         self.log = json_data

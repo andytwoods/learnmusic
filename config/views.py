@@ -15,7 +15,7 @@ def home(request):
 
         instrument_info = {'level': instrument.level,
                            'id': instrument.id,
-                           'notes': instrument.notes_str,
+                           'notes': instrument.notes,
                            'clef': instrument.clef
                            }
         instruments_info[instrument.name].append(instrument_info)

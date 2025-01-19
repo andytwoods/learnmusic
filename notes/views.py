@@ -40,10 +40,11 @@ def edit_learningscenario(request, pk: int):
     form = None
     if request.POST:
         form = LearningScenarioForm(request.POST, instance=model)
+        form_data = form.data
         if form.is_valid():
             ls: LearningScenario = form.save(commit=False)
             instrument = form.cleaned_data['instrument']
-            transposing_direction = instrument_infos[instrument].get('transposing_direction', [0,])[0]
+            transposing_direction = instrument_infos[instrument.name.lower()].get('transposing_direction', [0,])[0]
             ls.transposing_direction = transposing_direction
             ls.save()
             return redirect(reverse('notes-home'))
@@ -58,7 +59,7 @@ def edit_learningscenario(request, pk: int):
 
     return render(request, 'notes/learningscenario_edit.html', context=context)
 
-
+@login_required
 def edit_learningscenario_notes(request, pk: int):
     ls: LearningScenario = LearningScenario.objects.get(id=pk)
 
@@ -74,7 +75,7 @@ def edit_learningscenario_notes(request, pk: int):
 
     all_notes = [str(note) for note in generate_notes(lowest_note=lowest_note, highest_note=highest_note)]
 
-    context = {'notes': ls.simple_vocab(), 'all_notes': all_notes}
+    context = {'notes': ls.notes[0:20], 'all_notes': all_notes}
 
     return render(request, 'notes/learningscenario_edit_vocab.html', context=context)
 
@@ -93,10 +94,9 @@ def common_context(instrument: Instrument, sound:bool):
             'clef': instrument.clef.lower(),
             'instrument': instrument.name,
             'score_css': score_css,
-            'instrument_notes': instrument_info['notes'],
             }
 
-
+@login_required
 def practice(request, learningscenario_id: int, sound:bool=False):
     package, serialised_notes = LearningScenario.progress_latest_serialised(learningscenario_id)
     instrument_instance: Instrument = package.instrument()
@@ -145,19 +145,15 @@ def practice_try(request, instrument: str, clef:str, level: str, sound:bool=Fals
     return render(request, 'notes/practice_try.html', context=context)
 
 
+@login_required
 def practice_data(request, package_id: int):
-    learningscenario: NoteRecordPackage = NoteRecordPackage.objects.get(id=package_id)
-
     json_data = json.loads(request.body)
-    learningscenario.process_answers(json_data)
+    package = NoteRecordPackage.objects.get(id=package_id)
+    package.process_answers(json_data)
 
     return JsonResponse({'success': True})
 
-
-def instrument_data(request, instrument):
-    return None
-
-
+@login_required
 def learningscenario_graph(request, learningscenario_id):
     package, serialised_notes = LearningScenario.progress_latest_serialised(learningscenario_id)
 
