@@ -155,6 +155,13 @@ class NoteRecordPackage(TimeStampedModel):
         return difference_in_hours > hours
 
     @staticmethod
+    def serialised_notes(notes_str):
+        serialised_notes = []
+        for note in notes_str.split(';'):
+            serialised_notes.append(NoteRecordPackage.serialise_note(note))
+        return serialised_notes
+
+    @staticmethod
     def serialise_note(note_str):
         note, alter, octave = note_str.split(' ')
         return {

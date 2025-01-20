@@ -8,7 +8,7 @@ from django.urls import reverse
 from notes.forms import LearningScenarioForm
 from notes.instruments import instrument_infos
 from notes.models import LearningScenario, Instrument, NoteRecordPackage
-from notes.tools import generate_notes, compile_notes_per_skilllevel, generate_progress_from_str_notes
+from notes.tools import generate_notes, compile_notes_per_skilllevel
 
 
 @login_required
@@ -114,8 +114,8 @@ def practice(request, learningscenario_id: int, sound:bool=False):
 
 
 def practice_try(request, instrument: str, clef:str, level: str, sound:bool=False):
-    instrument_instance = Instrument.objects.get(name=instrument, level=level, clef=clef.upper())
-    serialised_notes = generate_progress_from_str_notes(instrument_instance.notes_str)
+    instrument_instance = Instrument.objects.get(name=instrument, level=level, clef=clef.capitalize())
+    serialised_notes = NoteRecordPackage.serialised_notes(instrument_instance.notes)
 
     instrument_info = instrument_infos[instrument.lower()]
     keys = instrument_info.get('common_keys')
@@ -174,7 +174,7 @@ def learningscenario_graph_try(request, instrument: str, clef: str, level: str):
         serialised_notes = json.loads(request.body)
     else:
         instrument_instance = Instrument.objects.get(name=instrument, clef=clef.upper(), level=level)
-        serialised_notes = generate_progress_from_str_notes(instrument_instance.notes_str)
+        serialised_notes = NoteRecordPackage.serialised_notes(instrument_instance.notes)
 
     rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
                                               for n in serialised_notes])

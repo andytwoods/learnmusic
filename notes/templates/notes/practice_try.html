@@ -8,7 +8,6 @@
   </button>
   <script>
     document.getElementById('see-results').addEventListener('click', () => {
-      const pruned_progress_data = session_manager.data_for_backend();
 
       fetch("{% url 'learningscenario_graph_try' instrument clef level %}", {
         method: 'POST', // HTTP method
@@ -16,7 +15,7 @@
           'Content-Type': 'application/json',
           'X-CSRFToken': "{{ csrf_token }}"
         },
-        body: JSON.stringify(pruned_progress_data) // Convert the list to JSON format
+        body: JSON.stringify(window.progress_data) // Convert the list to JSON format
       })
         .then(response => {
           if (response.redirected) {

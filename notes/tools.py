@@ -93,21 +93,6 @@ def compile_notes_per_skilllevel(notes):
     return per_skilllevel
 
 
-def generate_progress_from_str_notes(notes_str):
-    notes = notes_str.split(';')
-    progress = []
-    for note_str in notes:
-        note, alter, octave = note_str.split(' ')
-        note_info = {'note': note,
-                     'alter': int(alter),
-                     'octave': int(octave),
-                     'n': 0,
-                     'reaction_time': None,
-                     }
-        progress.append(note_info)
-    return progress
-
-
 def generate_instruments():
     from notes.models import Instrument
 

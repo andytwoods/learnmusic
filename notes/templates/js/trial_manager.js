@@ -26,7 +26,7 @@ const trial_manager = (function () {
 
         api.stop = function () {
             error_message_el.style.display = 'none';
-            callback();
+            if(callback) callback();
             callback = undefined;
         }
 
