@@ -5,6 +5,8 @@ const learning_manager = (function () {
     let masteryReactionTimeThreshold = 2; // Default threshold for reaction time in seconds
     let streak = 0; // Correct streak tracker
     const recentNotesLog = []; // Queue for the last 5 `nextNote` selections
+    const number_notes_to_initially_show = 3;
+    const retries = 3;
 
     // Helper function to determine if a note is mastered
 
@@ -12,7 +14,9 @@ const learning_manager = (function () {
         // Limit the calculation to the last 3 answers
         const recentCorrect = note.correct ? note.correct.slice(-3) : [];
 
-        //const recentReactionTimes = note.reaction_time_log ? note.reaction_time_log.slice(-3) : [];
+        //const recentReactionTimes = Array.isArray(note.reaction_time_log)
+        //        ? note.reaction_time_log.slice(-3)
+        //        : [];
 
         const totalCorrect = recentCorrect.filter(val => val === true).length;
         //const avgReactionTime = recentReactionTimes.length > 0
@@ -28,8 +32,11 @@ const learning_manager = (function () {
 
     // Helper function for deep equality comparison of notes
     function areNotesEqual(note1, note2) {
-        return note1 && note2 &&
-            note1.note === note2.note &&
+        if (!note1 || !note2) {
+            console.warn("Invalid notes passed to areNotesEqual:", note1, note2);
+            return false;
+        }
+        return note1.note === note2.note &&
             note1.octave === note2.octave &&
             note1.alter === note2.alter;
     }
@@ -50,29 +57,42 @@ const learning_manager = (function () {
     }
 
 
+    function processNotes(priorityNotes, recentNotesLog, selectionF) {
+        if (priorityNotes.length > 0) {
+            const subset = priorityNotes.slice(0, Math.min(number_notes_to_initially_show, priorityNotes.length));
+            let nextNote = null;
+            let attempts = 0; // Counter to track retry attempts
+
+            // Retry logic to fetch a non-recent, non-repeated note
+            do {
+                nextNote = selectionF(subset); // Try selecting a note from the subset
+                attempts++;
+            } while (
+                (attempts < retries) &&
+                (!nextNote || recentNotesLog.some(recentNote => areNotesEqual(recentNote, nextNote)))
+                );
+
+            if (nextNote) {
+                return nextNote;
+            }
+        }
+        return null;
+    }
+
     api.next_note = (function () {
-        let lastNote = null;
+        const recentNotesLog = []; // Tracks the last 5 notes played
 
         return function () {
-
             const masteredNotes = window.progress_data.filter(isMastered);
             const nonMasteredNotes = window.progress_data.filter(note => !isMastered(note));
-            let nextNote;
-console.log(masteredNotes, nonMasteredNotes);
-            if (nonMasteredNotes.length > 0) {
-                const subset = nonMasteredNotes.slice(0, Math.min(3, nonMasteredNotes.length));
-                nextNote = weightedRandomNote(subset);
 
-                if (!nextNote || areNotesEqual(nextNote, lastNote)) {
-                    nextNote = subset[0]; // Fallback to avoid infinite loop
-                }
-            } else if (masteredNotes.length > 0) {
-                // Use mastered notes if all notes are mastered
-                do {
-                    nextNote = weightedRandomNote(masteredNotes);
-                } while (areNotesEqual(nextNote, lastNote)); // Avoid repeat
-            } else {
-                // Introduce a new note if no non-mastered notes are available
+            // Check non-mastered notes first, then mastered notes
+            let nextNote =
+                processNotes(nonMasteredNotes, recentNotesLog, weightedRandomNote) ||
+                processNotes(masteredNotes, recentNotesLog, (els)=>els[0]);
+
+            if (!nextNote) {
+                // If neither non-mastered nor mastered notes are available, introduce a new note
                 const availableNewNotes = structuredInstrumentNotes.filter(newNote =>
                     !window.progress_data.some(existingNote => areNotesEqual(newNote, existingNote))
                 );
@@ -81,16 +101,22 @@ console.log(masteredNotes, nonMasteredNotes);
                     nextNote = availableNewNotes[0];
                     window.progress_data.push(nextNote);
                 } else {
-                    // Fallback to any note if no new notes are available
+                    // Fallback: return any note if no new notes are available
                     nextNote = weightedRandomNote(window.progress_data);
                 }
             }
 
-            lastNote = nextNote; // Update lastNote tracker
-            return nextNote;
+            if (nextNote) {
+                // Update recentNotesLog (maintain a queue of the last 5 notes)
+                recentNotesLog.push(nextNote);
+                if (recentNotesLog.length > 5) {
+                    recentNotesLog.shift(); // Remove the oldest note if log exceeds size
+                }
+            }
+
+            return nextNote; // Return the selected note
         };
     }());
-
 
     return api;
 }());

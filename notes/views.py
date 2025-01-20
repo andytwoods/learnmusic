@@ -40,12 +40,10 @@ def edit_learningscenario(request, pk: int):
     form = None
     if request.POST:
         form = LearningScenarioForm(request.POST, instance=model)
-        form_data = form.data
         if form.is_valid():
             ls: LearningScenario = form.save(commit=False)
             instrument = form.cleaned_data['instrument']
-            transposing_direction = instrument_infos[instrument.name.lower()].get('transposing_direction', [0,])[0]
-            ls.transposing_direction = transposing_direction
+            ls.transposing_direction = instrument_infos[instrument.name.lower()].get('transposing_direction', [0,])[0]
             ls.save()
             return redirect(reverse('notes-home'))
 

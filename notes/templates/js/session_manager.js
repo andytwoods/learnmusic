@@ -20,10 +20,6 @@ const session_manager = (function () {
         return api.current_note;
     }
 
-    api.data_for_backend = function () {
-        return window.progress_data.filter(note => note['n'] > 0);
-    }
-
     api.update_data = function (rt, answer) {
         console.log(rt, answer);
         api.current_note['reaction_time_log'].push(parseInt(rt));

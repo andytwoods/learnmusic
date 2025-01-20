@@ -95,13 +95,12 @@ class LearningScenario(TimeStampedModel):
         if self.instrument and not self.notes:
             highest_note = self.instrument.highest_note
             lowest_note = self.instrument.lowest_note
-            if highest_note and lowest_note:
+            if self.instrument.level == LevelChoices.BEGINNER:
+                self.notes = self.instrument.notes
+            else:
                 notes = tools.generate_notes(highest_note=highest_note,
                                              lowest_note=lowest_note)
-            else:
-                notes = tools.generate_notes_from_str(self.instrument.notes)
-
-            self.notes = ';'.join(notes)
+                self.notes = ';'.join(notes)
         super().save(*args, **kwargs)
 
     def __str__(self):

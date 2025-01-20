@@ -3,7 +3,7 @@ instruments = {"Trumpet": {
         "lowest_note": None,
         "highest_note": None,
         "clef": "TREBLE",
-        "notes": "C 0 4;D -1 4;D 0 4;E -1 4;E 0 4;F 0 4;G 0 4;A -1 4;A 0 4"
+        "notes": "C 0 4;D 0 4;E 0 4;F 0 4;G 0 4;A 0 4;B 0 4;B -1 4"
     },
     "Intermediate": {
         "lowest_note": "F 1 3",

@@ -55,8 +55,7 @@ const trial_manager = (function () {
         // this is NOT RT. Rather top left corner countdown.
         countdown_manager.start();
 
-        const pruned_progress_data = session_manager.data_for_backend();
-        sendResultsToBackend(pruned_progress_data);
+        sendResultsToBackend(window.progress_data);
 
         if (answer === true) {
             setTimeout(function () {
@@ -73,16 +72,16 @@ const trial_manager = (function () {
         let note_str = note['note'];
         note_str = note_str.charAt(0);
         switch (note['alter']) {
-            case 1:
+            case '1':
                 note_str += '#';
                 break;
-            case -1:
+            case '-1':
                 note_str += 'b';
                 break;
-            case 2:
+            case '2':
                 note_str += '##';
                 break;
-            case -2:
+            case '-2':
                 note_str += 'bb';
                 break;
         }
