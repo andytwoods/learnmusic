@@ -2,7 +2,6 @@ import random
 
 from notes.instruments import instruments
 
-
 notes = [
     "A♭ / G♯",
     "A",
@@ -21,7 +20,6 @@ notes = [
 
 
 def generate_notes(lowest_note, highest_note, include_crazy_notes=False):
-
     start_note, start_alter_str, start_octave_str = lowest_note.split(' ')
     end_note, end_alter_str, end_octave_str = highest_note.split(' ')
 
@@ -32,10 +30,10 @@ def generate_notes(lowest_note, highest_note, include_crazy_notes=False):
 
     current_octave = start_octave
 
-    if len(start_note)> 1:
+    if len(start_note) > 1:
         raise Exception('note should be 1 letter: ' + lowest_note)
 
-    if len(end_note)> 1:
+    if len(end_note) > 1:
         raise Exception('note should be 1 letter: ' + highest_note)
 
     compiled = []
@@ -129,4 +127,34 @@ def generate_instruments():
 
     Instrument.objects.bulk_create(generated_instruments)
 
+
+def serialise_notes(notes_str):
+    serialised_notes = []
+    for note in notes_str.split(';'):
+        serialised_notes.append(serialise_note(note))
+    return serialised_notes
+
+
+def serialise_note(note_str):
+    note, alter, octave = note_str.split(' ')
+    return {
+        'note': note,
+        'octave': octave,
+        'alter': alter,
+        'reaction_time': '',
+        'n': 0,
+        'reaction_time_log': [],
+        'correct': [],
+    }
+
+
+def generate_serialised_notes(instrument, level):
+    instrument_notes_info = instruments[instrument][level]
+    if 'notes' in instrument_notes_info and instrument_notes_info['notes'] is not None:
+        return serialise_notes(instrument_notes_info['notes'])
+
+    notes_list = generate_notes(lowest_note=instrument_notes_info['lowest_note'],
+                                highest_note=instrument_notes_info['highest_note'])
+
+    return [serialise_note(note) for note in notes_list]
 

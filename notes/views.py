@@ -5,9 +5,10 @@ from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 
+from notes import tools
 from notes.forms import LearningScenarioForm
-from notes.instruments import instrument_infos
-from notes.models import LearningScenario, Instrument, NoteRecordPackage
+from notes.instruments import instrument_infos, instruments
+from notes.models import Instrument, LearningScenario, NoteRecordPackage
 from notes.tools import generate_notes, compile_notes_per_skilllevel
 
 
@@ -78,8 +79,8 @@ def edit_learningscenario_notes(request, pk: int):
     return render(request, 'notes/learningscenario_edit_vocab.html', context=context)
 
 
-def common_context(instrument: Instrument, sound:bool):
-    instrument_info = instrument_infos[instrument.name.lower()]
+def common_context(instrument_name: str, clef:str, sound:bool):
+    instrument_info = instrument_infos[instrument_name.lower()]
     if sound:
         instrument_template = 'notes/instruments/mic_input.html'
         score_css = 'justify-content-center'
@@ -89,8 +90,8 @@ def common_context(instrument: Instrument, sound:bool):
 
     return {'answers_json': instrument_info['answers'],
             'instrument_template': instrument_template,
-            'clef': instrument.clef.lower(),
-            'instrument': instrument.name,
+            'clef': clef.lower(),
+            'instrument': instrument_name,
             'score_css': score_css,
             }
 
@@ -108,29 +109,29 @@ def practice(request, learningscenario_id: int, sound:bool=False):
         'sound': sound,
         'level': learningscenario.instrument.level.lower(),
     }
-    context.update(common_context(instrument_instance, sound))
+    context.update(common_context(instrument_name=instrument_instance.name,
+                                  clef=instrument_instance.clef,
+                                  sound=sound))
 
     return render(request, 'notes/practice.html', context=context)
 
 
 def practice_try(request, instrument: str, clef:str, level: str, sound:bool=False):
-    instrument_instance = Instrument.objects.get(name=instrument, level=level, clef=clef.capitalize())
-    serialised_notes = NoteRecordPackage.serialised_notes(instrument_instance.notes)
+
+    serialised_notes = tools.generate_serialised_notes(instrument, level)
 
     instrument_info = instrument_infos[instrument.lower()]
     keys = instrument_info.get('common_keys')
 
     context = {
         'progress': serialised_notes,
-        'instrument_id': instrument_instance.id,
         'key': keys[0],
         'transposing_direction': instrument_info.get('transposing_direction', [0,])[0],
         'level': level.lower(),
         'sound': sound,
-
     }
 
-    context.update(common_context(instrument_instance, sound))
+    context.update(common_context(instrument_name=instrument, clef=clef, sound=sound))
 
     rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
                                               for n in serialised_notes])
@@ -168,20 +169,19 @@ def learningscenario_graph(request, learningscenario_id):
 
     return render(request, 'notes/learningscenario_graph.html', context=context)
 
+
 def learningscenario_graph_try(request, instrument: str, clef: str, level: str):
 
     if request.method == 'POST':
         serialised_notes = json.loads(request.body)
     else:
-        instrument_instance = Instrument.objects.get(name=instrument, clef=clef.upper(), level=level)
-        serialised_notes = NoteRecordPackage.serialised_notes(instrument_instance.notes)
+        serialised_notes = tools.generate_serialised_notes(instrument, level.capitalize())
 
     rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
                                               for n in serialised_notes])
-
+    print(serialised_notes)
+    print(rt_per_sl)
     context = {
-        #'learningscenario_id': learningscenario_id,
-        # 'package_id': package.id,
         'package': None,
         'progress': serialised_notes,
         'rt_per_sk': rt_per_sl,

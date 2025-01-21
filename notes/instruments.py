@@ -9,13 +9,11 @@ instruments = {"Trumpet": {
         "lowest_note": "F 1 3",
         "highest_note": "C 0 5",
         "clef": "TREBLE",
-        "notes": None
     },
     "Advanced": {
         "lowest_note": "F 1 3",
         "highest_note": "C 0 6",
         "clef": "TREBLE",
-        "notes": None
     }
 },
     "Trombone": {
@@ -29,13 +27,11 @@ instruments = {"Trumpet": {
             "lowest_note": "F 1 3",
             "highest_note": "B -1 5",
             "clef": "TREBLE",
-            "notes": None
         },
         "Advanced": {
             "lowest_note": "F 1 3",
             "highest_note": "D 0 6",
             "clef": "TREBLE",
-            "notes": None
         }
     }
 }

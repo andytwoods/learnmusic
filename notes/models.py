@@ -154,25 +154,6 @@ class NoteRecordPackage(TimeStampedModel):
         difference_in_hours = difference.total_seconds() / 3600
         return difference_in_hours > hours
 
-    @staticmethod
-    def serialised_notes(notes_str):
-        serialised_notes = []
-        for note in notes_str.split(';'):
-            serialised_notes.append(NoteRecordPackage.serialise_note(note))
-        return serialised_notes
-
-    @staticmethod
-    def serialise_note(note_str):
-        note, alter, octave = note_str.split(' ')
-        return {
-            'note': note,
-            'octave': octave,
-            'alter': alter,
-            'reaction_time': '',
-            'n': 0,
-            'reaction_time_log': [],
-            'correct': [],
-        }
 
     def __str__(self):
         return f"{self.learningscenario} {self.created}"
