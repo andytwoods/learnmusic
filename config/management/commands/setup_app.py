@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.utils.crypto import get_random_string
 
-from notes.models import Instrument
 
 User = get_user_model()
 
@@ -22,7 +21,6 @@ class Command(BaseCommand):
 
                 self.stdout.write("=======================")
 
-                Instrument.create_default_instruments()
             else:
                 self.stdout.write("A superuser exists in the database. Skipping.")
         except Exception as e:

@@ -23,7 +23,7 @@
         <div class="card mb-4">
           <div class="card-body">
             <h5 class="card-title">
-              {{ learningscenario.instrument }}
+              {{ learningscenario.instrument_name }} {{ learningscenario.key }}
               <a class='small' href="{% url 'edit-learning-scenario' pk=learningscenario.id %}">edit</a>
               <button
                 class="btn btn-sm position-absolute top-0 end-0 m-1 text-danger"
@@ -55,7 +55,8 @@
                   <!-- Dropdown Menu -->
                   <ul class="dropdown-menu">
                     <li>
-                      <a class="dropdown-item" href="{% url 'practice-sound' learningscenario_id=learningscenario.id %}">
+                      <a class="dropdown-item"
+                         href="{% url 'practice-sound' learningscenario_id=learningscenario.id %}">
                         <i class="fas fa-microphone"></i> Mic-based practice
                       </a>
                     </li>
@@ -66,6 +67,9 @@
             <div class="card-footer text-muted small mt-3">
               <div>
                 {{ learningscenario.clef }} clef
+              </div>
+              <div>
+                {{ learningscenario.level }}
               </div>
               Last practiced: <span class="badge rounded-pill bg-secondary">{{ learningscenario.last_practiced }}</span>
               <br>

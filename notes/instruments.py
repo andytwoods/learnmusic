@@ -37,14 +37,14 @@ instruments = {"Trumpet": {
 }
 
 instrument_infos = {
-    'trumpet': {
+    'Trumpet': {
         'answer_template': 'trumpet.html',
         'answers': 'trumpet.json',
         'clef': ['TREBLE', ],
         'common_keys': ['Bb', 'C', ],
         'transposing_direction': [-1,],
     },
-    'trombone': {
+    'Trombone': {
         'answer_template': 'trombone.html',
         'answers': 'trombone.json',
         'clef': ['TREBLE', 'BASS', ],

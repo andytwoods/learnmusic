@@ -38,20 +38,18 @@
 
 
     document.addEventListener('DOMContentLoaded', function () {
-      const instrumentSelect = document.getElementById('id_instrument');
+      const instrumentSelect = document.getElementById('id_instrument_name');
       const clefSelect = document.getElementById('id_clef');
       const keySelect = document.getElementById('id_key');
 
 
       const updateFields = () => {
-
-        const selectedInstrument = instrumentSelect.value;
-        let selectedInstrumentTextRaw = instrumentSelect.options[instrumentSelect.selectedIndex].text;
-        let selectedInstrumentText = selectedInstrumentTextRaw.split(" ").slice(0, -1).join(" ");
-        selectedInstrumentText = selectedInstrumentText.toLowerCase();
+        let selectedInstrumentText = instrumentSelect.options[instrumentSelect.selectedIndex].text;
 
         const instrumentInfo = instruments_info[selectedInstrumentText];
+
         if (instrumentInfo) {
+
           const clefs = instrumentInfo.clef; // Get clef options
           const keys = instrumentInfo.common_keys; // Get key options
 

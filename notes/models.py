@@ -6,6 +6,7 @@ from django.utils import timezone
 from model_utils.models import TimeStampedModel
 
 from notes import tools
+from notes.instruments import instruments
 
 User = get_user_model()
 
@@ -52,36 +53,11 @@ class LevelChoices(models.TextChoices):
     ADVANCED = 'Advanced'
 
 
-class Instrument(models.Model):
-
-    @staticmethod
-    def get_instrument_range(instrument_name: str, level: str = 'Advanced'):
-        instrument = Instrument.objects.get(name=instrument_name, level=level)
-        return [instrument.lowest_note, instrument.highest_note]
-
-    def __str__(self):
-        return f"{self.name} {self.level}"
-
-    @classmethod
-    def get_instrument(cls, instrument_name):
-        return cls.objects.get(name=instrument_name)
-
-    def create_default_instruments(*args, **kwargs):
-        tools.generate_instruments()
-
-    name = models.CharField(max_length=64)
-    level = models.CharField(max_length=64,
-                             choices=LevelChoices.choices,
-                             default=LevelChoices.BEGINNER)
-    clef = models.CharField(max_length=64, choices=ClefChoices.choices, default=ClefChoices.TREBLE)
-    lowest_note = models.CharField(max_length=20, blank=True)
-    highest_note = models.CharField(max_length=20, blank=True)
-    notes = models.CharField(max_length=1024, default='')
-
 
 class LearningScenario(TimeStampedModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE, null=True, blank=True)
+    instrument_name = models.CharField(max_length=64, null=True, blank=True)
+    level = models.CharField(max_length=64,choices=LevelChoices.choices, default=LevelChoices.BEGINNER)
     notes = models.JSONField(null=True, blank=True)
     clef = models.CharField(max_length=64, choices=ClefChoices.choices, default=ClefChoices.TREBLE)
     key = models.CharField(max_length=2, choices=InstrumentKeys.choices, default=NoteChoices.C)
@@ -92,14 +68,14 @@ class LearningScenario(TimeStampedModel):
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         # instrument can be null as we create a blank instence before user specifies this
-        if self.instrument and not self.notes:
-            highest_note = self.instrument.highest_note
-            lowest_note = self.instrument.lowest_note
-            if self.instrument.level == LevelChoices.BEGINNER:
-                self.notes = self.instrument.notes
+        if self.instrument_name and not self.notes:
+
+            if self.level == LevelChoices.BEGINNER:
+                _notes = instruments[self.instrument_name][self.level]['notes']
+                self.notes = _notes.split(';')
             else:
-                notes = tools.generate_notes(highest_note=highest_note,
-                                             lowest_note=lowest_note)
+                lowest_note, highest_note = tools.get_instrument_range(self.instrument_name, self.level)
+                notes = tools.generate_notes(highest_note=highest_note, lowest_note=lowest_note)
                 self.notes = ';'.join(notes)
         super().save(*args, **kwargs)
 
@@ -132,8 +108,8 @@ class LearningScenario(TimeStampedModel):
         if progress is None:
             progress = []
             learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
-            for noterecord in learningscenario.notes.split(';'):
-                fresh_noterecord = NoteRecordPackage.serialise_note(noterecord)
+            for noterecord in learningscenario.notes:
+                fresh_noterecord = tools.serialise_note(noterecord)
                 progress.append(fresh_noterecord)
 
         return package, progress

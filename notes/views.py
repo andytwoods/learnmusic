@@ -7,8 +7,8 @@ from django.urls import reverse
 
 from notes import tools
 from notes.forms import LearningScenarioForm
-from notes.instruments import instrument_infos, instruments
-from notes.models import Instrument, LearningScenario, NoteRecordPackage
+from notes.instruments import instrument_infos
+from notes.models import LearningScenario, NoteRecordPackage, LevelChoices
 from notes.tools import generate_notes, compile_notes_per_skilllevel
 
 
@@ -43,8 +43,8 @@ def edit_learningscenario(request, pk: int):
         form = LearningScenarioForm(request.POST, instance=model)
         if form.is_valid():
             ls: LearningScenario = form.save(commit=False)
-            instrument = form.cleaned_data['instrument']
-            ls.transposing_direction = instrument_infos[instrument.name.lower()].get('transposing_direction', [0,])[0]
+            instrument_name = form.cleaned_data['instrument_name']
+            ls.transposing_direction = instrument_infos[instrument_name].get('transposing_direction', [0,])[0]
             ls.save()
             return redirect(reverse('notes-home'))
 
@@ -70,7 +70,8 @@ def edit_learningscenario_notes(request, pk: int):
         ls.edit_notes(added=notes_added, removed=notes_removed)
         return JsonResponse({'success': True}, status=200)
 
-    lowest_note, highest_note = Instrument.get_instrument_range(ls.instrument.name)
+
+    lowest_note, highest_note = tools.get_instrument_range(ls.instrument_name, LevelChoices.ADVANCED)
 
     all_notes = [str(note) for note in generate_notes(lowest_note=lowest_note, highest_note=highest_note)]
 
@@ -80,7 +81,7 @@ def edit_learningscenario_notes(request, pk: int):
 
 
 def common_context(instrument_name: str, clef:str, sound:bool):
-    instrument_info = instrument_infos[instrument_name.lower()]
+    instrument_info = instrument_infos[instrument_name]
     if sound:
         instrument_template = 'notes/instruments/mic_input.html'
         score_css = 'justify-content-center'
@@ -98,8 +99,8 @@ def common_context(instrument_name: str, clef:str, sound:bool):
 @login_required
 def practice(request, learningscenario_id: int, sound:bool=False):
     package, serialised_notes = LearningScenario.progress_latest_serialised(learningscenario_id)
-    instrument_instance: Instrument = package.instrument()
-    learningscenario = LearningScenario.objects.get(id=learningscenario_id)
+    instrument_name: str = package.learningscenario.instrument_name
+    learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
     context = {
         'learningscenario_id': learningscenario_id,
         'package_id': package.id,
@@ -107,11 +108,9 @@ def practice(request, learningscenario_id: int, sound:bool=False):
         'transposing_direction': learningscenario.transposing_direction,
         'progress': serialised_notes,
         'sound': sound,
-        'level': learningscenario.instrument.level.lower(),
+        'level': learningscenario.level.lower(),
     }
-    context.update(common_context(instrument_name=instrument_instance.name,
-                                  clef=instrument_instance.clef,
-                                  sound=sound))
+    context.update(common_context(instrument_name=instrument_name, clef=package.learningscenario.clef, sound=sound))
 
     return render(request, 'notes/practice.html', context=context)
 

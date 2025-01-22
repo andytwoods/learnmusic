@@ -91,43 +91,6 @@ def compile_notes_per_skilllevel(notes):
     return per_skilllevel
 
 
-def generate_instruments():
-    from notes.models import Instrument
-
-    generated_instruments = []
-
-    for instrument_nam, instrument_infos in instruments.items():
-
-        for level, info in instrument_infos.items():
-
-            instrument: Instrument = Instrument(
-                name=instrument_nam,
-                level=level,
-                lowest_note=info['lowest_note'],
-                highest_note=info['highest_note'],
-                clef=info['clef'],
-                notes=info['notes']
-            )
-
-            if not instrument.notes:
-                if instrument.lowest_note is None or instrument.highest_note is None:
-                    raise Exception("issue with instruments.py")
-                instrument.notes = ';'.join(generate_notes(instrument.lowest_note, instrument.highest_note))
-
-            if instrument.lowest_note is None or instrument.highest_note is None:
-                all_notes = instrument.notes.split(';')
-                if instrument.lowest_note is None:
-                    instrument.lowest_note = all_notes[0]
-                if instrument.highest_note is None:
-                    instrument.highest_note = all_notes[-1]
-
-            print(instrument.name, instrument.level, instrument.notes)
-
-            generated_instruments.append(instrument)
-
-    Instrument.objects.bulk_create(generated_instruments)
-
-
 def serialise_notes(notes_str):
     serialised_notes = []
     for note in notes_str.split(';'):
@@ -157,4 +120,12 @@ def generate_serialised_notes(instrument, level):
                                 highest_note=instrument_notes_info['highest_note'])
 
     return [serialise_note(note) for note in notes_list]
+
+
+def get_instrument_range(instrument:str, level:str):
+    instrument_notes_info = instruments[instrument][level]
+    if 'notes' in instrument_notes_info and instrument_notes_info['notes'] is not None:
+        _notes = instrument_notes_info['notes'].split(';')
+        return _notes[0], _notes[-1]
+    return instrument_notes_info['lowest_note'], instrument_notes_info['highest_note']
 
