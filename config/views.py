@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
 
-from notes.instruments import instruments
+from notes.instruments import instruments, instrument_infos
 from notes.models import LevelChoices
 
 
@@ -16,8 +16,17 @@ def home(request):
         'clef': 'dummy',
         'level': 'dummy'}).split('/')[1]
 
-    context = {'instruments': [x for x in instruments.keys()],
-               'levels': [x[1] for x in LevelChoices.choices],
+    instruments_data = {}
+    for instrument, instrument_info in instruments.items():
+        if instrument not in instruments_data:
+            instruments_data[instrument] = {
+                'clefs': instrument_infos[instrument]['clef'],
+                'keys': instrument_infos[instrument]['common_keys']
+            }
+        instruments_data[instrument]['levels'] = [str(x) for x in instrument_info.keys()]
+
+
+    context = {'instruments': instruments_data,
                'practice_url': practice_url}
     return render(request, template_name="pages/home.html", context=context)
 

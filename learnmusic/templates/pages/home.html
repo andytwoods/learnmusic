@@ -77,20 +77,21 @@
           }
 
           // Function to populate the instrument-level dropdown
-          function populateInstrumentLevels(instrument, levels) {
+          function populateInstrumentLevels(instrument, info) {
+
             // Clear existing levels
             instrumentLevelDropdownMenu.innerHTML = '';
 
             // Add levels to the dropdown
-            levels.forEach(level => {
+            info['levels'].forEach(level => {
               const item = document.createElement('li');
               const link = document.createElement('button');
               link.className = 'dropdown-item';
               link.type = 'button';
-              link.textContent = level.level;
+              link.textContent = level;
               link.addEventListener('click', function () {
-                instrumentLevelButton.textContent = level.level;
-                const url = "{{ request.scheme }}://{{ request.get_host }}/{{ practice_url }}/" + instrument + "/treble/" + level.level + "/";
+                instrumentLevelButton.textContent = level;
+                const url = "{{ request.scheme }}://{{ request.get_host }}/{{ practice_url }}/" + instrument + "/treble/" + level + "/";
                 loadIframe(url);
               });
               item.appendChild(link);

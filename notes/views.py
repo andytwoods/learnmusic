@@ -119,7 +119,7 @@ def practice_try(request, instrument: str, clef:str, level: str, sound:bool=Fals
 
     serialised_notes = tools.generate_serialised_notes(instrument, level)
 
-    instrument_info = instrument_infos[instrument.lower()]
+    instrument_info = instrument_infos[instrument]
     keys = instrument_info.get('common_keys')
 
     context = {
