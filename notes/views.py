@@ -7,11 +7,11 @@ from django.urls import reverse
 
 from notes import tools
 from notes.forms import LearningScenarioForm
-from notes.instruments import instrument_infos
-from notes.models import LearningScenario, NoteRecordPackage, LevelChoices
+from notes.instruments import instrument_infos, instruments
+from notes.models import LearningScenario, NoteRecordPackage, LevelChoices, InstrumentKeys, ClefChoices
 from notes.tools import generate_notes, compile_notes_per_skilllevel
 
-
+PRACTICE_TRY = 'practice-try'
 @login_required
 def notes_home(request):
     if request.htmx:
@@ -34,6 +34,7 @@ def new_learningscenario(request):
     scenario.save()
     url = reverse('edit-learning-scenario', kwargs={'pk': scenario.id})
     return redirect(url + '?new=true')
+
 
 @login_required
 def edit_learningscenario(request, pk: int):
@@ -115,19 +116,28 @@ def practice(request, learningscenario_id: int, sound:bool=False):
     return render(request, 'notes/practice.html', context=context)
 
 
-def practice_try(request, instrument: str, clef:str, level: str, sound:bool=False):
+def practice_try(request, instrument: str, clef:str, key:str, level: str, sound:bool=False):
 
     serialised_notes = tools.generate_serialised_notes(instrument, level)
 
     instrument_info = instrument_infos[instrument]
-    keys = instrument_info.get('common_keys')
+
+    my_instruments = instrument_infos.keys()
+    levels = instruments.get(instrument, {}).keys()
 
     context = {
+        'learningscenario_id': PRACTICE_TRY,
         'progress': serialised_notes,
-        'key': keys[0],
+        'key': key,
         'transposing_direction': instrument_info.get('transposing_direction', [0,])[0],
-        'level': level.lower(),
+        'level': level,
         'sound': sound,
+        'instrument': instrument,
+        'levels': levels,
+        'instruments': my_instruments,
+        'clef': clef,
+        'keys': [key[1] for key in InstrumentKeys.choices],
+        'clefs': [clef[1] for clef in ClefChoices.choices],
     }
 
     context.update(common_context(instrument_name=instrument, clef=clef, sound=sound))
@@ -169,7 +179,7 @@ def learningscenario_graph(request, learningscenario_id):
     return render(request, 'notes/learningscenario_graph.html', context=context)
 
 
-def learningscenario_graph_try(request, instrument: str, clef: str, level: str):
+def learningscenario_graph_try(request, instrument: str, clef: str, key: str, level: str):
 
     if request.method == 'POST':
         serialised_notes = json.loads(request.body)
@@ -187,4 +197,3 @@ def learningscenario_graph_try(request, instrument: str, clef: str, level: str):
     }
 
     return render(request, 'notes/learningscenario_graph_try.html', context=context)
-

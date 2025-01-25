@@ -4,15 +4,14 @@ from django.shortcuts import render
 from django.urls import reverse
 
 from notes.instruments import instruments, instrument_infos
-from notes.models import LevelChoices
 
 
 def home(request):
-
     # I broke the homepage when randomly updating the url to practice-try...
     # I don't want to repeat this mistake
     practice_url = reverse('practice-try', kwargs={
         'instrument': 'dummy',
+        'key': 'dummy',
         'clef': 'dummy',
         'level': 'dummy'}).split('/')[1]
 
@@ -25,9 +24,9 @@ def home(request):
             }
         instruments_data[instrument]['levels'] = [str(x) for x in instrument_info.keys()]
 
-
     context = {'instruments': instruments_data,
-               'practice_url': practice_url}
+               'practice_url': practice_url,
+               }
     return render(request, template_name="pages/home.html", context=context)
 
 

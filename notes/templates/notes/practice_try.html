@@ -1,6 +1,81 @@
 {% extends 'notes/practice.html' %}
 {% load static %}
 
+{% block cardbody %}
+<div class="small text-muted position-absolute end-0 me-2">{{ level }} level, key {{ key }}, {{ clef }} clef</div>
+{% endblock cardbody %}
+
+{% block cardheader %}
+  <!-- Cog Icon Dropdown -->
+  <div class="dropdown d-inline">
+    <button
+      class="btn btn-sm dropdown-toggle"
+      type="button"
+      id="dropdownMenuCog"
+      data-bs-toggle="dropdown"
+      aria-expanded="false">
+      <i class="fas fa-cog"></i>
+    </button>
+
+    <ul class="dropdown-menu" aria-labelledby="dropdownMenuCog">
+      <!-- Instrument Section -->
+      <li><h6 class="dropdown-header">Instrument</h6></li>
+      {% for my_instrument in instruments %}
+        <li>
+          <a class="dropdown-item {% if my_instrument == instrument %}active{% endif %}"
+             href="{% url 'practice-try' instrument=my_instrument clef=clef key=key level=level %}">
+            {{ my_instrument }}
+          </a>
+        </li>
+      {% endfor %}
+
+      <li>
+        <hr class="dropdown-divider">
+      </li> <!-- Divider -->
+
+      <!-- Level Section -->
+      <li><h6 class="dropdown-header">Level</h6></li>
+      {% for my_level in levels %}
+        <li>
+          <a class="dropdown-item {% if my_level == level %}active{% endif %}"
+             href="{% url 'practice-try' instrument=instrument clef=clef key=key level=my_level %}">
+            {{ my_level }}
+          </a>
+        </li>
+      {% endfor %}
+
+      <li>
+        <hr class="dropdown-divider">
+      </li> <!-- Divider -->
+
+      <!-- Clef Section -->
+      <li><h6 class="dropdown-header">Clef</h6></li>
+      {% for my_clef in clefs %}
+        <li>
+          <a class="dropdown-item {% if my_clef == clef %}active{% endif %}"
+             href="{% url 'practice-try' instrument=instrument clef=my_clef key=key level=level %}">
+            {{ my_clef }}
+          </a>
+        </li>
+      {% endfor %}
+
+      <li>
+        <hr class="dropdown-divider">
+      </li> <!-- Divider -->
+
+      <!-- Key Section -->
+      <li><h6 class="dropdown-header">Key</h6></li>
+      {% for my_key in keys %}
+        <li>
+          <a class="dropdown-item {% if my_key == key %}active{% endif %}"
+             href="{% url 'practice-try' instrument=instrument clef=clef key=my_key level=level %}">
+            Key: {{ my_key }}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock cardheader %}
 
 {% block see_results %}
   <button id="see-results"

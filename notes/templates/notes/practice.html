@@ -3,110 +3,114 @@
 
 
 {% block javascript %}
-    {{ block.super }}
-    <script src="{% static 'js/vexflow.js' %}"></script>
+  {{ block.super }}
+  <script src="{% static 'js/vexflow.js' %}"></script>
 {% endblock javascript %}
 
 {% block title %}
-    {{ instrument }} note trainer{% if key %}, {{ key }}{% endif %}
+  {{ instrument }} note trainer{% if key %}, {{ key }}{% endif %}
 {% endblock %}
 
 {% block body %}
 
-    <div id='error-message'
-         class="position-fixed start-50 translate-middle-x text-center bg-danger text-white p-2 rounded shadow"
-         style="z-index: 1050; top: 5%; display: none;">
-        <h2>m i s t a k e</h2>
-        <p id="correct-answer"></p>
+  <div id='error-message'
+       class="position-fixed start-50 translate-middle-x text-center bg-danger text-white p-2 rounded shadow"
+       style="z-index: 1050; top: 5%; display: none;">
+    <h2>m i s t a k e</h2>
+    <p id="correct-answer"></p>
+  </div>
+
+  <div class="card w-100 mw-md-75 mx-auto pb-5">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <div><h5 class="d-inline">{{ instrument }} note trainer</h5>
+        {% block cardheader %}{% endblock %}
+      </div>
+      <input type="range" id="instrument-input-position" class="form-range" style="width: 150px; display: none;"
+             min="0"
+             max="10">
     </div>
+    <div class="card-body position-relative">
+      {% block cardbody %}{% endblock %}
+      <div id="counter" style="display: none" class="text-secondary position-absolute top-0 start-0 p-2 m-2">
+        {% block see_results %}
+          {% if learningscenario_id %}
+            <a href="{% url 'learningscenario_graph' learningscenario_id=learningscenario_id %}"
+               class="btn text-start p-0 mx-0 text-secondary">Stop and see your results</a>
+          {% endif %}
+        {% endblock see_results %}
+        <br>
+        <span id="counter-value"></span>
+      </div>
+      <div class="row mt-5 text-center {{ score_css }}">
 
-    <div class="card w-100 mw-md-75 mx-auto pb-5">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5>{{ instrument }} note trainer{% if key %}, {{ key }}{% endif %}</h5>
-            <input type="range" id="instrument-input-position" class="form-range" style="width: 150px; display: none;"
-                   min="0"
-                   max="10">
+        <div class="col-9 align-self-center text-center">
+
+          <div id="sheet"></div>
         </div>
-        <div class="card-body position-relative">
-            <div id="counter" style="display: none" class="text-secondary position-absolute top-0 start-0 p-2 m-2">
-                {% block see_results %}
-                    {% if learningscenario_id %}
-                        <a href="{% url 'learningscenario_graph' learningscenario_id=learningscenario_id %}"
-                           class="btn text-start p-0 mx-0 text-secondary">Stop and see your results</a>
-                    {% endif %}
-                {% endblock see_results %}
-                <br>
-                <span id="counter-value"></span>
-            </div>
-            <div class="row mt-5 text-center {{ score_css }}">
+        <div id="right-of-sheet-placeholder"></div>
 
-                <div class="col-9 align-self-center text-center">
+      </div>
+      {% include instrument_template %}
 
-                    <div id="sheet"></div>
-                </div>
-                <div id="right-of-sheet-placeholder"></div>
-
-            </div>
-            {% include instrument_template %}
-
-        </div>
     </div>
+  </div>
 
-    {{ progress|json_script:"progress-data" }}
+  {{ progress|json_script:"progress-data" }}
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            getInstrumentData('{{ answers_json }}', function (_instrument_data) {
-                document.instrument_data = _instrument_data;
-            });
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      getInstrumentData('{{ answers_json }}', function (_instrument_data) {
+        document.instrument_data = _instrument_data;
+      });
+    });
+  </script>
+
+  <script>
+
+    function sendResultsToBackend(data) {
+
+      // Sending the POST request to the backend
+      {% if package_id %}
+        fetch("{% url 'practice-data' package_id=package_id %}", {
+          method: 'POST', // HTTP method
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': "{{ csrf_token }}"
+          },
+          body: JSON.stringify(data) // Convert the list to JSON format
         });
-    </script>
+      {% endif %}
 
-    <script>
-
-        function sendResultsToBackend(data) {
-
-            // Sending the POST request to the backend
-            {% if package_id %}
-                fetch("{% url 'practice-data' package_id=package_id %}", {
-                    method: 'POST', // HTTP method
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': "{{ csrf_token }}"
-                    },
-                    body: JSON.stringify(data) // Convert the list to JSON format
-                });
-            {% endif %}
-
-        }
-    </script>
+    }
+  </script>
 
 
-    <script>
+  <script>
 
-        window.progress_data = JSON.parse(
-            document.getElementById('progress-data').textContent
-        )
+    window.progress_data = JSON.parse(
+      document.getElementById('progress-data').textContent
+    )
 
-        {% include 'js/stave_manager.js' %}
-        {% include 'js/countdown_manager.js' %}
-        {% include 'js/trial_manager.js' %}
-        {% include 'js/session_manager.js' %}
-        {% if level == 'beginner' %}
-            {% include 'js/learning_manager.js' %}
-            //overriding here
-            session_manager.next_note = function () {
-                const next_note = learning_manager.next_note();
-                session_manager.current_note = next_note;
-                return next_note;
-            }
-        {% endif %}
-
-
-        document.addEventListener("DOMContentLoaded", function () {
-            trial_manager.next();
-        });
+    {% include 'js/stave_manager.js' %}
+    {% include 'js/countdown_manager.js' %}
+    {% include 'js/trial_manager.js' %}
+    {% include 'js/session_manager.js' %}
+    {% if level == 'beginner' %}
+      {% include 'js/learning_manager.js' %}
+      //overriding here
+      session_manager.next_note = function () {
+        const next_note = learning_manager.next_note();
+        session_manager.current_note = next_note;
+        return next_note;
+      }
+    {% endif %}
 
 
-    </script>
+    document.addEventListener("DOMContentLoaded", function () {
+      window.special_condition = 'first_trial';
+      trial_manager.next();
+    });
+
+
+  </script>
 {% endblock body %}

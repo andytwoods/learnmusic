@@ -4,7 +4,7 @@ const stave_manager = (function () {
     const div = document.getElementById("sheet");
     const containerWidth = div.clientWidth;
     const staveWidth = 200; //
-
+    const my_clef = '{{ clef }}';
     // Initialize VexFlow renderer
     const renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
     renderer.resize(containerWidth, 200);  // Resize the SVG
@@ -13,22 +13,29 @@ const stave_manager = (function () {
 
     const startX = (containerWidth - staveWidth) / 2; // Calculate the starting point for centering
     const stave = new VF.Stave(startX, 40, staveWidth);
-    stave.addClef("{{ clef }}");
+    stave.addClef(my_clef);
+    // stave.addKeySignature("{{ key }}");
     stave.setContext(context); // Attach the context to the stave
     stave.draw(context);       // Draw the stave
 
     function calc_stem_direct(note_str) {
-        const stave = '{{ clef }}';
+
 
         let middle_note, middle_octave;
-        if (stave === 'treble') {
+        if (my_clef === 'treble') {
             middle_note = "B";
             middle_octave = 4;
-        } else if (stave === 'bass') {
+        } else if (my_clef === 'bass') {
             middle_note = 'D'
             middle_octave = 3;
+        } else if (my_clef === 'alto') {
+            middle_note = 'C';
+            middle_octave = 4;
+        } else if (my_clef === 'tenor') {
+            middle_note = 'C';
+            middle_octave = 3;
         } else {
-            throw new Error('stave not recognized: ' + stave);
+            throw new Error('stave not recognized: ' + my_clef);
         }
 
         const note_arr = note_str.split("/");
@@ -61,7 +68,6 @@ const stave_manager = (function () {
 
     api.updateNote = function (newNote) {
         renderer.getContext().svg.innerHTML = "";
-
         stave.setContext(context);
         stave.draw();
 
@@ -73,6 +79,7 @@ const stave_manager = (function () {
         const note = new VF.StaveNote({
             keys: [newNote],
             duration: "q",
+            clef: my_clef,
             align_center: true,
             stem_direction: stemDirection // Explicitly set the stem direction
         });

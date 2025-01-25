@@ -16,12 +16,16 @@ const session_manager = (function () {
     }
 
     api.next_note = function () {
-        api.current_note = sortAndRandomizeByN()[0];
+        if(window.special_condition==='first_trial'){
+            api.current_note = window.progress_data[0];
+        }
+        else {
+            api.current_note = sortAndRandomizeByN()[0];
+        }
         return api.current_note;
     }
 
     api.update_data = function (rt, answer) {
-        console.log(rt, answer);
         api.current_note['reaction_time_log'].push(parseInt(rt));
         api.current_note['correct'].push(answer);
         api.current_note['n'] = parseInt(api.current_note['n']) + 1;

@@ -50,12 +50,17 @@ const trial_manager = (function () {
 
         locked = true;
         const rt = timer.stop();
-        session_manager.update_data(rt, answer);
+        if(window.special_condition==='first_trial') {
+            window.special_condition = '';
+        }
+        else {
+            session_manager.update_data(rt, answer);
+            sendResultsToBackend(window.progress_data);
+        }
+
 
         // this is NOT RT. Rather top left corner countdown.
         countdown_manager.start();
-
-        sendResultsToBackend(window.progress_data);
 
         if (answer === true) {
             setTimeout(function () {
@@ -89,7 +94,8 @@ const trial_manager = (function () {
         return note_str;
     }
 
-    api.next = function () {
+
+    api.next = function (special) {
         const next_note = session_manager.next_note();
         const parsed_note = parse_note(next_note);
         document.current_note = parsed_note;

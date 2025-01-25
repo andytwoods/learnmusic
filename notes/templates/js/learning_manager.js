@@ -80,16 +80,21 @@ const learning_manager = (function () {
     }
 
     api.next_note = (function () {
+
+
         const recentNotesLog = []; // Tracks the last 5 notes played
 
         return function () {
+            if(window.special_condition==='first_trial'){
+                return window.progress_data[0];
+            }
             const masteredNotes = window.progress_data.filter(isMastered);
             const nonMasteredNotes = window.progress_data.filter(note => !isMastered(note));
 
             // Check non-mastered notes first, then mastered notes
             let nextNote =
                 processNotes(nonMasteredNotes, recentNotesLog, weightedRandomNote) ||
-                processNotes(masteredNotes, recentNotesLog, (els)=>els[0]);
+                processNotes(masteredNotes, recentNotesLog, (els) => els[0]);
 
             if (!nextNote) {
                 // If neither non-mastered nor mastered notes are available, introduce a new note

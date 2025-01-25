@@ -11,12 +11,7 @@ class LearningScenarioForm(forms.ModelForm):
     class Meta:
         model = LearningScenario
         fields = ['instrument_name', 'level', 'clef', 'key']
-        labels = {
-            'instrument_name': 'Instrument',
-            'clef': 'Clef',
-            'level': 'Level',
-            'key': 'Instrument Key'
-        }
+
 
     def __init__(self, *args, **kwargs):
         super(LearningScenarioForm, self).__init__(*args, **kwargs)
