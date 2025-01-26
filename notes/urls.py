@@ -14,8 +14,8 @@ urlpatterns = [
     path("practice/<int:learningscenario_id>/", views.practice, name='practice'),
     path("practice-sound/<int:learningscenario_id>/", views.practice, name='practice-sound', kwargs={'sound': True}),
 
-    path('practice-try/<str:instrument>/<str:clef>/<str:level>/', views.practice_try, name='practice-try'),
-    path('practice-sound-try/<str:instrument>/<str:clef>/<str:level>/', views.practice_try,
+    path('practice-try/<str:instrument>/<str:clef>/<str:key>/<str:level>/', views.practice_try, name='practice-try'),
+    path('practice-sound-try/<str:instrument>/<str:clef>/<str:key>/<str:level>/', views.practice_try,
          kwargs={'sound': True}, name='practice-sound-try'),
 
     path("practice-data/<int:package_id>/", views.practice_data, name='practice-data'),
