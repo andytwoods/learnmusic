@@ -1,11 +1,42 @@
-from django.test import TestCase
+import json
+from unittest.mock import patch
 
-from notes.factories import LearningScenarioFactory
-from notes.models import LearningScenario
-from notes.tools import generate_notes, generate_instruments
+from django.test import TestCase, RequestFactory
+from django.urls import reverse
+
+from notes.factories import LearningScenarioFactory, UserFactory
+from notes.models import LearningScenario, NoteRecordPackage
+from notes.tools import generate_notes
+from notes.views import practice, practice_data
 
 
 # Create your tests here.
+class TestLearning(TestCase):
+
+    def setUp(self):
+        self.user = UserFactory()
+
+    def test_learning(self):
+        scenario = LearningScenarioFactory()
+        scenario_id = scenario.id
+        package1, serialised_notes1 = LearningScenario.progress_latest_serialised(scenario_id)
+
+        package = NoteRecordPackage.objects.get(id=package1.id)
+        serialised_notes1[0]['correct'].append(1)
+        serialised_notes1[0]['reaction_time_log'].append(1000)
+        package.process_answers(serialised_notes1)
+
+        # let's check we get the updated package
+        package2, serialised_notes2 = LearningScenario.progress_latest_serialised(scenario_id)
+        self.assertEqual(package2.id, package.id)
+        self.assertEqual(json.dumps(serialised_notes2), json.dumps(serialised_notes1))
+
+        # we should get blank data when the package is made to be older than 24 hours
+        with patch.object(NoteRecordPackage, 'older_than', return_value=True):
+            package3, serialised_notes3 = LearningScenario.progress_latest_serialised(scenario_id)
+            self.assertNotEqual(package3.id, package2.id)
+            self.assertNotEqual(json.dumps(serialised_notes3), json.dumps(serialised_notes2))
+
 
 class TestTools(TestCase):
     def test_generate_notes(self):
@@ -42,10 +73,6 @@ class TestTools(TestCase):
                                      'F 1 5', 'G -1 5', 'G 0 5', 'G 1 5', 'A -1 5', 'A 0 5',
                                      'A 1 5', 'B -1 5', 'B 0 5'])
 
-
-    def test_generate_instruments(self):
-        generate_instruments()
-        self.assertTrue(True)
 
 
 class TestModels(TestCase):

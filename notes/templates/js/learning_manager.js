@@ -1,33 +1,21 @@
 const learning_manager = (function () {
     let api = {};
-    let structuredInstrumentNotes;
-    let masteryCorrectThreshold = 3; // Default threshold for correct answers
-    let masteryReactionTimeThreshold = 2; // Default threshold for reaction time in seconds
-    let streak = 0; // Correct streak tracker
-    const recentNotesLog = []; // Queue for the last 5 `nextNote` selections
-    const number_notes_to_initially_show = 3;
-    const retries = 3;
+
+    const ATTEMPTS_TO_CHECK_IF_MASTERED = 3
+    const CORRECT_COUNT_THAT_INDICATES_MASTERED = 1;
+    const RECENT_NOTES_LOG_SIZE = 2;
 
     // Helper function to determine if a note is mastered
 
     function isMastered(note) {
-        // Limit the calculation to the last 3 answers
-        const recentCorrect = note.correct ? note.correct.slice(-3) : [];
+        // Limit to the last X answers
+        const recentCorrect = note.correct ? note.correct.slice(-ATTEMPTS_TO_CHECK_IF_MASTERED) : [];
 
-        //const recentReactionTimes = Array.isArray(note.reaction_time_log)
-        //        ? note.reaction_time_log.slice(-3)
-        //        : [];
-
+        // Count the number of correct answers in the last X attempts
         const totalCorrect = recentCorrect.filter(val => val === true).length;
-        //const avgReactionTime = recentReactionTimes.length > 0
-        //    ? recentReactionTimes.reduce((a, b) => parseInt(a) + parseInt(b), 0) / recentReactionTimes.length
-        //    : Infinity;
 
-        //console.log(recentCorrect, recentReactionTimes, totalCorrect, avgReactionTime);
-        return (
-            totalCorrect >= masteryCorrectThreshold
-            // && avgReactionTime <= masteryReactionTimeThreshold
-        );
+        // Mastery condition: at least Y correct answers in the last X attempts
+        return totalCorrect >= CORRECT_COUNT_THAT_INDICATES_MASTERED;
     }
 
     // Helper function for deep equality comparison of notes
@@ -41,87 +29,93 @@ const learning_manager = (function () {
             note1.alter === note2.alter;
     }
 
-    // Weighted randomization for notes
-    function weightedRandomNote(notes) {
-        const weights = notes.map(note => (isMastered(note) ? 1 : 5)); // Mastered notes have lower weights
-        const totalWeight = weights.reduce((a, b) => a + b, 0);
-        const random = Math.random() * totalWeight;
-        let cumulativeWeight = 0;
+    function orderNotesByMastery(notes) {
+        return notes.slice().sort((a, b) => {
+            const masteryA = isMastered(a) ? 1 : 0;  // Determine if note is mastered
+            const masteryB = isMastered(b) ? 1 : 0;
 
-        for (let i = 0; i < notes.length; i++) {
-            cumulativeWeight += weights[i];
-            if (random <= cumulativeWeight) {
-                return notes[i];
+            // If mastery levels are the same, randomize order
+            if (masteryA === masteryB) {
+                return Math.random() - 0.5; // Randomize order when mastery is equal
             }
-        }
+
+            // Otherwise, sort from least to most mastered
+            return masteryA - masteryB;
+        });
     }
 
 
-    function processNotes(priorityNotes, recentNotesLog, selectionF) {
-        if (priorityNotes.length > 0) {
-            const subset = priorityNotes.slice(0, Math.min(number_notes_to_initially_show, priorityNotes.length));
-            let nextNote = null;
-            let attempts = 0; // Counter to track retry attempts
-
-            // Retry logic to fetch a non-recent, non-repeated note
-            do {
-                nextNote = selectionF(subset); // Try selecting a note from the subset
-                attempts++;
-            } while (
-                (attempts < retries) &&
-                (!nextNote || recentNotesLog.some(recentNote => areNotesEqual(recentNote, nextNote)))
-                );
-
-            if (nextNote) {
-                return nextNote;
+    function processNotes(priorityNotes, recentNotesLog) {
+        const orderedNotes = orderNotesByMastery(priorityNotes); // Get notes in what you described
+        for (let note of orderedNotes) {
+            // Ensures the note has not been recently tested
+            if (!recentNotesLog.some(recentNote => areNotesEqual(recentNote, note))) {
+                return note;
             }
         }
-        return null;
+        return null; // No notes available that satisfy constraints
     }
 
     api.next_note = (function () {
 
-
-        const recentNotesLog = []; // Tracks the last 5 notes played
+        const recentNotesLog = []; // Tracks the last few notes played (e.g., 5)
 
         return function () {
-            if(window.special_condition==='first_trial'){
+            if (window.special_condition === 'first_trial') {
                 return window.progress_data[0];
             }
+
             const masteredNotes = window.progress_data.filter(isMastered);
             const nonMasteredNotes = window.progress_data.filter(note => !isMastered(note));
 
-            // Check non-mastered notes first, then mastered notes
-            let nextNote =
-                processNotes(nonMasteredNotes, recentNotesLog, weightedRandomNote) ||
-                processNotes(masteredNotes, recentNotesLog, (els) => els[0]);
+            let nextNote = null;
+
+            // First, try to pick from non-mastered notes
+            if (nonMasteredNotes.length > 0) {
+                nextNote = processNotes(nonMasteredNotes, recentNotesLog);
+            }
+
+            // If no viable non-mastered note, move to mastered notes
+            if (!nextNote && masteredNotes.length > 0) {
+                nextNote = processNotes(masteredNotes, recentNotesLog);
+            }
 
             if (!nextNote) {
-                // If neither non-mastered nor mastered notes are available, introduce a new note
-                const availableNewNotes = structuredInstrumentNotes.filter(newNote =>
-                    !window.progress_data.some(existingNote => areNotesEqual(newNote, existingNote))
-                );
-
-                if (availableNewNotes.length > 0) {
-                    nextNote = availableNewNotes[0];
-                    window.progress_data.push(nextNote);
-                } else {
-                    // Fallback: return any note if no new notes are available
-                    nextNote = weightedRandomNote(window.progress_data);
-                }
+                nextNote = processNotes(window.progress_data, recentNotesLog);
+            }
+            else {
+                const randomIndex = Math.floor(Math.random() * window.progress_data.length);
+                nextNote = window.progress_data[randomIndex];
             }
 
+            // Update the recent notes log
             if (nextNote) {
-                // Update recentNotesLog (maintain a queue of the last 5 notes)
                 recentNotesLog.push(nextNote);
-                if (recentNotesLog.length > 5) {
-                    recentNotesLog.shift(); // Remove the oldest note if log exceeds size
+                if (recentNotesLog.length > RECENT_NOTES_LOG_SIZE) {
+                    recentNotesLog.shift(); // Maintain a queue of the last few notes
                 }
             }
 
+            function logProgressDataMastery() {
+                if (!Array.isArray(window.progress_data)) {
+                    console.warn("window.progress_data is not an array.");
+                    return;
+                }
+
+
+                window.progress_data.forEach((note, index) => {
+                    const recentCorrect = note.correct ? note.correct.slice(-3) : [];
+                    const totalCorrect = recentCorrect.filter(val => val === true).length;
+                    const mastery = isMastered(note) ? "Mastered" : `Not mastered (Correct: ${totalCorrect}/3)`;
+
+                    console.log(`Note: ${note.note}, Octave: ${note.octave}, Alter: ${note.alter}, Mastery: ${mastery}`);
+                });
+            }
+
+            logProgressDataMastery();
             return nextNote; // Return the selected note
         };
-    }());
+    })();
 
     return api;
 }());
