@@ -179,7 +179,7 @@ def learningscenario_graph(request, learningscenario_id):
     return render(request, 'notes/learningscenario_graph.html', context=context)
 
 
-def learningscenario_graph_try(request, instrument: str, clef: str, key: str, level: str):
+def learningscenario_graph_try(request, instrument: str, level: str):
 
     if request.method == 'POST':
         serialised_notes = json.loads(request.body)
@@ -188,8 +188,6 @@ def learningscenario_graph_try(request, instrument: str, clef: str, key: str, le
 
     rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
                                               for n in serialised_notes])
-    print(serialised_notes)
-    print(rt_per_sl)
     context = {
         'package': None,
         'progress': serialised_notes,

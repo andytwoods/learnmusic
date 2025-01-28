@@ -1,0 +1,82 @@
+name: CI
+
+# Enable Buildkit and let compose use it to speed up image building
+env:
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+on:
+  pull_request:
+    branches: ['master', 'main']
+    paths-ignore: ['docs/**']
+
+  push:
+    branches: ['master', 'main']
+    paths-ignore: ['docs/**']
+
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  linter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # Consider using pre-commit.ci for open source project
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
+
+  unittest:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: postgres
+
+    env:
+      # Passed to your Django database settings
+      DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/postgres'
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: |
+            requirements/base.txt
+            requirements/local.txt
+
+      - name: Install Dependencies using uv
+        run: |
+          python -m pip install uv  # Ensure uv is installed
+          uv install -r requirements/local.txt
+
+      - name: Check DB Migrations
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test  # Use custom test settings file
+        run: python manage.py makemigrations --check
+
+      - name: Apply DB Migrations
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+        run: python manage.py migrate
+
+      - name: Run Unit Tests
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.test
+        run: python manage.py test

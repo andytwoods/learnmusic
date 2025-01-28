@@ -84,7 +84,7 @@
   <script>
     document.getElementById('see-results').addEventListener('click', () => {
 
-      fetch("{% url 'learningscenario_graph_try' instrument clef level %}", {
+      fetch("{% url 'learningscenario_graph_try' instrument level %}", {
         method: 'POST', // HTTP method
         headers: {
           'Content-Type': 'application/json',
