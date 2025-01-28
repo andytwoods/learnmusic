@@ -1,6 +1,6 @@
 name: CI
 
-# Enable Buildkit, and configure compose to speed up image builds
+# Enable Buildkit and set up environment variables for optimization
 env:
   DOCKER_BUILDKIT: 1
   COMPOSE_DOCKER_CLI_BUILD: 1
@@ -19,6 +19,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  linter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1  # For linter checks
 
   unittest:
     runs-on: ubuntu-latest
@@ -51,14 +64,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-uv-
 
-      - name: Install Dependencies using uv
+      - name: Create Virtual Environment & Install Dependencies
         run: |
-          python -m pip install uv  # Ensure uv is installed
-          uv pip install -r requirements/local.txt
+          python -m pip install uv                                   # Ensure uv is installed
+          uv venv --activate                                         # Create and activate a virtual environment
+          uv pip install -r requirements/local.txt                  # Install dependencies in the virtual environment
 
       - name: Check DB Migrations
         env:
-          DJANGO_SETTINGS_MODULE: config.settings.test  # Use custom test settings file
+          DJANGO_SETTINGS_MODULE: config.settings.test
         run: python manage.py makemigrations --check
 
       - name: Apply DB Migrations
