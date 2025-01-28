@@ -53,21 +53,28 @@ jobs:
 
       - name: Create Virtual Environment & Install Dependencies
         run: |
-          python -m pip install uv                                   # Ensure uv is installed
-          uv venv --native-tls                                        # Create and activate a virtual environment
-          uv pip install -r requirements/local.txt                  # Install dependencies in the virtual environment
+          python -m pip install uv                             # Ensure uv is installed
+          uv venv --native-tls                                 # Create a virtual environment
+          source .venv/bin/activate                            # Activate the virtual environment
+          uv pip install -r requirements/local.txt            # Install dependencies in the virtual environment
 
       - name: Check DB Migrations
+        run: |
+          source .venv/bin/activate
+          python manage.py makemigrations --check
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
-        run: python manage.py makemigrations --check
 
       - name: Apply DB Migrations
+        run: |
+          source .venv/bin/activate
+          python manage.py migrate
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
-        run: python manage.py migrate
 
       - name: Run Unit Tests
+        run: |
+          source .venv/bin/activate
+          python manage.py test
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
-        run: python manage.py test
