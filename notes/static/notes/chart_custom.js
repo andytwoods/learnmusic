@@ -1,12 +1,51 @@
-document.addEventListener("DOMContentLoaded", generate_graph);
+document.addEventListener("DOMContentLoaded", function () {
+    let chart = generate_rt_graph();
+    let showingReactionTime = true;
+    // Button toggling logic
+    const toggleButton = document.getElementById("toggle-data-button");
+    toggleButton.addEventListener("click", () => {
+        showingReactionTime = !showingReactionTime;
+        toggleButton.textContent = showingReactionTime
+            ? "Show % Correct"
+            : "Show Reaction Time";
+        chart.destroy();
+        if (showingReactionTime) chart = generate_rt_graph();
+        else chart = generate_correct_graph();
+    });
+});
 
-function generate_graph() {
-    const progress_data = JSON.parse(
+function generate_rt_graph() {
+    const progress_data_unsorted = JSON.parse(
         document.getElementById("progress-data").textContent
     );
     const rt_per_sk = JSON.parse(
         document.getElementById("rt_per_sk-data").textContent
     );
+
+    function getNoteOrder(note) {
+        // Define the order of natural notes (C < D < E < F < G < A < B)
+        const noteOrder = ["C", "D", "E", "F", "G", "A", "B"];
+        return noteOrder.indexOf(note);
+    }
+
+    function sortProgressData(a, b) {
+        // Sort by octave first
+        if (a.octave !== b.octave) {
+            return a.octave - b.octave; // Lower octave comes first
+        }
+
+        // Sort by natural note order (C < D < E < F < G < A < B)
+        const orderA = getNoteOrder(a.note);
+        const orderB = getNoteOrder(b.note);
+        if (orderA !== orderB) {
+            return orderA - orderB;
+        }
+
+        // Sort by alter (accidentals): ♭♭ < ♭ < natural < ♯ < ♯♯
+        return a.alter - b.alter; // `alter` ranges from -2 to 2
+    }
+
+    const progress_data = progress_data_unsorted.sort(sortProgressData);
 
     function median(numbers) {
         numbers = numbers.map(Number);
@@ -19,18 +58,40 @@ function generate_graph() {
         return sorted[middle];
     }
 
-    // Prepare scatter plot data from progress_data
+// Prepare scatter plot data from progress_data
     let data = [];
     let staveLines = [];
-    let flat_data = [];
 
     for (let i = 0; i < progress_data.length; i++) {
         const pd = progress_data[i];
         const rt_log = pd.reaction_time_log;
 
         if (!rt_log || rt_log.length === 0) continue; // Skip if no reaction time data found
+
         let rt = median(rt_log);
-        let note_id = pd.note + "/" + pd.octave;
+
+        // Include `alter` value in `note_id` to create unique identifiers
+        let note_id;
+        switch (pd.alter) {
+            case "-2":
+                note_id = pd.note + "♭♭/" + pd.octave; // Double flat
+                break;
+            case "-1":
+                note_id = pd.note + "♭/" + pd.octave; // Flat
+                break;
+            case "0":
+            case undefined:
+                note_id = pd.note + "/" + pd.octave; // Natural
+                break;
+            case "1":
+                note_id = pd.note + "♯/" + pd.octave; // Sharp
+                break;
+            case "2":
+                note_id = pd.note + "♯♯/" + pd.octave; // Double sharp
+                break;
+            default:
+                throw new Error('Unexpected value encountered for the note alteration: ' + pd);
+        }
 
         data.push({note: note_id, time: rt});
         staveLines.push(note_id);
@@ -186,32 +247,16 @@ function generate_graph() {
         },
     };
 
+    Chart.register(addPointLabelsPlugin);
+
     const config = {
         type: "scatter",
         data: chartData,
         options: {
             responsive: true,
             plugins: {
-                addPointLabelsPlugin: {
-                    id: "addPointLabels",
-                    afterDatasetDraw(chart, args, options) {
-                        const {ctx} = chart;
-                        const datasetIndex = chart.data.datasets.length - 1; // Scatter dataset
-                        const meta = chart.getDatasetMeta(datasetIndex);
+                addPointLabelsPlugin: addPointLabelsPlugin,
 
-                        meta.data.forEach((point, index) => {
-                            const {x, y} = point.tooltipPosition();
-                            const label = chart.data.labels[index];
-                            ctx.save();
-                            ctx.font = "12px Arial";
-                            ctx.fillStyle = "#000"; // Label color
-                            ctx.textAlign = "center";
-                            ctx.textBaseline = "top";
-                            ctx.fillText(label, x, y + 12); // Position label below the circle
-                            ctx.restore();
-                        });
-                    },
-                },
 
                 legend: {
                     display: true,
@@ -256,6 +301,188 @@ function generate_graph() {
 
     // Render the chart
     const ctx = document.getElementById("staveChart").getContext("2d");
-    new Chart(ctx, config);
+    return new Chart(ctx, config);
+}
 
+function generate_correct_graph() {
+    const progress_data_unsorted = JSON.parse(
+        document.getElementById("progress-data").textContent
+    );
+
+    // Function to define the order of natural notes
+    function getNoteOrder(note) {
+        const noteOrder = ["C", "D", "E", "F", "G", "A", "B"];
+        return noteOrder.indexOf(note);
+    }
+
+    // Function to sort progress data
+    function sortProgressData(a, b) {
+        // Sort by octave first
+        if (a.octave !== b.octave) {
+            return a.octave - b.octave; // Lower octave comes first
+        }
+
+        // Sort by natural note order (C < D < E < F < G < A < B)
+        const orderA = getNoteOrder(a.note);
+        const orderB = getNoteOrder(b.note);
+        if (orderA !== orderB) {
+            return orderA - orderB;
+        }
+
+        // Sort by alterations (accidentals): ♭♭ < ♭ < natural < ♯ < ♯♯
+        return a.alter - b.alter; // `alter` ranges from -2 to 2
+    }
+
+    // Sort the progress data
+    const progress_data = progress_data_unsorted.sort(sortProgressData);
+
+    // Prepare scatter plot data for percentage correct
+    const data = [];
+    const staveLines = [];
+
+    for (const pd of progress_data) {
+        const correctLog = pd.correct;
+
+        if (!correctLog || correctLog.length === 0) continue; // Skip if no correctness data found
+
+        // Calculate the percentage correctness
+        const totalAttempts = correctLog.length;
+        const correctAttempts = correctLog.filter((entry) => entry === true).length;
+        const percentageCorrect = (correctAttempts / totalAttempts) * 100;
+
+        // Include `alter` value in `note_id` to create unique identifiers
+        let note_id;
+        switch (pd.alter) {
+            case "-2":
+                note_id = pd.note + "♭♭/" + pd.octave; // Double flat
+                break;
+            case "-1":
+                note_id = pd.note + "♭/" + pd.octave; // Flat
+                break;
+            case "0":
+            case undefined:
+                note_id = pd.note + "/" + pd.octave; // Natural
+                break;
+            case "1":
+                note_id = pd.note + "♯/" + pd.octave; // Sharp
+                break;
+            case "2":
+                note_id = pd.note + "♯♯/" + pd.octave; // Double sharp
+                break;
+            default:
+                throw new Error("Unexpected value encountered for note alteration: " + pd);
+        }
+
+        data.push({note: note_id, correctPercentage: percentageCorrect});
+        staveLines.push(note_id);
+    }
+
+    // Calculate note positions for the x-axis
+    const notePositions = staveLines.reduce((acc, note, index) => {
+        acc[note] = index * 20 + 50; // X positions for each note, evenly spaced
+        return acc;
+    }, {});
+
+    // Prepare the chart data
+    const chartData = {
+        labels: data.map((d) => d.note),
+        datasets: [
+            {
+                label: "Correctness (%)", // Label for the dataset
+                borderColor: "rgb(0,0,0)", // Point color
+                backgroundColor: "rgb(0,0,0)", // Point fill color
+                data: data.map((d) => ({
+                    x: notePositions[d.note],
+                    y: d.correctPercentage,
+                })),
+                pointRadius: 10, // Size of points
+                pointHoverRadius: 12, // Size on hover
+                type: "scatter", // Scatter plot for points
+                order: 1, // Ensure it stays on top (optional)
+            },
+        ],
+    };
+
+    // Add plugin to render labels below circles
+    const addPointLabelsPlugin = {
+        id: "addPointLabels",
+        afterDatasetDraw(chart, args, options) {
+            const {ctx} = chart;
+            const datasetIndex = chart.data.datasets.length - 1; // Scatter dataset
+            const meta = chart.getDatasetMeta(datasetIndex);
+
+            meta.data.forEach((point, index) => {
+                const {x, y} = point.tooltipPosition();
+                const label = chart.data.labels[index];
+                ctx.save();
+                ctx.font = "12px Arial";
+                ctx.fillStyle = "#000"; // Label color
+                ctx.textAlign = "center";
+                ctx.textBaseline = "top";
+                ctx.fillText(label, x, y + 12); // Position label below the circle
+                ctx.restore();
+            });
+        },
+    };
+
+    Chart.register(addPointLabelsPlugin);
+
+    // Chart configuration
+    const config = {
+        type: "scatter",
+        data: chartData,
+        options: {
+            responsive: true,
+            plugins: {
+                addPointLabelsPlugin: addPointLabelsPlugin,
+                legend: {
+                    display: true,
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (tooltipItem) {
+                            return `Note: ${
+                                staveLines[tooltipItem.dataIndex]
+                            }, Correct: ${
+                                data[tooltipItem.dataIndex].correctPercentage.toFixed(2)
+                            }%`;
+                        },
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: "Notes",
+                    },
+                    ticks: {
+                        callback: function (value) {
+                            const note = Object.keys(notePositions).find(
+                                (note) => notePositions[note] === value
+                            );
+                            return note || "";
+                        },
+                    },
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: "Correctness (%)",
+                    },
+                    min: 0,
+                    suggestedMax: 105, // Add padding but don't show labels beyond 100%
+                    ticks: {
+                        callback: function (value) {
+                            return value > 100 ? "" : value + "%"; // Show values only up to 100%
+                        },
+                    },
+                },
+            },
+        },
+    };
+
+    // Render the chart
+    const ctx = document.getElementById("staveChart").getContext("2d");
+    return new Chart(ctx, config);
 }

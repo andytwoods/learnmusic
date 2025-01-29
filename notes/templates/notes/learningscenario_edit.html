@@ -73,6 +73,11 @@
       // Event listener for instrument dropdown changes
       instrumentSelect.addEventListener('change', updateFields);
 
+
+      if (window.location.search.includes('?new=true')) {
+        updateFields();
+      }
+
     });
   </script>
 {% endblock content %}

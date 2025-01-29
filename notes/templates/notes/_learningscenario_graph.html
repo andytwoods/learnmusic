@@ -4,6 +4,9 @@
 {% block javascript %}
   {{ block.super }}
   <script src="{% static "js/chart.js" %}"></script>
+  <script>
+    const level = "{{ level }}";
+  </script>
   <script src="{% static "notes/chart_custom.js" %}"></script>
 
 {% endblock javascript %}
@@ -18,7 +21,11 @@
 
   {{ progress|json_script:"progress-data" }}
   {{ rt_per_sk|json_script:"rt_per_sk-data" }}
+  <div class="text-center">
+    <button class="btn btn-secondary btn-sm" id="toggle-data-button">Show % Correct</button>
+  </div>
   <canvas id="staveChart" width="800" height="400"></canvas>
   <div class="text-center text-secondary">Please be aware that Beginner, Intermediate and Advanced data above will be
-     simulated whist we are collect an extensive range of performance data.</div>
+    simulated whist we are collect an extensive range of performance data.
+  </div>
 {% endblock body %}
