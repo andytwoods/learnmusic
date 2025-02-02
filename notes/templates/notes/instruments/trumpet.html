@@ -1,3 +1,4 @@
+{% load static %}
 {% block button_css %}
   <style>
     .input-button {
@@ -22,7 +23,7 @@
 {% endblock button_css %}
 
 
-<div class="row w-100 ustify-content-center align-items-center text-center">
+<div class="row w-100 justify-content-center align-items-center text-center">
   <div class="col-12 w-100 text-center mt-3">
     <button class="btn btn-secondary input-button btn-lg mt-5" id='answer' data-valve="answer" style="width:100%;">buzz
     </button>
@@ -119,7 +120,7 @@
 
         let keys_pressed_by_finger = [];
         document.addEventListener('keydown', function (event) {
-          if(keys_pressed_by_finger.indexOf(event.key)!==-1) return
+          if (keys_pressed_by_finger.indexOf(event.key) !== -1) return
           keys_pressed_by_finger.push(event.key);
           buttonlogic(event.key);
         });
@@ -210,4 +211,22 @@
       ()
     )
   ;
+</script>
+
+<script>
+  window.tutorial_instrument_specific_steps = [{
+    element: "#trumpet-right",
+    popover: {
+      title: "Trumpet valves",
+      description: "Pretend you are holding a trumpet. Press down the correct valves."
+    }
+  },
+    {
+      element: "#answer",
+      popover: {
+        title: "Buzz!",
+        description: "Press here to play the note."
+      }
+    },
+  ]
 </script>

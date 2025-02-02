@@ -1,0 +1,66 @@
+{% load static %}
+<div id="toggle-container" class="position-absolute bottom-0 end-0 p-3">
+  <div class="form-check form-switch">
+    <input
+      class="form-check-input"
+      type="checkbox"
+      id="helpToggleSwitch"
+      hx-no-confirm="true"
+      hx-get="{% url 'toggle-help' %}"
+      hx-trigger="change"
+      hx-swap="none"
+      {% if request.user.help %}checked{% endif %}>
+    <label class="form-check-label" for="helpToggleSwitch">Tutorial</label>
+  </div>
+</div>
+
+<script src="{% static 'hints/driver.js.iife.js' %}"></script>
+<link rel="stylesheet" href="{% static 'hints/driver.css' %}"/>
+
+<script>
+
+  const tutorial = (function start_tutorial() {
+    let driver, driverObj;
+    const start_steps = [{
+      element: "#sheet",
+      popover: {
+        title: "Musical score",
+        description: "We show you a note to play"
+      }
+    }]
+    const end_steps = [{
+      popover: {
+        title: "Rinse and repeat!",
+        description: '<img style="width:100%" src="{% static 'images/graph.jpg' %}" alt="accuracy"><br>Later, you can see graphs that shows you how quick you are, and your accuracy.',
+      }
+    }]
+    let api = {}
+
+    function setup() {
+      driver = window.driver.js.driver;
+    }
+
+    api.run = function () {
+      if (!driver) setup();
+      driverObj = driver(
+        {
+          showProgress: true,
+          steps: [...start_steps, ...window.tutorial_instrument_specific_steps, ...end_steps]
+        }
+      );
+      driverObj.drive();
+
+    }
+    return api;
+  }());
+
+  {% if request.user %}
+    {% if request.user.help %}
+      tutorial.run();
+    {% endif %}
+  {% else %}
+    tutorial.run();
+  {% endif %}
+
+
+</script>

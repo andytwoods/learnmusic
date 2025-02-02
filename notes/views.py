@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.utils.timezone import now
 
 from notes import tools
 from notes.forms import LearningScenarioForm
@@ -111,6 +112,7 @@ def practice(request, learningscenario_id: int, sound:bool=False):
         'sound': sound,
         'level': learningscenario.level.lower(),
     }
+
     context.update(common_context(instrument_name=instrument_name, clef=package.learningscenario.clef, sound=sound))
 
     return render(request, 'notes/practice.html', context=context)

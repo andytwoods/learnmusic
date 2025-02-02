@@ -75,7 +75,7 @@ function throttle(callback, limit) {
 document.addEventListener("htmx:confirm", function (e) {
 
     // below breaks htmx sometimes
-    //if (!e.detail.target.hasAttribute('hx-confirm')) return
+    if (e.detail.target.hasAttribute('hx-no-confirm')) return
 
     e.preventDefault()
 
