@@ -102,11 +102,13 @@ class LearningScenario(TimeStampedModel):
         package: NoteRecordPackage = NoteRecordPackage.objects.filter(learningscenario_id=learningscenario_id).last()
         progress = package.log if package else None
 
-        if progress is None or package is None or package.older_than(hours=24):
+        freshen_progess = False
 
-            if package is None:
-                package = NoteRecordPackage.objects.create(learningscenario_id=learningscenario_id)
+        if package is None or package.older_than(hours=24):
+            package = NoteRecordPackage.objects.create(learningscenario_id=learningscenario_id)
+            freshen_progess = True
 
+        if progress is None or freshen_progess:
             progress = []
             learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
             for noterecord in learningscenario.notes:
