@@ -22,46 +22,67 @@
   </style>
 {% endblock button_css %}
 
-
-<div class="row w-100 justify-content-center align-items-center text-center">
-  <div class="col-12 w-100 text-center mt-3">
-    <button class="btn btn-secondary input-button btn-lg mt-5" id='answer' data-valve="answer" style="width:100%;">buzz
-    </button>
+<div class="row w-100 justify-content-center text-center mt-auto">
+  <div class="col-12 w-100 text-center">
+    <button class="btn btn-secondary input-button btn-lg w-100" id="answer" data-valve="answer">Buzz</button>
   </div>
 </div>
 
-
-<div id='trumpet-right' style="display:none;" class="col-3 text-left">
+<div id='trumpet-right' class="position-absolute">
   {% block keys %}
-    <button class="valve rounded-pill input-button my-3  p-4 trumpet-b3" data-valve="3">3</button>
-    <button class="valve rounded-pill input-button my-3 p-4 trumpet-b2" data-valve="2">2</button>
-    <button class="valve rounded-pill input-button my-3 p-4 trumpet-b1" data-valve="1">1</button>
+    <button class="valve rounded-pill input-button my-3 p-4 trumpet-b3 position-absolute" data-valve="3">3</button>
+    <button class="valve rounded-pill input-button my-3 p-4 trumpet-b2 position-absolute" data-valve="2">2</button>
+    <button class="valve rounded-pill input-button my-3 p-4 trumpet-b1 position-absolute" data-valve="1">1</button>
   {% endblock keys %}
 </div>
 
 {% block instrument_modify %}
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-
+    (function () {
+      // Get the container for the valves
       const valves_container = document.getElementById('trumpet-right');
       const valves = valves_container.children;
 
       const gap = 10;
 
+      // Set up the instrument input position element
       const instrument_input_position = document.getElementById('instrument-input-position');
       instrument_input_position.style.display = 'block';
       instrument_input_position.addEventListener('input', align_valves);
 
+      const valve_min_right = 30;
+
       function align_valves(event) {
-        const value = event ? event.target.value : parseInt(instrument_input_position.value);
+
+        let angle = event ? parseInt(event.target.value) : 0;
+        angle += 20;
+
+        // Radius is the constant separation distance:
+        // Valve offsetWidth (center-based positioning) + the "gap" between adjacent elements
+        const radius = valves[0].offsetWidth + gap; // Combine dimensions and gap
+
+        // Convert angle to radians for trigonometric calculations
+        const angleInRadians = (Math.PI / 180) * angle; // Map angle to radians
+
         for (let i = 0; i < valves.length; i++) {
-          valves[i].style.right = (i * gap * (12 - value) + 20).toString() + 'px';
-          // valves[i].style.top = -(.4 * i * gap * (12 - value)).toString() + 'px';
+          // Calculate horizontal offset:
+          // Adds an angle-based tilt without losing the constant separation
+          const horizontalOffset = valve_min_right + i * radius * Math.sin(angleInRadians); // Opposite side (horizontal)
+
+          // Calculate vertical placement:
+          // Constant vertical separation distance (radius * i)
+          const verticalOffset = i * radius * Math.cos(angleInRadians); // Adjacent side (vertical)
+
+          // Apply calculated offsets to the valves
+          valves[i].style.right = `${horizontalOffset}px`; // Horizontal alignment
+          valves[i].style.top = `${verticalOffset}px`;     // Vertical alignment
         }
       }
 
+      // Initial alignment of the valves
       align_valves();
 
+      // Apply styles and transitions to the container
       valves_container.style.opacity = '0';
       valves_container.style.display = 'block';
 
@@ -69,7 +90,7 @@
         valves_container.style.transition = 'opacity 100ms ease-in';
         valves_container.style.opacity = '1';
       }, 200);
-    });
+    })();
   </script>
 {% endblock instrument_modify %}
 
