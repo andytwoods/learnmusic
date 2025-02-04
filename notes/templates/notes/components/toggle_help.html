@@ -5,7 +5,7 @@
       class="form-check-input"
       type="checkbox"
       id="helpToggleSwitch"
-      {% if learningscenario_id != 'practice-try'  %}
+      {% if learningscenario_id != 'practice-try' %}
       hx-no-confirm="true"
       hx-get="{% url 'toggle-help' %}"
       hx-trigger="change"
@@ -24,7 +24,6 @@
   const tutorial = (function start_tutorial() {
     let driver, driverObj;
     const start_steps = [{
-      element: "#sheet",
       popover: {
         title: "Musical score",
         description: "We show you a note to play"
@@ -63,6 +62,12 @@
   {% else %}
     tutorial.run();
   {% endif %}
+  const helpToggleSwitch = document.getElementById('helpToggleSwitch');
+  helpToggleSwitch.addEventListener('change', () => {
+    if (helpToggleSwitch.checked) {
+      tutorial.run();
+    }
+  });
 
 
 </script>
