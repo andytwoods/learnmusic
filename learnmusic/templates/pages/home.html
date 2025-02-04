@@ -118,7 +118,7 @@
           iframe.onload = function () {
             try {
               const iframeContent = iframe.contentWindow.document.body;
-              iframe.style.height = iframeContent.scrollHeight + 20 + "px"; // Adjust the height based on content
+              iframe.style.height = iframeContent.scrollHeight + 120 + "px"; // Adjust the height based on content
             } catch (err) {
               console.error("Unable to adjust iframe height due to cross-origin restrictions:", err);
             }

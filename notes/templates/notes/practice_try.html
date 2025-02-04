@@ -1,9 +1,9 @@
 {% extends 'notes/practice.html' %}
 {% load static %}
 
-{% block cardbody %}
-<div class="small text-muted position-absolute end-0 me-2">{{ level }} level, key {{ key }}, {{ clef }} clef</div>
-{% endblock cardbody %}
+{% block card-bottom %}
+<div class="small text-muted position-absolute bottom-0 start-0 ms-2 mb-2">{{ level }} level<br>key {{ key }} {{ clef }} clef</div>
+{% endblock card-bottom %}
 
 {% block cardheader %}
   <!-- Cog Icon Dropdown -->
