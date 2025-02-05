@@ -65,6 +65,7 @@ class LearningScenario(TimeStampedModel):
         MinValueValidator(-1),
         MaxValueValidator(1),
     ])
+    ux = models.JSONField(default=dict, blank=True)
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         # instrument can be null as we create a blank instence before user specifies this
@@ -76,7 +77,7 @@ class LearningScenario(TimeStampedModel):
             else:
                 lowest_note, highest_note = tools.get_instrument_range(self.instrument_name, self.level)
                 notes = tools.generate_notes(highest_note=highest_note, lowest_note=lowest_note)
-                self.notes = ';'.join(notes)
+                self.notes = notes
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -102,13 +103,13 @@ class LearningScenario(TimeStampedModel):
         package: NoteRecordPackage = NoteRecordPackage.objects.filter(learningscenario_id=learningscenario_id).last()
         progress = package.log if package else None
 
-        freshen_progess = False
+        freshen_progress = False
 
         if package is None or package.older_than(hours=24):
             package = NoteRecordPackage.objects.create(learningscenario_id=learningscenario_id)
-            freshen_progess = True
+            freshen_progress = True
 
-        if progress is None or freshen_progess:
+        if progress is None or freshen_progress:
             progress = []
             learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
             for noterecord in learningscenario.notes:

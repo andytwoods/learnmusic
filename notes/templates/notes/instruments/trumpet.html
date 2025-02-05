@@ -46,42 +46,115 @@
       const gap = 10;
 
       // Set up the instrument input position element
-      const instrument_input_position = document.getElementById('instrument-input-position');
-      instrument_input_position.style.display = 'block';
-      instrument_input_position.addEventListener('input', align_valves);
+      const instrument_input_tilt = document.getElementById('instrument-input-tilt');
+      const instrument_input_vertical = document.getElementById('instrument-input-vertical');
+      const instrument_input_horizontal = document.getElementById('instrument-input-horizontal');
+      const instrument_input_separation = document.getElementById('instrument-input-separation');
+      const instrument_input_reset = document.getElementById('reset-button');
 
-      const valve_min_right = 30;
+      instrument_input_tilt.style.display = 'block';
+      instrument_input_tilt.addEventListener('input', adjust_valves_tilt);
+      instrument_input_vertical.addEventListener('input', adjust_valves_vertical);
+      instrument_input_horizontal.addEventListener('input', adjust_valves_horizontal);
+      instrument_input_separation.addEventListener('input', adjust_valves_separation);
+      instrument_input_reset.addEventListener('click', reset_valves);
 
-      function align_valves(event) {
+// Store the initial vertical and horizontal positions of all valves
+      // Store the initial vertical and horizontal positions of all valves
+      const initialValvePositions = [...valves].map(valve => ({
+        top: parseInt(valve.style.top || '0'),
+        right: parseInt(valve.style.right || '0'),
+      }));
 
-        let angle = event ? parseInt(event.target.value) : 0;
-        angle += 20;
+// Track user adjustments separately: vertical, horizontal, tilt, and separation
+      let verticalOffset = 0;
+      let horizontalOffset = 0; // Controlled by the horizontal input range (0–100)
+      let tiltAngle = 0;        // Controlled by the tilt input range (0–100)
+      let separationOffset = 0; // Added to control spacing adjustments
 
-        // Radius is the constant separation distance:
-        // Valve offsetWidth (center-based positioning) + the "gap" between adjacent elements
-        const radius = valves[0].offsetWidth + gap; // Combine dimensions and gap
+// Store the initial separation based on valve dimensions (constant gap between valves)
+      const initialSeparation = valves[0].offsetWidth + gap; // Base separation = valve width + gap
 
-        // Convert angle to radians for trigonometric calculations
-        const angleInRadians = (Math.PI / 180) * angle; // Map angle to radians
+// Define the minimum horizontal distance from the right (0 on horizontal range input)
+      const minimumHorizontalDistance = 50; // Minimum distance (in pixels) from the right side
+
+// Maximum tilt angle in degrees (maps directly to slider max value of 100)
+      const maxTiltAngle = 90; // Adjust this value for a different maximum tilt
+
+// Adjust all valves' vertical positions
+      function adjust_valves_vertical(event) {
+        verticalOffset = event ? parseInt(event.target.value * 4) : 0;
+        update_valve_positions();
+      }
+
+// Adjust all valves' horizontal positions
+      function adjust_valves_horizontal(event) {
+        // Horizontal input defines the offset relative to the minimum horizontal distance
+        horizontalOffset = event ? parseInt(event.target.value * 4) : 0;
+        update_valve_positions();
+      }
+
+// Adjust all valves' tilt positions
+      function adjust_valves_tilt(event) {
+        // Map the slider input (0–100) to the tilt angle (0–maxTiltAngle)
+        tiltAngle = event ? (parseInt(event.target.value) / 100) * maxTiltAngle : 0;
+        update_valve_positions();
+      }
+
+// Adjust the separation of the valves
+      function adjust_valves_separation(event) {
+        separationOffset = event ? parseInt(event.target.value) : 0;
+        update_valve_positions();
+      }
+
+// Function to dynamically calculate and update valve positions
+      function update_valve_positions() {
+        // Current separation is the initial separation plus the offset
+        const currentSeparation = initialSeparation + separationOffset;
 
         for (let i = 0; i < valves.length; i++) {
-          // Calculate horizontal offset:
-          // Adds an angle-based tilt without losing the constant separation
-          const horizontalOffset = valve_min_right + i * radius * Math.sin(angleInRadians); // Opposite side (horizontal)
+          // Initial fixed positions for each valve
+          const initialTop = initialValvePositions[i].top;
+          const initialRight = initialValvePositions[i].right;
 
-          // Calculate vertical placement:
-          // Constant vertical separation distance (radius * i)
-          const verticalOffset = i * radius * Math.cos(angleInRadians); // Adjacent side (vertical)
+          // Calculate tilt offsets (based on angle and current separation)
+          const angleInRadians = (Math.PI / 180) * tiltAngle; // Map tilt angle to radians
+          const tiltHorizontalOffset = i * currentSeparation * Math.sin(angleInRadians); // Opposite side
+          const tiltVerticalOffset = i * currentSeparation * Math.cos(angleInRadians);   // Adjacent side
 
-          // Apply calculated offsets to the valves
-          valves[i].style.right = `${horizontalOffset}px`; // Horizontal alignment
-          valves[i].style.top = `${verticalOffset}px`;     // Vertical alignment
+          // Combine the initial positions with all offsets (vertical, tilt, horizontal, and separation)
+          let computedRight = minimumHorizontalDistance + horizontalOffset + tiltHorizontalOffset; // Start from minimum
+          const computedTop = initialTop + verticalOffset + tiltVerticalOffset;
+
+          // Apply the computed positions to the valve
+          valves[i].style.right = `${computedRight}px`;
+          valves[i].style.top = `${computedTop}px`;
         }
       }
 
-      // Initial alignment of the valves
-      align_valves();
+      function reset_valves() {
+        // Reset the slider values to their default
+        instrument_input_tilt.value = 0; // Reset tilt slider
+        instrument_input_vertical.value = 0; // Reset vertical slider
+        instrument_input_horizontal.value = 0; // Reset horizontal slider
+        instrument_input_separation.value = 0; // Reset separation slider
 
+        // Reset the tracked variables for offsets
+        verticalOffset = 0;
+        horizontalOffset = 0;
+        tiltAngle = 0;
+        separationOffset = 0;
+
+        // Reset the valve positions to their initial state
+        update_valve_positions();
+      }
+
+      let ux = JSON.parse(
+      document.getElementById('ux-data').textContent
+    )
+
+// Initial placement of the valves
+      update_valve_positions();
       // Apply styles and transitions to the container
       valves_container.style.opacity = '0';
       valves_container.style.display = 'block';

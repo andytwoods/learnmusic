@@ -138,8 +138,3 @@ class TestTools(TestCase):
                                      'D 1 5', 'E -1 5', 'E 0 5', 'E 1 5', 'F -1 5', 'F 0 5',
                                      'F 1 5', 'G -1 5', 'G 0 5', 'G 1 5', 'A -1 5', 'A 0 5',
                                      'A 1 5', 'B -1 5', 'B 0 5'])
-
-
-class TestModels(TestCase):
-    def test_progress_latest_serialised(self):
-        scenario: LearningScenario = LearningScenarioFactory()

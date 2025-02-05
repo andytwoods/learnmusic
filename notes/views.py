@@ -105,6 +105,7 @@ def practice(request, learningscenario_id: int, sound:bool=False):
     learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
     context = {
         'learningscenario_id': learningscenario_id,
+        'ux': learningscenario.ux,
         'package_id': package.id,
         'key': learningscenario.key,
         'transposing_direction': learningscenario.transposing_direction,
