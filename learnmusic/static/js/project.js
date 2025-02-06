@@ -13,6 +13,19 @@ function getInstrumentData(instrument, callback) {
         });/* Project specific Javascript goes here. */
 }
 
+function fade_in(element, duration) {
+    // Apply the fade-in effect
+    element.style.opacity = '0'; // Start with opacity 0
+    element.style.transition = 'opacity 0.3s ease-in'; // Transition for 0.3 seconds
+    element.style.display = 'block'; // Ensure it's displayed if it was hidden
+
+    if (!duration) duration = 200;
+// Trigger the fade-in after appending
+    setTimeout(() => {
+        element.style.opacity = '1'; // Set opacity to 1 for fade-in effect
+    }, duration);
+}
+
 function getEnharmonicEquivalents(noteString) {
     // Enharmonic mappings
     const enharmonics = {
@@ -37,7 +50,7 @@ function getEnharmonicEquivalents(noteString) {
         "B#": ["C"]
     };
 
-    if(noteString.indexOf('/')===-1) return enharmonics[noteString]
+    if (noteString.indexOf('/') === -1) return enharmonics[noteString]
 
     // Parse the note and octave from VexFlow note string
     const regex = /^([A-Ga-g][#b]*)(\/\d)$/; // Matches notes like "A#/4", "Bb/4", etc.

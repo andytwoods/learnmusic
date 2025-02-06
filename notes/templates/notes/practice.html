@@ -27,64 +27,6 @@
       <div><h5 class="d-inline">{{ instrument }} note trainer</h5>
         {% block cardheader %}{% endblock %}
       </div>
-      <div class="dropdown">
-        <!-- Dropdown toggle button with gear icon -->
-        <button class="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown"
-                aria-expanded="false">
-          <i class="fas fa-cog"></i> <!-- Font Awesome gear icon -->
-        </button>
-
-        <!-- Dropdown menu -->
-        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
-          <li class="px-3 py-2">
-            <label for="instrument-input-tilt" class="form-label">Adjust Tilt</label>
-            <input
-              type="range"
-              id="instrument-input-tilt"
-              class="form-range"
-              style="width: 150px;"
-              min="0"
-              max="100"
-              value="0">
-          </li>
-          <li class="px-3 py-2">
-            <label for="instrument-input-vertical" class="form-label">Adjust vertical position</label>
-            <input
-              type="range"
-              id="instrument-input-vertical"
-              class="form-range"
-              style="width: 150px;"
-              min="0"
-              max="100"
-              value="0">
-          </li>
-          <li class="px-3 py-2">
-            <label for="instrument-input-horizontal" class="form-label">Adjust horizontal position</label>
-            <input
-              type="range"
-              id="instrument-input-horizontal"
-              class="form-range"
-              style="width: 150px;"
-              min="0"
-              max="100"
-              value="0">
-          </li>
-          <li class="px-3 py-2">
-            <label for="instrument-input-separation" class="form-label">Adjust gap</label>
-            <input
-              type="range"
-              id="instrument-input-separation"
-              class="form-range"
-              style="width: 150px;"
-              min="0"
-              max="100"
-              value="0">
-          </li>
-          <li class="px-3 py-2 text-center">
-            <button id="reset-button" class="btn btn-primary" style="margin-top: 10px;">Reset</button>
-          </li>
-        </ul>
-      </div>
     </div>
     <div class="card-body position-relative d-flex flex-column">
       {% block cardbody %}{% endblock %}
@@ -109,14 +51,14 @@
       </div>
       {% include instrument_template %}
     </div>
-    {% block card-bottom %}{% endblock %}
+  <div id="cardbottom"></div>
+    {% block cardbottom %}{% endblock %}
     {% include 'notes/components/toggle_help.html' %}
 
   </div>
 
   {{ progress|json_script:"progress-data" }}
 
-  {{ ux|json_script:"ux-data" }}
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
