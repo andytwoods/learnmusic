@@ -64,3 +64,11 @@ svg {
   position: relative;
   z-index: 2; /* Ensure the text is above the overlay */
 }
+
+:root {
+  --vh: 1vh; /* Fallback for browsers without JavaScript */
+}
+
+.min-vh-100 {
+  min-height: calc(var(--vh, 1vh) * 100);
+}
