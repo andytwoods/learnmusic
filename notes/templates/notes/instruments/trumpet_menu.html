@@ -3,54 +3,26 @@
   <button class="btn btn-light dropdown-toggle" type="button"
           id="dropdownMenuButton1" data-bs-toggle="dropdown"
           aria-expanded="false">
-    <i class="text-muted fas text-faded fa-cog"></i> Adjust valves <!-- Font Awesome gear icon -->
+    <i class="text-muted fas text-faded fa-cog"></i> Adjust valves
   </button>
 
   <!-- Dropdown menu -->
   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
     <li class="px-3 py-2">
       <label for="instrument-input-tilt" class="form-label">Adjust Tilt</label>
-      <input
-        type="range"
-        id="instrument-input-tilt"
-        class="form-range"
-        style="width: 150px;"
-        min="0"
-        max="100"
-        value="0">
+      <input type="range" id="instrument-input-tilt" class="form-range" style="width: 150px;" min="-100" max="100" value="0">
     </li>
     <li class="px-3 py-2">
       <label for="instrument-input-vertical" class="form-label">Adjust vertical position</label>
-      <input
-        type="range"
-        id="instrument-input-vertical"
-        class="form-range"
-        style="width: 150px;"
-        min="0"
-        max="100"
-        value="0">
+      <input type="range" id="instrument-input-vertical" class="form-range" style="width: 150px;" min="0" max="100" value="0">
     </li>
     <li class="px-3 py-2">
       <label for="instrument-input-horizontal" class="form-label">Adjust horizontal position</label>
-      <input
-        type="range"
-        id="instrument-input-horizontal"
-        class="form-range"
-        style="width: 150px;"
-        min="0"
-        max="100"
-        value="0">
+      <input type="range" id="instrument-input-horizontal" class="form-range" style="width: 150px;" min="-100" max="100" value="0">
     </li>
     <li class="px-3 py-2">
       <label for="instrument-input-separation" class="form-label">Adjust gap</label>
-      <input
-        type="range"
-        id="instrument-input-separation"
-        class="form-range"
-        style="width: 150px;"
-        min="0"
-        max="100"
-        value="0">
+      <input type="range" id="instrument-input-separation" class="form-range" style="width: 150px;" min="0" max="100" value="0">
     </li>
     <li class="px-3 py-2 text-center">
       <button id="reset-button" class="btn btn-primary" style="margin-top: 10px;">Reset</button>
@@ -60,7 +32,7 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    // --- Existing Setup ---
+    // --- Cached Elements ---
     const valves_container = document.getElementById('trumpet-right');
     const valves = valves_container.children;
 
@@ -71,84 +43,109 @@
     const instrument_input_reset = document.getElementById('reset-button');
 
     const dropdownMenuButton = document.getElementById('dropdownMenuButton1');
-    const dropdownMenu = document.querySelector('.dropdown-menu');
+
+    // --- Constants ---
+    const cacheKey = "valveRangeInputCache";
+    const RECALCULATION_DELAY = 16; // ~60fps for smoother updates
+    const gap = 10;
+    const minimumHorizontalDistance = 50;
+    const maxTiltAngle = 90;
 
     const initialValvePositions = [...valves].map(valve => ({
       top: parseInt(valve.style.top || '0'),
       right: parseInt(valve.style.right || '0'),
     }));
 
-    const gap = 10;
     const initialSeparation = valves[0].offsetWidth + gap;
-    const minimumHorizontalDistance = 50;
-    const maxTiltAngle = 90;
 
+    // --- Dynamic Variables ---
     let verticalOffset = 0;
     let horizontalOffset = 0;
     let tiltAngle = 0;
     let separationOffset = 0;
+    let animationFrameId = null;
 
-    // Cache key for storing data
-    const cacheKey = "valveRangeInputCache";
+    // --- Throttling Function ---
+    function throttle(callback, limit) {
+      let waiting = false;
+      return function (...args) {
+        if (!waiting) {
+          waiting = true;
+          setTimeout(() => {
+            callback.apply(this, args);
+            waiting = false;
+          }, limit);
+        }
+      };
+    }
 
-    // Save slider values to cache
+    // --- Cache Management ---
     function saveToCache() {
-      const sliderValues = {
+      const currentValues = {
         tilt: instrument_input_tilt.value,
         vertical: instrument_input_vertical.value,
         horizontal: instrument_input_horizontal.value,
         separation: instrument_input_separation.value,
       };
-      localStorage.setItem(cacheKey, JSON.stringify(sliderValues));
-      console.log("Slider values saved to cache:", sliderValues);
+
+      const cachedValues = JSON.parse(localStorage.getItem(cacheKey));
+      if (JSON.stringify(currentValues) !== JSON.stringify(cachedValues)) {
+        localStorage.setItem(cacheKey, JSON.stringify(currentValues));
+        console.log("Slider values saved to cache:", currentValues);
+      }
     }
 
-    // Load slider values from cache
     function loadFromCacheAndApply() {
       const cachedValues = localStorage.getItem(cacheKey);
       if (cachedValues) {
         const sliderValues = JSON.parse(cachedValues);
 
-        // Apply cached values to sliders
         instrument_input_tilt.value = sliderValues.tilt || 0;
         instrument_input_vertical.value = sliderValues.vertical || 0;
         instrument_input_horizontal.value = sliderValues.horizontal || 0;
         instrument_input_separation.value = sliderValues.separation || 0;
 
-        // Update offsets based on cached values
         verticalOffset = parseInt(sliderValues.vertical || 0) * 4;
         horizontalOffset = parseInt(sliderValues.horizontal || 0) * 4;
         tiltAngle = (parseInt(sliderValues.tilt || 0) / 100) * maxTiltAngle;
         separationOffset = parseInt(sliderValues.separation || 0);
 
-        // Recalculate valve positions after loading cached values
         update_valve_positions();
         console.log("Slider values restored from cache:", sliderValues);
       }
     }
 
-    // Function to dynamically calculate and update valve positions
+    // --- Optimised Valve Position Update ---
     function update_valve_positions() {
-      const currentSeparation = initialSeparation + separationOffset;
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
 
-      for (let i = 0; i < valves.length; i++) {
-        const initialTop = initialValvePositions[i].top;
-        const initialRight = initialValvePositions[i].right;
+      animationFrameId = requestAnimationFrame(() => {
+        const currentSeparation = initialSeparation + separationOffset;
 
-        const angleInRadians = (Math.PI / 180) * tiltAngle;
-        const tiltHorizontalOffset = i * currentSeparation * Math.sin(angleInRadians);
-        const tiltVerticalOffset = i * currentSeparation * Math.cos(angleInRadians);
+        for (let i = 0; i < valves.length; i++) {
+          const initialTop = initialValvePositions[i].top;
+          const angleInRadians = (Math.PI / 180) * tiltAngle;
+          const tiltHorizontalOffset = i * currentSeparation * Math.sin(angleInRadians);
+          const tiltVerticalOffset = i * currentSeparation * Math.cos(angleInRadians);
 
-        const computedRight = minimumHorizontalDistance + horizontalOffset + tiltHorizontalOffset;
-        const computedTop = initialTop + verticalOffset + tiltVerticalOffset;
+          const computedRight = minimumHorizontalDistance + horizontalOffset + tiltHorizontalOffset;
+          const computedTop = initialTop + verticalOffset + tiltVerticalOffset;
 
-        valves[i].style.right = `${computedRight}px`;
-        valves[i].style.top = `${computedTop}px`;
-      }
+          valves[i].style.transform = `translate(${computedRight}px, ${computedTop}px)`;
+        }
+        animationFrameId = null;
+      });
     }
 
-    // Reset sliders and clear cache
+    // --- Reset Function ---
     function reset_valves() {
+      if (instrument_input_tilt.value === "0" &&
+          instrument_input_vertical.value === "0" &&
+          instrument_input_horizontal.value === "0" &&
+          instrument_input_separation.value === "0") {
+        return;
+      }
+
       instrument_input_tilt.value = 0;
       instrument_input_vertical.value = 0;
       instrument_input_horizontal.value = 0;
@@ -159,40 +156,36 @@
       tiltAngle = 0;
       separationOffset = 0;
 
-      localStorage.removeItem(cacheKey); // Clear cache
-      update_valve_positions(); // Reset valve positions
+      localStorage.removeItem(cacheKey);
+      update_valve_positions();
       console.log("Sliders reset and cache cleared");
     }
 
-    // --- Attach Event Listeners ---
-    dropdownMenuButton.addEventListener('hidden.bs.dropdown', saveToCache); // Save on menu close
-    instrument_input_reset.addEventListener('click', reset_valves); // Reset button
+    // --- Event Listeners ---
+    dropdownMenuButton.addEventListener('hidden.bs.dropdown', saveToCache);
+    instrument_input_reset.addEventListener('click', reset_valves);
 
-    // Restore sliders on page load
-    loadFromCacheAndApply();
-
-    // --- Adjust Valve Position Listeners ---
-    instrument_input_tilt.addEventListener('input', (event) => {
+    instrument_input_tilt.addEventListener('input', throttle((event) => {
       tiltAngle = (parseInt(event.target.value) / 100) * maxTiltAngle;
       update_valve_positions();
-    });
+    }, RECALCULATION_DELAY));
 
-    instrument_input_vertical.addEventListener('input', (event) => {
+    instrument_input_vertical.addEventListener('input', throttle((event) => {
       verticalOffset = parseInt(event.target.value) * 4;
       update_valve_positions();
-    });
+    }, RECALCULATION_DELAY));
 
-    instrument_input_horizontal.addEventListener('input', (event) => {
+    instrument_input_horizontal.addEventListener('input', throttle((event) => {
       horizontalOffset = parseInt(event.target.value) * 4;
       update_valve_positions();
-    });
+    }, RECALCULATION_DELAY));
 
-    instrument_input_separation.addEventListener('input', (event) => {
+    instrument_input_separation.addEventListener('input', throttle((event) => {
       separationOffset = parseInt(event.target.value);
       update_valve_positions();
-    });
+    }, RECALCULATION_DELAY));
 
-    // Ensure valves are placed properly on initial page load
+    loadFromCacheAndApply();
     update_valve_positions();
   });
 </script>

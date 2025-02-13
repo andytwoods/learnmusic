@@ -2,8 +2,8 @@ const stave_manager = (function () {
     let api = {};
     const VF = Vex.Flow;  // Reference VexFlow library
     const div = document.getElementById("sheet");
-    const containerWidth = div.clientWidth;
-    const staveWidth = 200; //
+    let containerWidth = div.clientWidth;
+    let staveWidth = 200; //
     const my_clef = '{{ clef }}';
     // Initialize VexFlow renderer
     const renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
@@ -12,7 +12,7 @@ const stave_manager = (function () {
     const context = renderer.getContext();  // Get the rendering context
 
     const startX = (containerWidth - staveWidth) / 2; // Calculate the starting point for centering
-    const stave = new VF.Stave(startX, 40, staveWidth);
+    let stave = new VF.Stave(startX, 40, staveWidth);
     stave.addClef(my_clef);
     // stave.addKeySignature("{{ key }}");
     stave.setContext(context); // Attach the context to the stave
@@ -153,6 +153,19 @@ const stave_manager = (function () {
         // Track the SVG group as feedback note for future removal
         feedbackNotes.push(contextGroup);
     };
+
+    // 🔹 **Resize Stave on Container Resize**
+    function resizeStave() {
+        containerWidth = container.clientWidth;
+        staveWidth = containerWidth * 0.8; // Stave should be 80% of container
+        renderer.resize(containerWidth, 200);
+        context.clear();
+
+        stave = new VF.Stave(10, 40, staveWidth);
+        stave.addClef(my_clef);
+        stave.setContext(context).draw();
+    }
+
 
 
     return api;

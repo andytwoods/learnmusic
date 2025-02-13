@@ -79,7 +79,6 @@ traitlets==5.14.3
 types-PyYAML==6.0.12.20240917
 typing_extensions==4.12.2
 urllib3==2.2.3
-uv==0.5.14
 virtualenv==20.28.0
 watchdog==6.0.0
 wcwidth==0.2.13

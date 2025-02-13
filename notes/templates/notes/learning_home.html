@@ -24,17 +24,38 @@
           <div class="card-body">
             <h5 class="card-title">
               {{ learningscenario.instrument_name }} {{ learningscenario.key }}
-              <a class='small' href="{% url 'edit-learning-scenario' pk=learningscenario.id %}">edit</a>
-              <button
-                class="btn btn-sm position-absolute top-0 end-0 m-1 text-danger"
-                hx-post="{{ request.path }}"
-                hx-target="#learningscenario-{{ learningscenario.id }}"
-                hx-swap="outerHTML"
-                hx-confirm="Are you sure you want to delete this item?"
-                hx-vals='{"action": "delete", "id": {{ learningscenario.id }}}'
-              >
-                Delete
-              </button>
+
+              <div class="dropdown position-absolute top-0 end-0 m-1">
+                <button
+                  class="btn btn-sm dropdown-toggle"
+                  type="button"
+                  id="dropdownMenuButton{{ learningscenario.id }}"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  Options
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ learningscenario.id }}">
+                  <li>
+                    <a class='dropdown-item' href="{% url 'edit-learning-scenario' pk=learningscenario.id %}">Info</a>
+                  </li>
+                  <li>
+                     <a class="dropdown-item" href="{% url 'edit-learning-scenario-notes' pk=learningscenario.id %}">Edit notes</a>
+                  </li>
+                  <li>
+                    <a
+                      class="dropdown-item text-danger"
+                      hx-post="{{ request.path }}"
+                      hx-target="#learningscenario-{{ learningscenario.id }}"
+                      hx-swap="outerHTML"
+                      hx-confirm="Are you sure you want to delete this item?"
+                      hx-vals='{"action": "delete", "id": {{ learningscenario.id }}}'
+                      href="#">
+                      Delete
+                    </a>
+                  </li>
+                </ul>
+              </div>
             </h5>
             <div class="card-text">
               <div>
