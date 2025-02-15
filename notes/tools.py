@@ -129,3 +129,40 @@ def get_instrument_range(instrument:str, level:str):
         return _notes[0], _notes[-1]
     return instrument_notes_info['lowest_note'], instrument_notes_info['highest_note']
 
+
+def sort_notes(grouped_by_note):
+    import re
+
+    # Define the proper ordering of notes within an octave
+    NOTE_ORDER = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"]
+
+    # Extended sorting logic for notes with octaves
+    def note_sort_key(note):
+        """
+        Sorts musical notes based on their order in NOTE_ORDER and their octave.
+        Args:
+            note (str): A note with an accidental and octave, e.g., "F3b", "C4#", or "G#2".
+        Returns:
+            tuple: A tuple (octave, note_index) for sorting.
+        """
+        # Parse the note using regex: Capture the base note, alterations and the octave
+        match = re.match(r"([A-G]+[#b]*)(\d+)", note)  # E.g., "F3b" -> ["F3b", "F3", "3"]
+        if match:
+            note_base, octave = match.groups()
+            octave = int(octave)  # Convert octave to an integer
+            # Handle flats and sharps
+            if note_base not in NOTE_ORDER and "b" in note_base:
+                # Convert flats to sharps for equivalence
+                flat_to_sharp = {"Db": "C#", "Eb": "D#", "Gb": "F#", "Ab": "G#", "Bb": "A#"}
+                note_base = flat_to_sharp.get(note_base, note_base)
+            note_index = NOTE_ORDER.index(note_base) if note_base in NOTE_ORDER else float('inf')
+            return (octave, note_index)
+        else:
+            # Return high values for invalid notes to push them to the end
+            return (float('inf'), float('inf'))
+
+    # Sort grouped_by_note dictionary by its keys
+    sorted_grouped_by_note = {key: grouped_by_note[key] for key in sorted(grouped_by_note.keys(), key=note_sort_key)}
+
+    # Output the sorted dictionary
+    return sorted_grouped_by_note
