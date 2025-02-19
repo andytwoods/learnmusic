@@ -5,6 +5,7 @@ const stave_manager = (function () {
     let containerWidth = div.clientWidth;
     let staveWidth = 200; //
     const my_clef = '{{ clef }}';
+    const transpose_key = "{{ transpose_key }}";
     // Initialize VexFlow renderer
     const renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
     renderer.resize(containerWidth, 200);  // Resize the SVG
@@ -14,7 +15,11 @@ const stave_manager = (function () {
     const startX = (containerWidth - staveWidth) / 2; // Calculate the starting point for centering
     let stave = new VF.Stave(startX, 40, staveWidth);
     stave.addClef(my_clef);
-    // stave.addKeySignature("{{ key }}");
+    
+    //stave.addKeySignature('F');
+
+
+
     stave.setContext(context); // Attach the context to the stave
     stave.draw(context);       // Draw the stave
 

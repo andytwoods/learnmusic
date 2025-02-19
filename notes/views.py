@@ -115,6 +115,7 @@ def practice(request, learningscenario_id: int, sound: bool = False):
         'transposing_direction': learningscenario.transposing_direction,
         'progress': serialised_notes,
         'sound': sound,
+        'transpose_key': learningscenario.transpose_key,
         'level': learningscenario.level.lower(),
     }
 

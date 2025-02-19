@@ -24,9 +24,11 @@
 
   <div class="card w-100 mw-md-75 mx-auto pb-5 d-flex flex-column" style="min-height: calc(var(--vh, 1vh) * 100);">
     <div class="card-header d-flex align-items-center">
-      <div><h5 class="d-inline">{{ instrument }} note trainer</h5>
-        {% block cardheader %}{% endblock %}
-      </div>
+      {% block cardheader %}
+        <div>
+          <h5 class="d-inline">{{ instrument }} note trainer</h5>
+        </div>
+      {% endblock %}
     </div>
     <div class="card-body position-relative d-flex flex-column">
       {% block cardbody %}{% endblock %}

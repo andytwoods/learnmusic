@@ -10,11 +10,13 @@ class LearningScenarioForm(forms.ModelForm):
 
     class Meta:
         model = LearningScenario
-        fields = ['instrument_name', 'level', 'clef', 'key']
+        fields = ['instrument_name', 'label', 'level', 'clef', 'key', 'transpose_key', ]
 
 
     def __init__(self, *args, **kwargs):
         super(LearningScenarioForm, self).__init__(*args, **kwargs)
+
+        self.fields['transpose_key'].label = 'Transposing from which key'
 
         self.fields['instrument_name'] = forms.ChoiceField(
             choices=[(i, i) for i in instrument_infos.keys()],
@@ -29,6 +31,7 @@ class LearningScenarioForm(forms.ModelForm):
         # Modify layout to include the new field
         self.helper.layout = Layout(
             Field('instrument_name'),
+            Field('label'),
             Div(
                 Field('clef'),
                 Field('level'),

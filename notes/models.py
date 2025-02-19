@@ -10,6 +10,7 @@ from notes.instruments import instruments
 
 User = get_user_model()
 
+
 class InstrumentKeys(models.TextChoices):
     A = "A", "A"
     A_SHARP = "A#", "A#"
@@ -28,6 +29,12 @@ class InstrumentKeys(models.TextChoices):
     G = "G", "G"
     G_SHARP = "G#", "G#"
     G_FLAT = "Gb", "Gb"
+
+
+class BlankTransposingKey(models.TextChoices):
+    BLANK = "BL", "None"
+
+transposing_choices = BlankTransposingKey.choices + InstrumentKeys.choices
 
 
 class NoteChoices(models.TextChoices):
@@ -53,14 +60,17 @@ class LevelChoices(models.TextChoices):
     ADVANCED = 'Advanced'
 
 
-
 class LearningScenario(TimeStampedModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    label = models.CharField(max_length=64, null=True, blank=True, help_text='If you have lots of learning scenarios, it might help to give them memorable names')
     instrument_name = models.CharField(max_length=64, null=True, blank=True)
-    level = models.CharField(max_length=64,choices=LevelChoices.choices, default=LevelChoices.BEGINNER)
+    level = models.CharField(max_length=64, choices=LevelChoices.choices, default=LevelChoices.BEGINNER)
     notes = models.JSONField(null=True, blank=True)
     clef = models.CharField(max_length=64, choices=ClefChoices.choices, default=ClefChoices.TREBLE)
     key = models.CharField(max_length=2, choices=InstrumentKeys.choices, default=NoteChoices.C)
+    transpose_key = models.CharField(max_length=2, choices=transposing_choices,
+                                     default=BlankTransposingKey.BLANK , help_text='This is an advanced option. Leave as None if unsure')
+
     transposing_direction = models.IntegerField(default=0, validators=[
         MinValueValidator(-1),
         MaxValueValidator(1),
@@ -133,7 +143,6 @@ class NoteRecordPackage(TimeStampedModel):
         difference = timezone.now() - self.created
         difference_in_hours = difference.total_seconds() / 3600
         return difference_in_hours > hours
-
 
     def __str__(self):
         return f"{self.learningscenario} {self.created}"

@@ -16,15 +16,20 @@
 {% endblock css %}
 
 {% block content %}
-  <h2>Learning Manager</h2>
-  <div class="row mb-3" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <div class="row justify-content-center align-items-center">
+    <div class="col-6 text-center g-2 mb-3">
+      <h2>Learning Manager</h2>
+    </div>
+  </div>
+  <div class="row mb-3 justify-content-center align-items-center" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
     {% for learningscenario in learningscenarios %}
       <div class="col-md-6" id="learningscenario-{{ learningscenario.id }}">
         <div class="card mb-4">
           <div class="card-body">
             <h5 class="card-title">
-              {{ learningscenario.instrument_name }} {{ learningscenario.key }}
-
+              {% if learningscenario.label %}{{ learningscenario.label }}{% else %}
+                {{ learningscenario.instrument_name }} {{ learningscenario.key }}
+              {% endif %}
               <div class="dropdown position-absolute top-0 end-0 m-1">
                 <button
                   class="btn btn-sm dropdown-toggle"
@@ -37,11 +42,12 @@
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ learningscenario.id }}">
                   <li>
-                    <a class='dropdown-item' href="{% url 'edit-learning-scenario' pk=learningscenario.id %}">Info</a>
+                    <a class='dropdown-item' href="{% url 'edit-learning-scenario' pk=learningscenario.id %}">Edit
+                      learning scenario</a>
                   </li>
                   <li>
-                    <a class="dropdown-item" href="{% url 'edit-learning-scenario-notes' pk=learningscenario.id %}">Edit
-                      notes</a>
+                    <a class="dropdown-item" href="{% url 'edit-learning-scenario-notes' pk=learningscenario.id %}">
+                      Edit notes</a>
                   </li>
                   <li>
                     <a
@@ -101,8 +107,8 @@
                   <a
                     class="btn btn-secondary btn-sm"
                     href="{% url 'see-progress' learningscenario_id=learningscenario.id %}"
-      aria-label="See progress for the selected item" >
-                  <i class="fas fa-chart-line"></i> See Progress
+                    aria-label="See progress for the selected item">
+                    <i class="fas fa-chart-line"></i> See Progress
                   </a>
                 </div>
 
@@ -110,8 +116,9 @@
             </div>
             <div class="card-footer text-muted small mt-3">
               <div>
-                {{ learningscenario.clef }} clef
-              </div>
+                {{ learningscenario.clef }} clef{% if learningscenario.transpose_key %}, transposing from {{ learningscenario.transpose_key }}
+                </div>
+              {% endif %}
               <div>
                 {{ learningscenario.level }}
               </div>
@@ -124,9 +131,11 @@
       </div>
     {% endfor %}
   </div>
-  <a href="{% url 'new-learning-scenario' %}?" class="btn btn-primary btn-lg">
-    <i class="fas fa-plus"></i> Set up a new learning scenario
-  </a>
-
-
+  <div class="row justify-content-center align-items-center">
+    <div class="col-md-4">
+      <a href="{% url 'new-learning-scenario' %}?" class="btn btn-primary btn-lg">
+        <i class="fas fa-plus"></i> Set up a new learning scenario
+      </a>
+    </div>
+  </div>
 {% endblock content %}
