@@ -1,20 +1,17 @@
 {% extends 'notes/practice.html' %}
 {% load static %}
 
-{% block cardbottom %}
-<div class="small text-muted position-absolute bottom-0 start-0 ms-2 mb-2">{{ level }} level<br>key {{ key }} {{ clef }} clef</div>
-{% endblock cardbottom %}
 
 {% block cardheader %}
   <!-- Cog Icon Dropdown -->
-  <div class="dropdown d-inline">
+  <div class="dropdown position-absolute end-0 top-0">
     <button
-      class="btn btn-sm dropdown-toggle"
+      class="btn btn-light btn-xs p-0 mt-2 me-3 dropdown-toggle"
       type="button"
       id="dropdownMenuCog"
       data-bs-toggle="dropdown"
       aria-expanded="false">
-      <i class="fas fa-cog"></i>
+      <i class="fas fa-cog"></i> {{ instrument }}, {{ level }}, {{ key }}
     </button>
 
     <ul class="dropdown-menu" aria-labelledby="dropdownMenuCog">
