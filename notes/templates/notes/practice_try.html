@@ -12,7 +12,7 @@
       id="dropdownMenuCog"
       data-bs-toggle="dropdown"
       aria-expanded="false">
-      <i class="fas fa-cog"></i> {{ instrument }}, {{ level }}, {{ key }}
+      <i class="fas fa-cog"></i> {{ instrument }}, {{ level }} {% if key != transpose_key %}, transposing from {{ transpose_key }}{% endif %}
     </button>
 
     <ul class="dropdown-menu" aria-labelledby="dropdownMenuCog">
@@ -62,10 +62,10 @@
       </li> <!-- Divider -->
 
       <!-- Key Section -->
-      <li><h6 class="dropdown-header">Key</h6></li>
+      <li><h6 class="dropdown-header">Transpose from</h6></li>
       {% for my_key in keys %}
         <li>
-          <a class="dropdown-item {% if my_key == key %}active{% endif %}"
+          <a class="dropdown-item {% if my_key == transpose_key %}active{% endif %}"
              href="{% url 'practice-try' instrument=instrument clef=clef key=my_key level=level %}">
             Key: {{ my_key }}
           </a>

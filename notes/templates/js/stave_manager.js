@@ -1,3 +1,70 @@
+const transpose = (function () {
+
+    const KEY_TO_SEMITONES = {
+        // Keys
+        'C': 0, 'C#': 1, 'Db': 1,
+        'D': 2, 'D#': 3, 'Eb': 3,
+        'E': 4, 'Fb': 4, 'E#': 5,
+        'F': 5, 'F#': 6, 'Gb': 6,
+        'G': 7, 'G#': 8, 'Ab': 8,
+        'A': 9, 'A#': 10, 'Bb': 10,
+        'B': 11, 'Cb': 11, 'B#': 0
+    };
+
+    const INT_TO_SHARP = [
+        "C", "C#", "D", "D#", "E", "F",
+        "F#", "G", "G#", "A", "A#", "B"
+    ];
+
+    function getSemitoneShift(fromKey, toKey) {
+        const fromVal = KEY_TO_SEMITONES[fromKey] ?? 0;
+        const toVal = KEY_TO_SEMITONES[toKey] ?? 0;
+        let diff = toVal - fromVal;
+
+        if (diff > 6) diff -= 12;
+        if (diff < -6) diff += 12;
+
+        return diff;
+    }
+
+    function transposeNoteString(noteStr, shift) {
+        const [pitchPart, octavePart] = noteStr.split("/");
+        let octave = parseInt(octavePart, 10);
+
+        const noteLetter = pitchPart[0].toUpperCase();
+        const accidental = pitchPart.slice(1) || ""; // everything after the first char
+
+        let pitchInt = KEY_TO_SEMITONES[noteLetter + accidental] ?? 0;
+
+        pitchInt += shift;
+
+        while (pitchInt < 0) {
+            pitchInt += 12;
+            octave -= 1;
+        }
+        while (pitchInt > 11) {
+            pitchInt -= 12;
+            octave += 1;
+        }
+        const newPitchName = INT_TO_SHARP[pitchInt];
+
+        return `${newPitchName}/${octave}`;
+    }
+
+    let currentFromKey = '{{ key }}'
+    let currentToKey = '{{ transpose_key }}';
+
+    return function (noteStr) {
+
+        if(currentFromKey===currentToKey) return noteStr;
+        const semitoneShift = getSemitoneShift(currentFromKey, currentToKey);
+        const updatedNote = transposeNoteString(noteStr, semitoneShift);
+        return updatedNote
+
+    };
+}());
+
+
 const stave_manager = (function () {
     let api = {};
     const VF = Vex.Flow;  // Reference VexFlow library
@@ -5,6 +72,7 @@ const stave_manager = (function () {
     let containerWidth = div.clientWidth;
     let staveWidth = 200; //
     const my_clef = '{{ clef }}';
+    const my_key = '{{ key }}';
     const transpose_key = "{{ transpose_key }}";
     // Initialize VexFlow renderer
     const renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
@@ -15,9 +83,8 @@ const stave_manager = (function () {
     const startX = (containerWidth - staveWidth) / 2; // Calculate the starting point for centering
     let stave = new VF.Stave(startX, 40, staveWidth);
     stave.addClef(my_clef);
-    
-    //stave.addKeySignature('F');
 
+    //stave.addKeySignature('F');
 
 
     stave.setContext(context); // Attach the context to the stave
@@ -72,6 +139,7 @@ const stave_manager = (function () {
     }
 
     api.updateNote = function (newNote) {
+        newNote = transpose(newNote);
         renderer.getContext().svg.innerHTML = "";
         stave.setContext(context);
         stave.draw();
@@ -170,7 +238,6 @@ const stave_manager = (function () {
         stave.addClef(my_clef);
         stave.setContext(context).draw();
     }
-
 
 
     return api;

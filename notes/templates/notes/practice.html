@@ -26,7 +26,15 @@
     <div class="card-header d-flex align-items-center">
       {% block cardheader %}
         <div>
-          <h5 class="d-inline">{{ instrument }} note trainer</h5>
+          <h5 class="d-inline">
+            {% if label %}
+              {{ label }}
+            {% else %}
+              {{ instrument }}
+            {% endif %}
+            {{ key }}{% if key != transpose_key %}, transposing from {{ transpose_key }}
+          {% endif %}
+          </h5>
         </div>
       {% endblock %}
     </div>

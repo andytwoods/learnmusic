@@ -1,3 +1,4 @@
+import copy
 from typing import Any
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -71,10 +72,6 @@ class LearningScenario(TimeStampedModel):
     transpose_key = models.CharField(max_length=2, choices=transposing_choices,
                                      default=BlankTransposingKey.BLANK , help_text='This is an advanced option. Leave as None if unsure')
 
-    transposing_direction = models.IntegerField(default=0, validators=[
-        MinValueValidator(-1),
-        MaxValueValidator(1),
-    ])
     ux = models.JSONField(default=dict, blank=True)
 
     def save(self, *args: Any, **kwargs: Any) -> None:
@@ -133,6 +130,18 @@ class LearningScenario(TimeStampedModel):
             self.notes.append(note_str)
         for note_str in removed:
             self.notes.remove(note_str)
+
+    def clone(self):
+        obj_copy = copy.deepcopy(self)
+        obj_copy.pk = None
+        obj_copy.label += ' copy'
+        obj_copy.save()
+        return obj_copy
+
+    def get_transposeKey(self):
+        if self.transpose_key == BlankTransposingKey.BLANK:
+            return self.key
+        return self.transpose_key
 
 
 class NoteRecordPackage(TimeStampedModel):

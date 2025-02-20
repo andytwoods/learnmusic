@@ -6,6 +6,7 @@ from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils.timezone import now
+from django_htmx.http import HttpResponseClientRefresh
 
 from notes import tools
 from notes.forms import LearningScenarioForm
@@ -23,6 +24,10 @@ def notes_home(request):
         if action == 'delete':
             learningscenario_id = request.POST.get('id')
             LearningScenario.objects.get(id=learningscenario_id).delete()
+        elif action == 'copy':
+            learningscenario_id = request.POST.get('id')
+            LearningScenario.objects.get(id=learningscenario_id).clone()
+            return HttpResponseClientRefresh()
         else:
             raise Exception("unknown action")
         return HttpResponse('', status=200)
@@ -49,7 +54,6 @@ def edit_learningscenario(request, pk: int):
         if form.is_valid():
             ls: LearningScenario = form.save(commit=False)
             instrument_name = form.cleaned_data['instrument_name']
-            ls.transposing_direction = instrument_infos[instrument_name].get('transposing_direction', [0, ])[0]
             ls.save()
             return redirect(reverse('notes-home'))
 
@@ -112,10 +116,9 @@ def practice(request, learningscenario_id: int, sound: bool = False):
         'ux': learningscenario.ux,
         'package_id': package.id,
         'key': learningscenario.key,
-        'transposing_direction': learningscenario.transposing_direction,
         'progress': serialised_notes,
         'sound': sound,
-        'transpose_key': learningscenario.transpose_key,
+        'transpose_key': learningscenario.get_transposeKey(),
         'level': learningscenario.level.lower(),
     }
 
@@ -135,8 +138,8 @@ def practice_try(request, instrument: str, clef: str, key: str, level: str, soun
     context = {
         'learningscenario_id': PRACTICE_TRY,
         'progress': serialised_notes,
-        'key': key,
-        'transposing_direction': instrument_info.get('transposing_direction', [0, ])[0],
+        'key': instrument_info['common_keys'][0],
+        'transpose_key': key,
         'level': level,
         'sound': sound,
         'instrument': instrument,

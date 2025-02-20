@@ -50,9 +50,17 @@
                       Edit notes</a>
                   </li>
                   <li>
+                    <a class="dropdown-item"
+                       hx-post="."
+                       hx-no-confirm="true"
+                       href="#"
+                       hx-vals='{"action": "copy", "id": {{ learningscenario.id }}}'>
+                      Copy</a>
+                  </li>
+                  <li>
                     <a
                       class="dropdown-item text-danger"
-                      hx-post="{{ request.path }}"
+                      hx-post="."
                       hx-target="#learningscenario-{{ learningscenario.id }}"
                       hx-swap="outerHTML"
                       hx-confirm="Are you sure you want to delete this item?"
@@ -116,7 +124,8 @@
             </div>
             <div class="card-footer text-muted small mt-3">
               <div>
-                {{ learningscenario.clef }} clef{% if learningscenario.transpose_key %}, transposing from {{ learningscenario.transpose_key }}
+                {{ learningscenario.clef }} clef{% if learningscenario.transpose_key %}, transposing from
+                {{ learningscenario.transpose_key }}
                 </div>
               {% endif %}
               <div>

@@ -32,13 +32,11 @@ instrument_infos = {
         'answers': 'trumpet.json',
         'clef': ['TREBLE', ],
         'common_keys': ['Bb', 'C', ],
-        'transposing_direction': [-1,],
     },
     'Trombone': {
         'answer_template': 'trombone.html',
         'answers': 'trombone.json',
         'clef': ['TREBLE', 'BASS', ],
         'common_keys': ['C', 'Bb'],
-        'transposing_direction': [-1, 0],
     },
 }
