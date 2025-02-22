@@ -105,7 +105,61 @@ class TestLearning(TestCase):
 
 
 class TestTools(TestCase):
-    def test_generate_notes(self):
+    def test_compile_notes_per_skilllevel(self):
+        notes = [{'note': 'C', 'octave': '4', 'alter': '0'}]
+        compiled = compile_notes_per_skilllevel(notes)
+        self.assertIn('beginner', compiled)
+        self.assertIn('intermediate', compiled)
+        self.assertIn('advanced', compiled)
+
+    def test_serialise_notes(self):
+        notes_str = "C 0 4;D 0 4"
+        serialised = serialise_notes(notes_str)
+        self.assertEqual(len(serialised), 2)
+        self.assertEqual(serialised[0]['note'], 'C')
+
+    def test_serialise_note(self):
+        note_str = "C 0 4"
+        serialised = serialise_note(note_str)
+        self.assertEqual(serialised['note'], 'C')
+        self.assertEqual(serialised['octave'], '4')
+
+    def test_generate_serialised_notes(self):
+        # Mock instruments data for testing
+        instruments = {
+            'piano': {
+                'beginner': {
+                    'lowest_note': 'C 0 4',
+                    'highest_note': 'C 0 5'
+                }
+            }
+        }
+        notes = generate_serialised_notes('piano', 'beginner')
+        self.assertTrue(len(notes) > 0)
+
+    def test_get_instrument_range(self):
+        # Mock instruments data for testing
+        instruments = {
+            'piano': {
+                'beginner': {
+                    'lowest_note': 'C 0 4',
+                    'highest_note': 'C 0 5'
+                }
+            }
+        }
+        lowest, highest = get_instrument_range('piano', 'beginner')
+        self.assertEqual(lowest, 'C 0 4')
+        self.assertEqual(highest, 'C 0 5')
+
+    def test_sort_notes(self):
+        notes = {
+            "C4": [],
+            "D4": [],
+            "B3": [],
+            "A#3": []
+        }
+        sorted_notes = sort_notes(notes)
+        self.assertEqual(list(sorted_notes.keys()), ["A#3", "B3", "C4", "D4"])
         start_note = 'A 1 4'
         end_note = 'G 1 4'
 
