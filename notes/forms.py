@@ -16,7 +16,7 @@ class LearningScenarioForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(LearningScenarioForm, self).__init__(*args, **kwargs)
 
-        self.fields['transpose_key'].label = 'Transposing from which key'
+        self.fields['transpose_key'].label = 'Transposing to which key'
 
         self.fields['instrument_name'] = forms.ChoiceField(
             choices=[(i, i) for i in instrument_infos.keys()],

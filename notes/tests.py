@@ -6,7 +6,8 @@ from django.urls import reverse
 
 from notes.factories import LearningScenarioFactory, UserFactory
 from notes.models import LearningScenario, NoteRecordPackage
-from notes.tools import generate_notes
+from notes.tools import generate_notes, sort_notes, compile_notes_per_skilllevel, serialise_notes, serialise_note, \
+    generate_serialised_notes, get_instrument_range
 
 
 class TestPagesWork(TestCase):
@@ -134,7 +135,7 @@ class TestTools(TestCase):
                 }
             }
         }
-        notes = generate_serialised_notes('piano', 'beginner')
+        notes = generate_serialised_notes('Trumpet', 'Beginner')
         self.assertTrue(len(notes) > 0)
 
     def test_get_instrument_range(self):
@@ -147,9 +148,10 @@ class TestTools(TestCase):
                 }
             }
         }
-        lowest, highest = get_instrument_range('piano', 'beginner')
+
+        lowest, highest = get_instrument_range('Trumpet', 'Beginner')
         self.assertEqual(lowest, 'C 0 4')
-        self.assertEqual(highest, 'C 0 5')
+        self.assertEqual(highest, 'B -1 4')
 
     def test_sort_notes(self):
         notes = {

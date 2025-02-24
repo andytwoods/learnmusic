@@ -331,3 +331,4 @@ learnmusic/media/
 .env
 .envs/*
 !.envs/.local/
+.aider*

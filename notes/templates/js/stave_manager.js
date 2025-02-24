@@ -19,7 +19,7 @@ const transpose = (function () {
     function getSemitoneShift(fromKey, toKey) {
         const fromVal = KEY_TO_SEMITONES[fromKey] ?? 0;
         const toVal = KEY_TO_SEMITONES[toKey] ?? 0;
-        let diff = toVal - fromVal;
+        let diff = fromVal - toVal;
 
         if (diff > 6) diff -= 12;
         if (diff < -6) diff += 12;
