@@ -1,6 +1,6 @@
 # ruff: noqa: ERA001, E501
 """Base settings to build other settings files upon."""
-
+import os
 from pathlib import Path
 
 import environ
@@ -10,10 +10,11 @@ BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 APPS_DIR = BASE_DIR / "learnmusic"
 env = environ.Env()
 
-READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
+READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=True)
 if READ_DOT_ENV_FILE:
-    # OS environment variables take precedence over variables from .env
     env.read_env(str(BASE_DIR / ".env"))
+
+
 
 # GENERAL
 # ------------------------------------------------------------------------------
@@ -88,6 +89,7 @@ THIRD_PARTY_APPS = [
     "allauth.socialaccount",
     'widget_tweaks',
     "django_htmx",
+    "webpush",
 ]
 
 LOCAL_APPS = [
@@ -295,5 +297,9 @@ SOCIALACCOUNT_ADAPTER = "learnmusic.users.adapters.SocialAccountAdapter"
 # https://docs.allauth.org/en/latest/socialaccount/configuration.html
 SOCIALACCOUNT_FORMS = {"signup": "learnmusic.users.forms.UserSocialSignupForm"}
 
-# Your stuff...
-# ------------------------------------------------------------------------------
+
+WEBPUSH_SETTINGS = {
+    "VAPID_PUBLIC_KEY": "BOPA9ZWEu09iw3FfJv1HZ0oo2iw8K2cM6TvKJaonwYciJakHOkJnEMYvxYQzWYm76H8PXFvWKL2B-AW6P-r3hGU",
+    "VAPID_PRIVATE_KEY": env.str("VAPID_PRIVATE_KEY"),
+    "VAPID_ADMIN_EMAIL": "admin@example.com"
+}

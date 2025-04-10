@@ -1,4 +1,9 @@
 {% extends 'base.html' %}
+{% load webpush_notifications %}
+
+{% block head %}
+  {% webpush_header %}
+{% endblock head %}
 
 {% block title %}
   Child Page Title
@@ -20,6 +25,8 @@
     <div class="col-6 text-center g-2 mb-3">
       <h2>Learning Manager</h2>
     </div>
+
+
   </div>
   <div class="row mb-3 justify-content-center align-items-center" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
     {% for learningscenario in learningscenarios %}
@@ -47,7 +54,7 @@
                   </li>
                   <li>
                     <a class="dropdown-item" href="{% url 'edit-learning-scenario-notes' pk=learningscenario.id %}">
-                      Edit notes</a>
+                      Edit musical notes you want to train on</a>
                   </li>
                   <li>
                     <a class="dropdown-item"
@@ -141,10 +148,13 @@
     {% endfor %}
   </div>
   <div class="row justify-content-center align-items-center">
-    <div class="col-md-4">
+    <div class="col-md-4 text-center">
       <a href="{% url 'new-learning-scenario' %}?" class="btn btn-primary btn-lg">
         <i class="fas fa-plus"></i> Set up a new learning scenario
       </a>
+      <div class="mt-5 p-2 shadow rounded bg-light mx-auto d-inline-block">
+        Want reminders to practice? {% webpush_button with_class="btn btn-outline-secondary btn-sm  " %}
+      </div>
     </div>
   </div>
 {% endblock content %}

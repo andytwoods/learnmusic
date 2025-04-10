@@ -25,6 +25,7 @@ urlpatterns = [
     path("", include("notes.urls")),
     path('toggle-help', views.toggle_help, name='toggle-help'),
     path('test-rollbar/', views.test_rollbar, name='test-rollbar'),
+    path('webpush/', include('webpush.urls')),
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
 ]

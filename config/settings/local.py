@@ -16,6 +16,8 @@ SECRET_KEY = env(
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = ["*",]  # noqa: S104
 
+CSRF_TRUSTED_ORIGINS = ["https://cf8e-31-126-97-92.ngrok-free.app",]
+
 X_FRAME_OPTIONS = "SAMEORIGIN"
 # CACHES
 # ------------------------------------------------------------------------------
