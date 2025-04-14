@@ -1,16 +1,15 @@
 const learning_manager = (function () {
     let api = {};
 
-    const ATTEMPTS_TO_CHECK_IF_MASTERED = 3
+    const ATTEMPTS_TO_CHECK_IF_MASTERED = 3;
     const CORRECT_COUNT_THAT_INDICATES_MASTERED = 1;
     const RECENT_NOTES_LOG_SIZE = 2;
+    let LIKELIHOOD_OF_MASTERED_NOTE = 0.8;
 
     // Helper function to determine if a note is mastered
-
     function isMastered(note) {
         // Limit to the last X answers
         const recentCorrect = note.correct ? note.correct.slice(-ATTEMPTS_TO_CHECK_IF_MASTERED) : [];
-
         // Count the number of correct answers in the last X attempts
         const totalCorrect = recentCorrect.filter(val => val === true).length;
 
@@ -18,46 +17,37 @@ const learning_manager = (function () {
         return totalCorrect >= CORRECT_COUNT_THAT_INDICATES_MASTERED;
     }
 
-    // Helper function for deep equality comparison of notes
+    // Helper function for deep equality comparison
     function areNotesEqual(note1, note2) {
         if (!note1 || !note2) {
             console.warn("Invalid notes passed to areNotesEqual:", note1, note2);
             return false;
         }
         return note1.note === note2.note &&
-            note1.octave === note2.octave &&
-            note1.alter === note2.alter;
+               note1.octave === note2.octave &&
+               note1.alter === note2.alter;
     }
 
+    // Simple function to preserve the original order but group unmastered first
     function orderNotesByMastery(notes) {
-        return notes.slice().sort((a, b) => {
-            const masteryA = isMastered(a) ? 1 : 0;  // Determine if note is mastered
-            const masteryB = isMastered(b) ? 1 : 0;
-
-            // If mastery levels are the same, randomize order
-            if (masteryA === masteryB) {
-                return Math.random() - 0.5; // Randomize order when mastery is equal
-            }
-
-            // Otherwise, sort from least to most mastered
-            return masteryA - masteryB;
-        });
+        const unmastered = notes.filter(note => !isMastered(note));
+        const mastered   = notes.filter(note =>  isMastered(note));
+        return [...unmastered, ...mastered];
     }
 
-
+    // Returns the first note from priorityNotes not in the recentNotesLog
     function processNotes(priorityNotes, recentNotesLog) {
-        const orderedNotes = orderNotesByMastery(priorityNotes); // Get notes in what you described
+        const orderedNotes = orderNotesByMastery(priorityNotes);
         for (let note of orderedNotes) {
-            // Ensures the note has not been recently tested
             if (!recentNotesLog.some(recentNote => areNotesEqual(recentNote, note))) {
                 return note;
             }
         }
-        return null; // No notes available that satisfy constraints
+        return null;
     }
 
     api.next_note = (function () {
-        const recentNotesLog = []; // Persistent across function calls
+        const recentNotesLog = []; // Persistent across calls
 
         return function () {
             if (window.special_condition === 'first_trial') {
@@ -69,22 +59,22 @@ const learning_manager = (function () {
 
             let nextNote = null;
 
-            // First, try to pick from non-mastered notes
-            if (nonMasteredNotes.length > 0) {
-                nextNote = processNotes(nonMasteredNotes, recentNotesLog);
-            }
-
-            // If no viable non-mastered note, move to mastered notes
-            if (!nextNote && masteredNotes.length > 0) {
+            // Weighted pick between mastered vs. unmastered
+            const r = Math.random(); // random float between 0 and 1
+            if (r < LIKELIHOOD_OF_MASTERED_NOTE && masteredNotes.length > 0) {
+                // Try from mastered first
                 nextNote = processNotes(masteredNotes, recentNotesLog);
             }
-
-            // If no notes found, try all notes
+            // If we didn't pick from mastered (or none was viable), try unmastered
+            if (!nextNote && nonMasteredNotes.length > 0) {
+                nextNote = processNotes(nonMasteredNotes, recentNotesLog);
+            }
+            // If still no note, pick from all
             if (!nextNote) {
                 nextNote = processNotes(window.progress_data, recentNotesLog);
             }
 
-            // Ensure we don't return a note that was recently played
+            // If still no note, reset the recentNotesLog so we can pick again
             if (!nextNote) {
                 console.warn("All notes have been recently played. Resetting recent notes log.");
                 recentNotesLog.length = 0; // Clear the log and retry
@@ -99,18 +89,21 @@ const learning_manager = (function () {
                 }
             }
 
+            // Logging for debugging
             function logProgressDataMastery() {
                 if (!Array.isArray(window.progress_data)) {
                     console.warn("window.progress_data is not an array.");
                     return;
                 }
-
                 window.progress_data.forEach((note, index) => {
                     const recentCorrect = note.correct ? note.correct.slice(-3) : [];
                     const totalCorrect = recentCorrect.filter(val => val === true).length;
-                    const mastery = isMastered(note) ? "Mastered" : `Not mastered (Correct: ${totalCorrect}/3)`;
-
-                    console.log(`Note: ${note.note}, Octave: ${note.octave}, Alter: ${note.alter}, Mastery: ${mastery}`);
+                    const mastery = isMastered(note)
+                        ? "Mastered"
+                        : `Not mastered (Correct: ${totalCorrect}/3)`;
+                    console.log(
+                        `Note: ${note.note}, Octave: ${note.octave}, Alter: ${note.alter}, Mastery: ${mastery}`
+                    );
                 });
             }
 
@@ -118,7 +111,6 @@ const learning_manager = (function () {
             return nextNote;
         };
     })();
-
 
     return api;
 }());

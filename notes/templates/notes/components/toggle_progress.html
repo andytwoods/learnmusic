@@ -1,0 +1,35 @@
+{% load static %}
+<div id="toggle-container" class="d-inline-block me-3">
+  <div class="form-check form-switch">
+    <input
+      class="form-check-input"
+      type="checkbox"
+      id="progressToggleSwitch"
+      {% if learningscenario_id != 'practice-try' %}
+      hx-no-confirm="true"
+      hx-get="{% url 'toggle-help' %}"
+      hx-trigger="change"
+      hx-swap="none"
+      {% endif %}
+      {% if request.user.help %}checked{% endif %}>
+    <label class="form-check-label" for="helpToggleSwitch">Tutorial</label>
+  </div>
+</div>
+
+<script>
+
+  const progress_manager = (function start_tutorial() {
+    const api = {};
+
+    const progressToggleSwitch = document.getElementById('progressToggleSwitch');
+
+    let enabled = progressToggleSwitch.checked;
+    progressToggleSwitch.addEventListener('change', ()=>{
+      enabled = progressToggleSwitch.checked;
+    });
+
+    return api;
+  }());
+
+
+</script>

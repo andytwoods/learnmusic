@@ -1,6 +1,7 @@
 instruments = {"Trumpet": {
     "Beginner": {
-        "notes": "C 0 4;D 0 4;E 0 4;F 0 4;G 0 4;A 0 4;B 0 4;B -1 4"
+        # https://chatgpt.com/share/67f819f1-948c-8003-a8d8-39f9443f5d58
+        "notes": "C 0 4;D 0 4;E 0 4;F 0 4;G 0 4;A 0 4;B 0 4;C 0 5;G 0 3;A 0 3;B 0 3;F 1 4;C 1 5;D 0 5;G 1 4;B -1 3;D 1 5;E 0 5;F 0 5;G 0 5;A 0 5;B 0 5;C 0 6;F 1 5;C 1 6;D 0 6;B -1 4;E -1 4;E -1 5;B -1 5;G 1 5;D 1 6;E 0 6;A -1 3;D -1 4;A -1 4"
     },
     "Intermediate": {
         "lowest_note": "F 1 3",

@@ -1,8 +1,10 @@
 import json
 from datetime import timedelta
+from statistics import median  # Python 3.4+ has a built-in median function
 
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponse
+from django.http import HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils.timezone import now
@@ -53,7 +55,6 @@ def edit_learningscenario(request, pk: int):
         form = LearningScenarioForm(request.POST, instance=model)
         if form.is_valid():
             ls: LearningScenario = form.save(commit=False)
-            instrument_name = form.cleaned_data['instrument_name']
             ls.save()
             return redirect(reverse('notes-home'))
 
@@ -109,6 +110,7 @@ def common_context(instrument_name: str, clef: str, sound: bool):
 @login_required
 def practice(request, learningscenario_id: int, sound: bool = False):
     package, serialised_notes = LearningScenario.progress_latest_serialised(learningscenario_id)
+
     instrument_name: str = package.learningscenario.instrument_name
     learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
     context = {
@@ -217,24 +219,16 @@ def progress(request, learningscenario_id: int):
 
 
 def progress_data_view(request, learningscenario_id):
-    # 1. Decide time range or grouping based on granularity
-    #    For example, we might define an earliest date to group from:
+    # 1. Decide the time window
     earliest_date = now() - timedelta(days=30)  # last 30 days as example
 
     # 2. Retrieve all NoteRecordPackage items for this user in that range
-    #    (Or skip if you have a different approach)
     packages = NoteRecordPackage.objects.filter(
         learningscenario__id=learningscenario_id,
         created__gte=earliest_date
     )
 
-    # 3. Aggregate the data
-    #    We'll just show a made-up structure here. In reality, you’d:
-    #    - parse the .log JSON,
-    #    - compute average reaction time per day/week/month,
-    #    - compute overall accuracy per day/week/month,
-    #    - also group by note to create the "by_note" data
-
+    # 3. Prepare structures for grouping stats
     over_time_labels = []
     over_time_accuracy = []
     over_time_reaction = []
@@ -243,112 +237,104 @@ def progress_data_view(request, learningscenario_id):
     by_note_accuracy = []
     by_note_reaction = []
 
-    # 3a. Example: we do some naive iteration (for MVP) over each package’s log
-    #     and accumulate stats in dictionaries. This can be expensive if data is large.
-    #     For real usage, consider storing aggregated summaries in the DB or using F expressions.
-
-    # Pseudo-structures for grouping
+    # Instead of sum/count for reaction times, keep a list of all reaction times
     grouped_by_date = {}
     grouped_by_note = {}
 
-    pkg: NoteRecordPackage
     for pkg in packages:
-        # pkg.log might be a JSON field containing many record items
         if not pkg.log:
             continue
+
         for record in pkg.log:
-            # record looks like:
-            # {"note": "F", "octave": "3", "alter": "1",
-            #  "reaction_time_log": [181],
-            #  "correct": [false]}
-            # ...
+            # Example record structure:
+            # {
+            #   "note": "F", "octave": "3", "alter": "1",
+            #   "reaction_time_log": [181],
+            #   "correct": [false]
+            # }
             note_name = f"{record['note']}{record['octave']}"
             if record['alter'] == '1':
                 note_name += '#'
             elif record['alter'] == '-1':
                 note_name += 'b'
 
-            # For each attempt:
             attempts_count = len(record['correct'])
-            # Count how many are correct
-            correct_count = sum(record['correct'])
-            # Reaction times: average if you like
-            reaction_avg = 0
-            if record['reaction_time_log']:
-                reaction_avg = sum(record['reaction_time_log']) / len(record['reaction_time_log'])
+            correct_count = sum(record['correct'])  # sum of booleans => count of `True`
 
-            # 3a(i) group by date
-            # For a real aggregator, you'd convert pkg.created_at to day/week/month
             date_key = pkg.created.strftime("%Y-%m-%d")  # daily grouping example
 
+            # Initialize dictionaries if not present
             if date_key not in grouped_by_date:
                 grouped_by_date[date_key] = {
                     "sum_correct": 0,
                     "sum_total": 0,
-                    "sum_reaction": 0,
-                    "count_reaction": 0
+                    "reaction_times": []  # store all reaction times here
                 }
 
             grouped_by_date[date_key]["sum_correct"] += correct_count
             grouped_by_date[date_key]["sum_total"] += attempts_count
-            grouped_by_date[date_key]["sum_reaction"] += sum(record['reaction_time_log'])
-            grouped_by_date[date_key]["count_reaction"] += len(record['reaction_time_log'])
+            # Extend the list with all reaction times
+            grouped_by_date[date_key]["reaction_times"].extend(record['reaction_time_log'])
 
-            # 3a(ii) group by note
             if note_name not in grouped_by_note:
                 grouped_by_note[note_name] = {
                     "sum_correct": 0,
                     "sum_total": 0,
-                    "sum_reaction": 0,
-                    "count_reaction": 0
+                    "reaction_times": []
                 }
 
             grouped_by_note[note_name]["sum_correct"] += correct_count
             grouped_by_note[note_name]["sum_total"] += attempts_count
-            grouped_by_note[note_name]["sum_reaction"] += sum(record['reaction_time_log'])
-            grouped_by_note[note_name]["count_reaction"] += len(record['reaction_time_log'])
+            grouped_by_note[note_name]["reaction_times"].extend(record['reaction_time_log'])
 
+    # Optionally, if you need a custom-sorted approach to notes
     grouped_by_note_sorted = tools.sort_notes(grouped_by_note)
-    # 3b. Turn grouped data into lists for Chart.js
+
+    # 3b. Convert grouped data into lists for Chart.js
     # Over time
     for date_key in sorted(grouped_by_date.keys()):
         over_time_labels.append(date_key)
         correct = grouped_by_date[date_key]["sum_correct"]
         total = grouped_by_date[date_key]["sum_total"]
+
+        # Accuracy is still sum(correct)/sum(total)
         if total > 0:
             accuracy_pct = (correct / total) * 100
         else:
             accuracy_pct = 0
         over_time_accuracy.append(round(accuracy_pct, 1))
 
-        if grouped_by_date[date_key]["count_reaction"] > 0:
-            avg_reaction = (grouped_by_date[date_key]["sum_reaction"]
-                            / grouped_by_date[date_key]["count_reaction"])
+        # Reaction time is now the median of all reaction times recorded that day
+        reaction_times = grouped_by_date[date_key]["reaction_times"]
+        if reaction_times:
+            med_reaction = median(reaction_times)
         else:
-            avg_reaction = 0
-        over_time_reaction.append(round(avg_reaction, 1))
+            med_reaction = 0
+        over_time_reaction.append(round(med_reaction, 1))
 
     # By note
-    # This is not time-based, just a sum across the whole period
     for note_key in grouped_by_note_sorted:
         by_note_labels.append(note_key)
+
         correct = grouped_by_note_sorted[note_key]["sum_correct"]
         total = grouped_by_note_sorted[note_key]["sum_total"]
+
+        # Accuracy
         if total > 0:
             accuracy_pct = (correct / total) * 100
         else:
             accuracy_pct = 0
         by_note_accuracy.append(round(accuracy_pct, 1))
 
-        if grouped_by_note_sorted[note_key]["count_reaction"] > 0:
-            avg_reaction = (grouped_by_note_sorted[note_key]["sum_reaction"]
-                            / grouped_by_note_sorted[note_key]["count_reaction"])
+        # Median reaction time per note
+        reaction_times = grouped_by_note_sorted[note_key]["reaction_times"]
+        if reaction_times:
+            med_reaction = median(reaction_times)
         else:
-            avg_reaction = 0
-        by_note_reaction.append(round(avg_reaction, 1))
+            med_reaction = 0
+        by_note_reaction.append(round(med_reaction, 1))
 
-
-    # Finally assemble JSON for the chart
+    # Assembling JSON for Chart.js
     data = {
         "over_time": {
             "labels": over_time_labels,

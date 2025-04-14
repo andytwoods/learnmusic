@@ -138,7 +138,7 @@
 
       // By-Note Chart:
       chartByNote.data.labels = noteLabels;
-      chartByNote.data.datasets[0].label = showReactionTime ? 'Reaction Time (ms)' : 'Accuracy (%)';
+      chartByNote.data.datasets[0].label = showReactionTime ? 'Reaction Time (ms, median)' : 'Accuracy (%)';
       chartByNote.data.datasets[0].data = noteData;
 
       // Trigger re-draw for updated background and marker colors

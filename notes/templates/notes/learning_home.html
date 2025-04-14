@@ -124,12 +124,13 @@
             </div>
             <div class="card-footer text-muted small mt-3">
               <div>
-                {{ learningscenario.clef }} clef{% if learningscenario.transpose_key %}, transposing from
-                {{ learningscenario.transpose_key }}
-                </div>
-              {% endif %}
+                Clef: {{ learningscenario.clef }}
+                {% if learningscenario.transpose_key != "BL" %}
+                  , transposing from:{{ learningscenario.transpose_key }}
+                {% endif %}
+              </div>
               <div>
-                {{ learningscenario.level }}
+                Level: {{ learningscenario.level }}
               </div>
               Last practiced: <span class="badge rounded-pill bg-secondary">{{ learningscenario.last_practiced }}</span>
               <br>
