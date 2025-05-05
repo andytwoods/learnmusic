@@ -1,59 +1,59 @@
 {% load i18n %}
-<div class="mb-1">
-  <!-- Navbar with About moved to the right-hand side -->
-  <nav class="navbar navbar-expand-md navbar-light bg-light">
-    <div class="container-fluid">
-      <!-- Left-hand side content -->
-      <a class="navbar-brand" href="{% url 'home' %}">LearnMusic</a>
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#navbarContent"
-        aria-controls="navbarContent"
-        aria-expanded="false"
-        aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+<nav class="navbar bg-base-100 shadow-sm mb-1">
+  <!-- START: left side -------------------------------------------------- -->
+  <div class="navbar-start">
+    <!-- Mobile hamburger -->
+    <div class="dropdown">
+      <label tabindex="0" class="btn btn-ghost lg:hidden" aria-label="{{ _('Open menu') }}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+        </svg>
+      </label>
+      <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+        {% if request.user.is_authenticated %}
+          <li><a href="{% url 'notes-home' %}" class="font-medium">{% translate 'Learning Hub' %}</a></li>
+        {% endif %}
+        <li><a href="{% url 'about' %}">{% translate 'About' %}</a></li>
+      </ul>
+    </div>
 
-      <div class="collapse navbar-collapse" id="navbarContent">
-        <!-- Left-hand nav items -->
-        <ul class="navbar-nav me-auto">
-          {% if request.user.is_authenticated %}
-            <li class="nav-item active">
-              <button
-                class="btn btn-primary"
-                onclick="window.location.href='{% url 'notes-home' %}'">
-                Learning Hub
-              </button>
-            </li>
-          {% endif %}
-        </ul>
+    <!-- Brand / Logo -->
+    <a href="{% url 'home' %}" class="btn btn-ghost normal-case text-xl">LearnMusic</a>
+  </div>
+  <!-- END: left side ---------------------------------------------------- -->
 
-        <!-- Right-hand nav items -->
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'about' %}">About</a>
-          </li>
-          {% if request.user.is_authenticated %}
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'users:detail' request.user.pk %}">{% translate "My Profile" %}</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'account_logout' %}">{% translate "Sign Out" %}</a>
-            </li>
-          {% else %}
-            {% if ACCOUNT_ALLOW_REGISTRATION %}
-              <li class="nav-item">
-                <a id="sign-up-link" class="nav-link" href="{% url 'account_signup' %}">{% translate "Sign Up" %}</a>
-              </li>
-            {% endif %}
-            <li class="nav-item">
-              <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% translate "Sign In" %}</a>
-            </li>
-          {% endif %}
+  <!-- START: centre ----------------------------------------------------- -->
+  <div class="navbar-center hidden lg:flex">
+    <ul class="menu menu-horizontal px-1">
+      {% if request.user.is_authenticated %}
+        <li><a href="{% url 'notes-home' %}" class="btn btn-primary btn-sm normal-case">{% translate 'Learning Hub' %}</a></li>
+      {% endif %}
+      <li><a href="{% url 'about' %}">{% translate 'About' %}</a></li>
+    </ul>
+  </div>
+  <!-- END: centre ------------------------------------------------------- -->
+
+  <!-- START: right side ------------------------------------------------- -->
+  <div class="navbar-end gap-2">
+    {% if request.user.is_authenticated %}
+      <div class="dropdown dropdown-end">
+        <label tabindex="0" class="btn btn-ghost btn-circle avatar" aria-label="{{ _('Account menu') }}">
+          <div class="w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 overflow-hidden">
+            {% comment %}Replace with real avatar if you store one on the user/profile{% endcomment %}
+            <img src="{{ request.user.profile.avatar.url|default_if_none:'' }}" alt="{{ request.user.get_full_name|default:request.user.username }}" onerror="this.style.display='none'" />
+          </div>
+        </label>
+        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+          <li><a href="{% url 'users:detail' request.user.pk %}">{% translate 'My Profile' %}</a></li>
+          <li><a href="{% url 'account_logout' %}">{% translate 'Sign Out' %}</a></li>
         </ul>
       </div>
-    </div>
-  </nav>
-</div>
+    {% else %}
+      {% if ACCOUNT_ALLOW_REGISTRATION %}
+        <a id="sign-up-link" class="btn btn-ghost btn-sm" href="{% url 'account_signup' %}">{% translate 'Sign Up' %}</a>
+      {% endif %}
+      <a id="log-in-link" class="btn btn-primary btn-sm" href="{% url 'account_login' %}">{% translate 'Sign In' %}</a>
+    {% endif %}
+  </div>
+  <!-- END: right side --------------------------------------------------- -->
+</nav>

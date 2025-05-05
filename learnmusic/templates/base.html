@@ -21,14 +21,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css"
           integrity="sha512-5Hs3dF2AEPkpNAR7UiOHba+lRSJNeM2ECkwxUIxC1Q/FLycGTbNapWXB4tP889k5T5Ju8fs4b1P5z/iB4nMfSQ=="
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
-    <!-- Latest compiled and minified Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
-          integrity="sha512-jnSuA4Ss2PkkikSOLtYs8BlYIeeIK1h99ty4YfvRPAlzr377vr3CXDb7sb7eEEBYjDtcYj+AjBH3FLv5uSJuXg=="
-          crossorigin="anonymous" referrerpolicy="no-referrer"/>
-    <!-- Your stuff: Third-party CSS libraries go here -->
-    <!-- This file stores project-specific CSS -->
-
-
+    <!-- Tailwind CSS -->
     <link href="{% static 'css/project.css' %}" rel="stylesheet"/>
 
 
@@ -42,10 +35,7 @@
             integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+"
             crossorigin="anonymous"></script>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"
-            integrity="sha512-7Pi/otdlbbCR+LnW+F7PwFcSDJOuUJB3OxtEHbg4vSMvzvJjde4Po1v4BR9Gdc9aXNUNFVUY+SK51wWT8WF0Gg=="
-            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Alpine.js for interactive components -->
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -59,7 +49,7 @@
   {% block navbar %}
     {% include 'navbar.html' %}
   {% endblock navbar %}
-  <div class="container">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     {% block messages %}
       {% include 'messages.html' %}
     {% endblock messages %}

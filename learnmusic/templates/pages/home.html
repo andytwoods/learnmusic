@@ -31,17 +31,17 @@
   <!-- Hero Section -->
   <section class="custom-lander text-white text-center py-5">
     <div class="overlay"></div>
-    <div class="container position-relative">
-      <h1 class="display-4">Master Your Notes, Master the Stage</h1>
-      <p class="lead">A practice tool for musicians <b>at any stage</b> to improve their note recognition and playing
+    <div class="container relative z-10">
+      <h1 class="text-4xl font-bold mb-2">Master Your Notes, Master the Stage</h1>
+      <p class="text-xl mb-4">A practice tool for musicians <b>at any stage</b> to improve their note recognition and playing
         skills—quickly and effectively.</p>
-      <a href="#" class="btn btn-light btn-lg" style="text-shadow: none !important;">Get Started</a>
+      <a href="#" class="btn btn-primary" style="text-shadow: none !important;">Get Started</a>
     </div>
   </section>
 
   <section class="pt-5">
-    <div class="container">
-      <h2>Have a go now!</h2>
+    <div class="container mx-auto px-4">
+      <h2 class="text-2xl font-bold mb-4">Have a go now!</h2>
       {{ instruments|json_script:"instruments-data" }}
       <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -58,11 +58,12 @@
           // Populate the instrument-dropdown with keys of the instruments object
           for (const instrument in instruments) {
             const item = document.createElement('li');
-            const link = document.createElement('button');
-            link.className = 'dropdown-item';
-            link.type = 'button';
+            const link = document.createElement('a');
+            link.className = 'block px-4 py-2 hover:bg-gray-100';
+            link.href = '#';
             link.textContent = instrument;
-            link.addEventListener('click', function () {
+            link.addEventListener('click', function (e) {
+              e.preventDefault();
               // Update the main dropdown button text and populate the levels dropdown
               instrumentButton.textContent = instrument;
 
@@ -85,11 +86,12 @@
             // Add levels to the dropdown
             info['levels'].forEach(level => {
               const item = document.createElement('li');
-              const link = document.createElement('button');
-              link.className = 'dropdown-item';
-              link.type = 'button';
+              const link = document.createElement('a');
+              link.className = 'block px-4 py-2 hover:bg-gray-100';
+              link.href = '#';
               link.textContent = level;
-              link.addEventListener('click', function () {
+              link.addEventListener('click', function (e) {
+                e.preventDefault();
                 instrumentLevelButton.textContent = level;
                 const url = "{{ request.scheme }}://{{ request.get_host }}/{{ practice_url }}/" + instrument + "/treble/Bb/" + level + "/";
                 loadIframe(url);
@@ -128,115 +130,104 @@
         }
       </script>
       <div>
-        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2">
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-2">
           <!-- Instrument Dropdown -->
-          <div class="col-auto">
-            <div class="dropdown" id="instrument-dropdown">
-              <button class="btn btn-primary dropdown-toggle" type="button" id="instrumentButton"
-                      data-bs-toggle="dropdown" aria-expanded="false">
-                Select your instrument
-              </button>
-              <ul class="dropdown-menu" id="instrumentDropdownMenu">
-              </ul>
+          <div class="dropdown">
+            <div tabindex="0" role="button" class="btn btn-primary" id="instrumentButton">
+              Select your instrument
             </div>
+            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52" id="instrumentDropdownMenu">
+            </ul>
           </div>
 
           <!-- Instrument Level Dropdown -->
-          <div class="col-auto">
-            <div class="dropdown" id="instrument-level-dropdown">
-              <button class="btn btn-secondary dropdown-toggle" type="button" id="instrumentLevelButton"
-                      data-bs-toggle="dropdown" aria-expanded="false" disabled>
-                What level do you play at?
-              </button>
-              <ul class="dropdown-menu" id="instrumentLevelDropdownMenu">
-                <!-- Items will be dynamically populated -->
-              </ul>
+          <div class="dropdown">
+            <div tabindex="0" role="button" class="btn btn-secondary" id="instrumentLevelButton" disabled>
+              What level do you play at?
             </div>
+            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52" id="instrumentLevelDropdownMenu">
+              <!-- Items will be dynamically populated -->
+            </ul>
           </div>
         </div>
       </div>
     </div>
   </section>
   <div class="m-1">
-    <div id="iframe-container">
+    <div id="iframe-container" class="w-full">
       <!-- The iframe will be added here dynamically -->
     </div>
   </div>
 
   <!-- Features Section -->
   <section id="features" class="py-5">
-    <div class="container">
+    <div class="container mx-auto px-4">
       <div class="text-center mb-4">
-        <h2>Why Choose Our App?</h2>
-        <p class="text-muted">Everything you need to improve your skills as a musician.</p>
+        <h2 class="text-2xl font-bold">Why Choose Our App?</h2>
+        <p class="text-gray-600">Everything you need to improve your skills as a musician.</p>
       </div>
-      <div class="row g-2">
-        <div class="col-md-4">
-          <div class="card h-100 shadow-sm bg-light">
-            <div class="card-body text-center">
-              <h5 class="card-title"><i class="bi bi-music-note"></i> Quick Note Practice</h5>
-              <p class="card-text">Engaging exercises to help you play notes faster and more accurately.</p>
-            </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body text-center">
+            <h2 class="card-title justify-center"><i class="bi bi-music-note"></i> Quick Note Practice</h2>
+            <p>Engaging exercises to help you play notes faster and more accurately.</p>
           </div>
         </div>
-        <div class="col-md-4">
-          <div class="card h-100 shadow-sm bg-light">
-            <div class="card-body text-center">
-              <h5 class="card-title"><i class="bi bi-bar-chart"></i> Track Your Progress</h5>
-              <p class="card-text">Get detailed insights and analytics on your improvement journey.</p>
-            </div>
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body text-center">
+            <h2 class="card-title justify-center"><i class="bi bi-bar-chart"></i> Track Your Progress</h2>
+            <p>Get detailed insights and analytics on your improvement journey.</p>
           </div>
         </div>
-        <div class="col-md-4">
-          <div class="card h-100 shadow-sm bg-light">
-            <div class="card-body text-center">
-              <h5 class="card-title"><i class="bi bi-question-circle"></i> Personalized Challenges</h5>
-              <p class="card-text">Tailored exercises that match your skill level and musical goals.</p>
-            </div>
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body text-center">
+            <h2 class="card-title justify-center"><i class="bi bi-question-circle"></i> Personalized Challenges</h2>
+            <p>Tailored exercises that match your skill level and musical goals.</p>
           </div>
         </div>
       </div>
     </div>
   </section>
+
   <!-- Testimonials Section -->
-  <section id="testimonials" class="bg-light py-5">
-    <div class="container">
+  <section id="testimonials" class="bg-base-200 py-5">
+    <div class="container mx-auto px-4">
       <div class="text-center mb-4">
-        <h2>What Users Say</h2>
-        <p class="text-muted">Join thousands of musicians who’ve improved their skills!</p>
+        <h2 class="text-2xl font-bold">What Users Say</h2>
+        <p class="text-gray-600">Join thousands of musicians who've improved their skills!</p>
       </div>
-      <div class="row">
-        <div class="col-md-4">
-          <blockquote class="blockquote">
-            <p>"This app has transformed the way I practice trumpet notes."</p>
-            <footer class="blockquote-footer">Sara T., Trumpeter</footer>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-base-100 p-4 rounded-lg shadow">
+          <blockquote>
+            <p class="italic">"This app has transformed the way I practice trumpet notes."</p>
+            <footer class="text-gray-600 mt-2">— Sara T., Trumpeter</footer>
           </blockquote>
         </div>
-        <div class="col-md-4">
-          <blockquote class="blockquote">
-            <p>"I’ve never been more confident playing the piano. Thank you!"</p>
-            <footer class="blockquote-footer">John D., Pianist</footer>
+        <div class="bg-base-100 p-4 rounded-lg shadow">
+          <blockquote>
+            <p class="italic">"I've never been more confident playing the piano. Thank you!"</p>
+            <footer class="text-gray-600 mt-2">— John D., Pianist</footer>
           </blockquote>
         </div>
-        <div class="col-md-4">
-          <blockquote class="blockquote">
-            <p>"Perfect for beginners and experienced musicians alike."</p>
-            <footer class="blockquote-footer">Anna K., Violinist</footer>
+        <div class="bg-base-100 p-4 rounded-lg shadow">
+          <blockquote>
+            <p class="italic">"Perfect for beginners and experienced musicians alike."</p>
+            <footer class="text-gray-600 mt-2">— Anna K., Violinist</footer>
           </blockquote>
         </div>
       </div>
     </div>
   </section>
 
-  <footer class="bg-dark text-white py-4">
-    <div class="container">
-      <div class="row">
+  <footer class="bg-neutral text-neutral-content py-4">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <!-- About Section -->
-        <div class="col-md-4">
-          <h5>About Us</h5>
+        <div>
+          <h5 class="text-lg font-bold mb-2">About Us</h5>
           <p>We create tools to help musicians practice effectively and grow to their full potential.</p>
         </div>
-        <!-- Links Section -->
+        <!-- Links Section can be added here if needed -->
       </div>
 
       <div class="text-center mt-3">

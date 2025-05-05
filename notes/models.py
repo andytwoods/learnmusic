@@ -118,9 +118,11 @@ class LearningScenario(TimeStampedModel):
 
         if progress is None or freshen_progress:
             progress = []
-            learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
-            for noterecord in learningscenario.notes:
-                fresh_noterecord = tools.serialise_note(noterecord)
+
+        learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
+        for noterecord in learningscenario.notes:
+            fresh_noterecord = tools.serialise_note(noterecord)
+            if fresh_noterecord not in progress:
                 progress.append(fresh_noterecord)
 
         return package, progress

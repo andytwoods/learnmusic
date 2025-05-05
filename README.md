@@ -39,3 +39,28 @@ To run the tests, check your test coverage, and generate an HTML coverage report
 
     $ python manage.py test
 
+### Setting Up Tailwind CSS
+
+This project uses Tailwind CSS for styling. Follow these steps to set up the Tailwind CLI:
+
+1. Install Node.js and npm if you haven't already (https://nodejs.org/)
+
+2. Install the project dependencies:
+
+    ```
+    $ npm install
+    ```
+
+3. Build the CSS (one-time build):
+
+    ```
+    $ npm run build
+    ```
+
+4. Or watch for changes during development:
+
+    ```
+    $ npm run watch
+    ```
+
+The Tailwind configuration is in `tailwind.config.js`, and the input CSS file is at `./learnmusic/static/css/tailwind.css`. The compiled output is generated at `./learnmusic/static/css/project.css`.
