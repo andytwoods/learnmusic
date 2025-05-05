@@ -1,0 +1,18 @@
+{
+  "name": "learnmusic",
+  "version": "1.0.0",
+  "description": "LearnMusic project",
+  "scripts": {
+    "build": "tailwindcss -i ./learnmusic/static/css/tailwind.css -o ./learnmusic/static/css/project.css --minify",
+    "watch": "tailwindcss -i ./learnmusic/static/css/tailwind.css -o ./learnmusic/static/css/project.css --watch"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.16",
+    "daisyui": "^5.0.35",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^4.1.5"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.5"
+  }
+}

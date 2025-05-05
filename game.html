@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pac-Man with Voice Recognition</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    #gameCanvas {
+      background: #000;
+      display: block;
+      margin: 20px auto;
+      border: 2px solid #fff;
+    }
+    #instructions {
+      margin: 0 auto;
+      width: 80%;
+      max-width: 600px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pac-Man with Voice Recognition</h1>
+  <canvas id="gameCanvas" width="480" height="480"></canvas>
+
+  <div id="instructions">
+    <p><strong>Controls:</strong></p>
+    <ul>
+      <li>Use the <strong>arrow keys</strong> to move Pac-Man.</li>
+      <li>Use <strong>voice commands</strong> "<em>up</em>", "<em>down</em>", "<em>left</em>", "<em>right</em>" to move Pac-Man.</li>
+    </ul>
+    <p><em>Allow microphone access when prompted, and note that only certain browsers (e.g. Chrome) support the SpeechRecognition API.</em></p>
+  </div>
+
+  <script>
+    /********************************************************************
+     * Basic Pac-Man with Voice Recognition
+     ********************************************************************/
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const TILE_SIZE = 24;   // size of each maze cell in px
+    const ROWS = 20;        // number of rows in the maze
+    const COLS = 20;        // number of cols in the maze
+
+    // Simple Maze Layout
+    // 0 -> path
+    // 1 -> wall
+    // A small sample layout:
+    const maze = [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,1,0,1],
+      [1,0,1,0,0,0,1,0,1,0,1,0,1,0,0,0,0,1,0,1],
+      [1,0,1,0,1,1,1,0,1,0,1,0,1,1,1,1,0,1,0,1],
+      [1,0,0,0,1,0,0,0,1,0,1,0,0,0,0,1,0,1,0,1],
+      [1,1,1,1,1,0,1,1,1,0,1,1,1,1,0,1,0,1,0,1],
+      [1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,1,0,1,0,1],
+      [1,0,1,1,1,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1],
+      [1,0,1,0,0,0,0,0,0,0,0,1,0,1,0,1,0,1,0,1],
+      [1,0,1,1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,0,1],
+      [1,0,0,0,0,0,0,0,0,1,0,1,0,1,0,1,0,1,0,1],
+      [1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1,0,1,0,1],
+      [1,0,0,0,0,0,0,1,0,1,0,0,0,1,0,1,0,1,0,1],
+      [1,0,1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1],
+      [1,0,1,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0,1],
+      [1,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    ];
+
+    // Pac-Man's initial state
+    let pacman = {
+      x: 0,       // column
+      y: 0,       // row
+      dx: 0,
+      dy: 0,
+      speed: 0.1  // movement speed
+    };
+
+    // Basic ghosts
+    let ghosts = [
+      { x: 8,  y: 8,  color: 'red',  direction: 'left'  },
+      { x: 10, y: 10, color: 'pink', direction: 'right' }
+    ];
+
+    // Ensure Pac-Man does NOT start inside a wall:
+    function getValidSpawn() {
+      let validCells = [];
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          // 0 means open path
+          if (maze[r][c] === 0) {
+            validCells.push({ r, c });
+          }
+        }
+      }
+      let idx = Math.floor(Math.random() * validCells.length);
+      return validCells[idx];
+    }
+
+    // Initialize Pac-Man at a valid cell
+    function initPacman() {
+      let spawn = getValidSpawn();
+      pacman.x = spawn.c;
+      pacman.y = spawn.r;
+      pacman.dx = 0;
+      pacman.dy = 0;
+    }
+
+    initPacman(); // pick a random valid position
+
+    // Listen for arrow key presses to move Pac-Man manually
+    window.addEventListener('keydown', (e) => {
+      switch (e.key) {
+        case 'ArrowUp':
+          movePacman('up');
+          break;
+        case 'ArrowDown':
+          movePacman('down');
+          break;
+        case 'ArrowLeft':
+          movePacman('left');
+          break;
+        case 'ArrowRight':
+          movePacman('right');
+          break;
+      }
+    });
+
+    // Helper: Move Pac-Man in a direction
+    function movePacman(direction) {
+      switch (direction) {
+        case 'up':
+          pacman.dx = 0;
+          pacman.dy = -1;
+          break;
+        case 'down':
+          pacman.dx = 0;
+          pacman.dy = 1;
+          break;
+        case 'left':
+          pacman.dx = -1;
+          pacman.dy = 0;
+          break;
+        case 'right':
+          pacman.dx = 1;
+          pacman.dy = 0;
+          break;
+      }
+    }
+
+    // Main game loop
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function update() {
+      // Move Pac-Man
+      moveEntity(pacman);
+
+      // Move ghosts
+      ghosts.forEach(ghost => moveGhost(ghost));
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw Maze
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (maze[r][c] === 1) {
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(
+              c * TILE_SIZE,
+              r * TILE_SIZE,
+              TILE_SIZE,
+              TILE_SIZE
+            );
+          }
+        }
+      }
+
+      // Draw Pac-Man
+      ctx.fillStyle = 'yellow';
+      ctx.beginPath();
+      ctx.arc(
+        pacman.x * TILE_SIZE + TILE_SIZE/2,
+        pacman.y * TILE_SIZE + TILE_SIZE/2,
+        TILE_SIZE/2 - 2,
+        0,
+        2 * Math.PI
+      );
+      ctx.fill();
+
+      // Draw ghosts
+      ghosts.forEach(g => {
+        ctx.fillStyle = g.color;
+        ctx.fillRect(
+          g.x * TILE_SIZE + 4,
+          g.y * TILE_SIZE + 4,
+          TILE_SIZE - 8,
+          TILE_SIZE - 8
+        );
+      });
+    }
+
+    function moveEntity(entity) {
+      let newX = entity.x + entity.dx * entity.speed;
+      let newY = entity.y + entity.dy * entity.speed;
+
+      // Round the potential new position to check collision
+      let tileX = Math.round(newX);
+      let tileY = Math.round(newY);
+
+      // Check if it is a valid (0) tile
+      if (maze[tileY] && maze[tileY][tileX] === 0) {
+        entity.x = newX;
+        entity.y = newY;
+      }
+    }
+
+    // Simple ghost "AI"
+    function moveGhost(ghost) {
+      let newX = ghost.x;
+      let newY = ghost.y;
+
+      if (ghost.direction === 'left')  newX -= 0.02;
+      if (ghost.direction === 'right') newX += 0.02;
+      if (ghost.direction === 'up')    newY -= 0.02;
+      if (ghost.direction === 'down')  newY += 0.02;
+
+      let tileX = Math.round(newX);
+      let tileY = Math.round(newY);
+
+      if (maze[tileY][tileX] === 1) {
+        // pick random new direction
+        let directions = ['up', 'down', 'left', 'right'];
+        ghost.direction = directions[Math.floor(Math.random() * directions.length)];
+      } else {
+        ghost.x = newX;
+        ghost.y = newY;
+      }
+    }
+
+    // Start the game loop
+    requestAnimationFrame(gameLoop);
+
+
+    /************************************************************************
+     * Voice Recognition Setup (Web Speech API)
+     ************************************************************************/
+    // Check if the browser supports SpeechRecognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;    // keep recognizing continuously
+      recognition.interimResults = false; // we only care about final results
+      recognition.lang = 'en-US';
+
+      recognition.onresult = function(event) {
+        // loop through the results
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript.trim().toLowerCase();
+          console.log('[Voice]', transcript);
+
+          // If the recognized text includes the keywords, move Pac-Man
+          if (transcript.includes('up')) {
+            movePacman('up');
+          } else if (transcript.includes('down')) {
+            movePacman('down');
+          } else if (transcript.includes('left')) {
+            movePacman('left');
+          } else if (transcript.includes('right')) {
+            movePacman('right');
+          }
+        }
+      };
+
+      recognition.onerror = function(e) {
+        console.error('Speech recognition error:', e);
+      };
+
+      recognition.onend = function() {
+        // Restart recognition if it stops (optional)
+        console.log('Speech recognition ended, restarting...');
+        recognition.start();
+      };
+
+      // Start listening
+      recognition.start();
+    } else {
+      console.warn('Speech Recognition not supported by this browser.');
+    }
+
+  </script>
+</body>
+</html>
