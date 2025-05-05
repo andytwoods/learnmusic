@@ -20,170 +20,144 @@
 
   <script>
     function update_backend() {
-
-      // Sending the POST request to the backend
-
       fetch(window.location.href, {
-        method: 'POST', // HTTP method
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRFToken': "{{ csrf_token }}"
         },
         body: JSON.stringify(window.selected_notes())
-      })
-        .then(data => {
-          window.location.reload();
-        })
-
-
+      }).then(() => window.location.reload());
     }
   </script>
 
   <script>
-    // Set up VexFlow
     document.addEventListener("DOMContentLoaded", function () {
 
-      // Set up VexFlow
+      /* ---------------------  VEXFLOW SET-UP  ---------------------- */
       const VF = Vex.Flow;
       const div = document.getElementById("output");
       const renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
 
-      // Get the width of the parent div dynamically
-      const parentWidth = div.offsetWidth;
-
-      // Configure renderer dimensions based on parent div width
-      renderer.resize(parentWidth, 1000); // Adjust height as needed
+      const parentWidth = div.offsetWidth;          // dynamic width
+      renderer.resize(parentWidth, 1000);           // height as needed
       const context = renderer.getContext();
 
-      // Function to render staves and notes dynamically
+      /* --------------  RENDER + INTERACT WITH NOTES  -------------- */
       const updateNotes = (notes, selected) => {
-        // Clear previous rendering
         context.clear();
 
-        let notesPerStave = 10;
-        if(parentWidth<800) notesPerStave = 6
-        let yPosition = 40; // Initial vertical position
+        let notesPerStave = parentWidth < 800 ? 6 : 10;
+        let yPosition = 40;                         // top stave Y-pos
 
         for (let i = 0; i < notes.length; i += notesPerStave) {
-          // Create a new stave
-          const stave = new VF.Stave(10, yPosition, parentWidth - 20); // Adjust width for margins
+          const stave = new VF.Stave(10, yPosition, parentWidth - 20);
           stave.addClef("treble").setContext(context).draw();
 
-          // Get the slice of notes for this stave
           const staveNotes = notes.slice(i, i + notesPerStave).map((note, index) => {
+            const staveNote = new VF.StaveNote({ keys: [note], duration: "1" });
 
-            const staveNote = new VF.StaveNote({keys: [note], duration: "1"});
-
-            // Add accidental if present
-            if (note.indexOf("b") !== -1) {
+            /* accidental */
+            if (note.includes("b")) {
               staveNote.addModifier(new VF.Accidental("b"), 0);
-            } else if (note.indexOf("#") !== -1) {
+            } else if (note.includes("#")) {
               staveNote.addModifier(new VF.Accidental("#"), 0);
             }
 
-            if (selected[i + index]) {
-              staveNote.setStyle({fillStyle: "black"});
-            } else {
-              staveNote.setStyle({fillStyle: "lightgray"});
-            }
+            /* colour for selected / unselected */
+            staveNote.setStyle({ fillStyle: selected[i + index] ? "black" : "lightgray" });
+
+            /* --------  ▼  ADD NAME LABEL ABOVE THE NOTE  ▼  -------- */
+            const octave = note.split('/')[1]
+            let label = note.split('/')[0]      // "C/4" → "C"
+                            .replace("b", "♭")  // prettify flats
+                            .replace("#", "♯"); // prettify sharps
+
+            const annotation = new VF.Annotation(label + ' ' + octave)
+                  .setFont("Arial", 12)
+                  .setVerticalJustification(VF.Annotation.VerticalJustify.TOP);
+
+            staveNote.addModifier(annotation, 0);
+            /* ------------------------------------------------------- */
 
             return staveNote;
           });
 
-          // Create a voice and format the notes
-          const voice = new VF.Voice({num_beats: staveNotes.length, beat_value: 1});
-          voice.addTickables(staveNotes);
+          const voice = new VF.Voice({ num_beats: staveNotes.length, beat_value: 1 })
+                           .addTickables(staveNotes);
 
-          const formatter = new VF.Formatter().joinVoices([voice]).format([voice], parentWidth - 40);
+          new VF.Formatter().joinVoices([voice]).format([voice], parentWidth - 40);
           voice.draw(context, stave);
 
-          // Adjust vertical position for the next stave
-          yPosition += 120;
+          yPosition += 140;     // was 120; extra space for labels
         }
         addNoteInteractivity(notes, selected);
       };
 
+      /* ---------------------  CLICK HANDLERS  --------------------- */
       const addNoteInteractivity = (notes, selected) => {
         const noteHeads = context.svg.querySelectorAll(".vf-notehead");
 
         noteHeads.forEach((noteHead, index) => {
-
           const associatedNote = notes[index];
           noteHead.setAttribute("data-note", associatedNote);
 
           noteHead.addEventListener("click", () => {
-
             selected[index] = !selected[index];
-            const has_been_selected = selected[index];
-
             noteHead.style.fill = selected[index] ? "black" : "lightgray";
 
             const recoveredNote = noteHead.getAttribute("data-note");
-
-            if (has_been_selected) {
+            if (selected[index]) {
               rolling_selection.push(recoveredNote);
             } else {
               rolling_selection.splice(rolling_selection.indexOf(recoveredNote), 1);
             }
-
           });
         });
       };
 
       window.selected_notes = function () {
-
         const uniqueToSelectedAtStart = selected_at_start.filter(
-          element => !rolling_selection.includes(element)
+          el => !rolling_selection.includes(el)
         );
-
         const uniqueToRollingSelection = rolling_selection.filter(
-          element => !selected_at_start.includes(element)
+          el => !selected_at_start.includes(el)
         );
+        return { added: uniqueToRollingSelection, removed: uniqueToSelectedAtStart };
+      };
 
-        return {
-          'added': uniqueToRollingSelection,
-          'removed': uniqueToSelectedAtStart
-        }
-      }
-
-
-      const notes_data = JSON.parse(
-        document.getElementById('notes-data').textContent
-      );
-      const all_notes_data = JSON.parse(
-        document.getElementById('all-notes-data').textContent
-      );
-      console.log(all_notes_data)
+      /* --------------------  DATA FROM DJANGO  -------------------- */
+      const notes_data = JSON.parse(document.getElementById('notes-data').textContent);
+      const all_notes_data = JSON.parse(document.getElementById('all-notes-data').textContent);
 
       let selected_at_start = [];
       let rolling_selection = [];
 
       function setup() {
-        let notes = [];
-        let is_selected = [];
-        for (let i = 0; i < all_notes_data.length; i++) {
-          const all_note = all_notes_data[i];
-          const split_note = all_note.split(" ");
-          let note = split_note[0];
-          if (split_note[1] === "-1") note += 'b'
-          else if (split_note[1] === "1") note += '#'
-          note += '/' + split_note[2];
-          notes.push(note);
-          is_selected.push(notes_data.indexOf(all_note) !== -1);
-          if (notes_data.indexOf(all_note) !== -1) {
-            selected_at_start.push(note);
-            rolling_selection.push(note)
-          }
+        const notes = [];
+        const is_selected = [];
 
-        }
+        all_notes_data.forEach(all_note => {
+          const [letter, accidental, octave] = all_note.split(" ");
+          let note = letter;
+          if (accidental === "-1")      note += "b";
+          else if (accidental === "1")  note += "#";
+          note += "/" + octave;
+
+          notes.push(note);
+
+          const initiallySelected = notes_data.includes(all_note);
+          is_selected.push(initiallySelected);
+          if (initiallySelected) {
+            selected_at_start.push(note);
+            rolling_selection.push(note);
+          }
+        });
+
         updateNotes(notes, is_selected);
       }
 
-      // doing it this way for encapsulation and keeping scope pure
-      setup();
-
+      setup();    // initialise everything
     });
-
-
   </script>
 {% endblock content %}

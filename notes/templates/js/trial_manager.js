@@ -26,7 +26,7 @@ const trial_manager = (function () {
 
         api.stop = function () {
             error_message_el.style.display = 'none';
-            if(callback) callback();
+            if (callback) callback();
             callback = undefined;
         }
 
@@ -50,10 +50,9 @@ const trial_manager = (function () {
 
         locked = true;
         const rt = timer.stop();
-        if(window.special_condition==='first_trial') {
+        if (window.special_condition === 'first_trial') {
             window.special_condition = '';
-        }
-        else {
+        } else if (!session_manager.current_note.skipRecording) {
             session_manager.update_data(rt, answer);
             sendResultsToBackend(window.progress_data);
         }
