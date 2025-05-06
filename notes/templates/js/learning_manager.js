@@ -38,7 +38,6 @@ const learning_manager = (function () {
         // “Mastered” means >= CORRECT_COUNT_THAT_INDICATES_MASTERED correct
         // out of the last ATTEMPTS_TO_CHECK_IF_MASTERED answers
         const score = getMasteryScore(note) >= CORRECT_COUNT_THAT_INDICATES_MASTERED;
-        console.log('here')
         return score;
     }
 

@@ -1,5 +1,5 @@
 import copy
-from typing import Any
+from typing import Any, List
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
@@ -118,12 +118,30 @@ class LearningScenario(TimeStampedModel):
 
         if progress is None or freshen_progress:
             progress = []
-            learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
-            for noterecord in learningscenario.notes:
-                fresh_noterecord = tools.serialise_note(noterecord)
-                progress.append(fresh_noterecord)
+
+        learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
+
+        progress = LearningScenario._add_new_notes(learningscenario.notes, progress)
+        progress = LearningScenario._remove_deleted_notes(learningscenario.notes, progress)
 
         return package, progress
+
+    @staticmethod
+    def _add_new_notes(note_records:List[str], progress):
+        flattened_progress = [f'{note['note']} {note['alter']} {note['octave']}' for note in progress]
+        for noterecord in note_records:
+            if noterecord not in flattened_progress:
+                fresh_noterecord = tools.serialise_note(noterecord)
+                progress.append(fresh_noterecord)
+        return progress
+
+    @staticmethod
+    def _remove_deleted_notes(note_records:List[str], progress):
+        for note_obj in progress:
+            flattened_note = f'{note_obj["note"]} {note_obj["alter"]} {note_obj["octave"]}'
+            if flattened_note not in note_records:
+                progress.remove(note_obj)
+        return progress
 
     def edit_notes(self, added, removed):
         for note_str in added:
