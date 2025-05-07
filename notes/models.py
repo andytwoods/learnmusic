@@ -143,11 +143,13 @@ class LearningScenario(TimeStampedModel):
                 progress.remove(note_obj)
         return progress
 
-    def edit_notes(self, added, removed):
+    def edit_notes(self, added, removed, commit=True):
         for note_str in added:
             self.notes.append(note_str)
         for note_str in removed:
             self.notes.remove(note_str)
+        if commit:
+            self.save()
 
     def clone(self):
         obj_copy = copy.deepcopy(self)

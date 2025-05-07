@@ -13,26 +13,21 @@
 {% block content %}
   <h2>Edit Learning Scenario Notes</h2>
   <p>Select the notes you want to practice, including enharmonics</p>
-  <button class="btn btn-primary" onclick="update_backend()">Save</button>
+  <button class="btn btn-primary"
+          hx-post="."
+          hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-no-confirm="true"
+          hx-swap="innerHTML" hx-target="body"
+          hx-vals='js:{data:window.selected_notes()}'
+  >Save
+  </button>
   {{ notes|json_script:"notes-data" }}
   {{ all_notes|json_script:"all-notes-data" }}
   <div id="output"></div>
 
-  <script>
-    function update_backend() {
-      fetch(window.location.href, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': "{{ csrf_token }}"
-        },
-        body: JSON.stringify(window.selected_notes())
-      }).then(() => window.location.reload());
-    }
-  </script>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
+
+    function generate_music_form() {
 
       /* ---------------------  VEXFLOW SET-UP  ---------------------- */
       const VF = Vex.Flow;
@@ -55,7 +50,7 @@
           stave.addClef("treble").setContext(context).draw();
 
           const staveNotes = notes.slice(i, i + notesPerStave).map((note, index) => {
-            const staveNote = new VF.StaveNote({ keys: [note], duration: "1" });
+            const staveNote = new VF.StaveNote({keys: [note], duration: "1"});
 
             /* accidental */
             if (note.includes("b")) {
@@ -65,17 +60,17 @@
             }
 
             /* colour for selected / unselected */
-            staveNote.setStyle({ fillStyle: selected[i + index] ? "black" : "lightgray" });
+            staveNote.setStyle({fillStyle: selected[i + index] ? "black" : "lightgray"});
 
             /* --------  ▼  ADD NAME LABEL ABOVE THE NOTE  ▼  -------- */
             const octave = note.split('/')[1]
             let label = note.split('/')[0]      // "C/4" → "C"
-                            .replace("b", "♭")  // prettify flats
-                            .replace("#", "♯"); // prettify sharps
+              .replace("b", "♭")  // prettify flats
+              .replace("#", "♯"); // prettify sharps
 
             const annotation = new VF.Annotation(label + ' ' + octave)
-                  .setFont("Arial", 12)
-                  .setVerticalJustification(VF.Annotation.VerticalJustify.TOP);
+              .setFont("Arial", 12)
+              .setVerticalJustification(VF.Annotation.VerticalJustify.TOP);
 
             staveNote.addModifier(annotation, 0);
             /* ------------------------------------------------------- */
@@ -83,8 +78,8 @@
             return staveNote;
           });
 
-          const voice = new VF.Voice({ num_beats: staveNotes.length, beat_value: 1 })
-                           .addTickables(staveNotes);
+          const voice = new VF.Voice({num_beats: staveNotes.length, beat_value: 1})
+            .addTickables(staveNotes);
 
           new VF.Formatter().joinVoices([voice]).format([voice], parentWidth - 40);
           voice.draw(context, stave);
@@ -123,7 +118,7 @@
         const uniqueToRollingSelection = rolling_selection.filter(
           el => !selected_at_start.includes(el)
         );
-        return { added: uniqueToRollingSelection, removed: uniqueToSelectedAtStart };
+        return ({added: uniqueToRollingSelection, removed: uniqueToSelectedAtStart});
       };
 
       /* --------------------  DATA FROM DJANGO  -------------------- */
@@ -140,8 +135,8 @@
         all_notes_data.forEach(all_note => {
           const [letter, accidental, octave] = all_note.split(" ");
           let note = letter;
-          if (accidental === "-1")      note += "b";
-          else if (accidental === "1")  note += "#";
+          if (accidental === "-1") note += "b";
+          else if (accidental === "1") note += "#";
           note += "/" + octave;
 
           notes.push(note);
@@ -153,11 +148,11 @@
             rolling_selection.push(note);
           }
         });
-
         updateNotes(notes, is_selected);
       }
-
       setup();    // initialise everything
-    });
+    }
+
+    generate_music_form();
   </script>
 {% endblock content %}

@@ -1,4 +1,5 @@
 import random
+from unittest import case
 
 from notes.instruments import instruments
 
@@ -18,6 +19,20 @@ notes = [
     "G♯ / A♭"
 ]
 
+def convert_note_slash_to_db(slash_note):
+    note, octave = slash_note.split('/')
+    if len(note) == 1:
+        alter = 0
+    else:
+        match note[1]:
+            case 'b':
+                alter = -1
+            case '#':
+                alter = 1
+            case _:
+                raise Exception('note should be 1 letter: ' + slash_note)
+        note = note[0]
+    return f'{note} {alter} {octave}'
 
 def generate_notes(lowest_note, highest_note, include_crazy_notes=False):
     start_note, start_alter_str, start_octave_str = lowest_note.split(' ')

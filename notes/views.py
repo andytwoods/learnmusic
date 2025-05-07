@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 from statistics import median  # Python 3.4+ has a built-in median function
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.http import JsonResponse
@@ -14,7 +15,7 @@ from notes import tools
 from notes.forms import LearningScenarioForm
 from notes.instruments import instrument_infos, instruments
 from notes.models import LearningScenario, NoteRecordPackage, LevelChoices, InstrumentKeys, ClefChoices
-from notes.tools import generate_notes, compile_notes_per_skilllevel
+from notes.tools import generate_notes, compile_notes_per_skilllevel, convert_note_slash_to_db
 
 PRACTICE_TRY = 'practice-try'
 
@@ -75,11 +76,11 @@ def edit_learningscenario_notes(request, pk: int):
 
     # not sure why request.POST does not suffice. Perhaps cos JSON sent
     if request.method == 'POST':
-        received = json.loads(request.body)
-        notes_added = received['added']
-        notes_removed = received['removed']
-        ls.edit_notes(added=notes_added, removed=notes_removed)
-        return JsonResponse({'success': True}, status=200)
+        received = json.loads(request.POST.get('data'))
+        notes_added = [convert_note_slash_to_db(note) for note in received['added']]
+        notes_removed = [convert_note_slash_to_db(note) for note in received['removed']]
+        ls.edit_notes(added=notes_added, removed=notes_removed, commit=True)
+        messages.success(request, 'Notes updated')
 
     lowest_note, highest_note = tools.get_instrument_range(ls.instrument_name, LevelChoices.ADVANCED)
 
