@@ -5,14 +5,7 @@
     <input
       class="form-check-input"
       type="checkbox"
-      id="helpToggleSwitch"
-      {% if learningscenario_id != 'practice-try' %}
-      hx-no-confirm="true"
-      hx-get="{% url 'toggle-help' %}"
-      hx-trigger="change"
-      hx-swap="none"
-      {% endif %}
-      {% if request.user.help %}checked{% endif %}>
+      id="helpToggleSwitch">
     <label class="form-check-label" for="helpToggleSwitch">Tutorial</label>
   </div>
 </div>
@@ -56,15 +49,19 @@
     return api;
   }());
 
-  {% if request.user.is_authenticated %}
-    {% if request.user.help %}
-      tutorial.run();
-    {% endif %}
-  {% else %}
-    tutorial.run();
-  {% endif %}
+  // Initialize help toggle state from localStorage (default to true if not set)
   const helpToggleSwitch = document.getElementById('helpToggleSwitch');
+  const helpEnabled = localStorage.getItem('helpEnabled') !== 'false'; // Default to true
+  helpToggleSwitch.checked = helpEnabled;
+
+  // Run tutorial if help is enabled
+  if (helpEnabled) {
+    tutorial.run();
+  }
+
+  // Update localStorage when toggle changes
   helpToggleSwitch.addEventListener('change', () => {
+    localStorage.setItem('helpEnabled', helpToggleSwitch.checked);
     if (helpToggleSwitch.checked) {
       tutorial.run();
     }

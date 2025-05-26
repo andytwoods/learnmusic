@@ -4,14 +4,7 @@
     <input
       class="form-check-input"
       type="checkbox"
-      id="progressToggleSwitch"
-      {% if learningscenario_id != 'practice-try' %}
-      hx-no-confirm="true"
-      hx-get="{% url 'toggle-help' %}"
-      hx-trigger="change"
-      hx-swap="none"
-      {% endif %}
-      {% if request.user.help %}checked{% endif %}>
+      id="progressToggleSwitch">
     <label class="form-check-label" for="helpToggleSwitch">Tutorial</label>
   </div>
 </div>
@@ -23,9 +16,16 @@
 
     const progressToggleSwitch = document.getElementById('progressToggleSwitch');
 
-    let enabled = progressToggleSwitch.checked;
+    // Initialize progress toggle state from localStorage (default to true if not set)
+    const progressEnabled = localStorage.getItem('progressEnabled') !== 'false'; // Default to true
+    progressToggleSwitch.checked = progressEnabled;
+
+    let enabled = progressEnabled;
+
+    // Update localStorage when toggle changes
     progressToggleSwitch.addEventListener('change', ()=>{
       enabled = progressToggleSwitch.checked;
+      localStorage.setItem('progressEnabled', enabled);
     });
 
     return api;
