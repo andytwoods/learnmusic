@@ -9,7 +9,7 @@ from .base import env
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ['learnmusic.applikuapp.com', ]
+ALLOWED_HOSTS = ['learnmusic.applikuapp.com', 'tootomatic.com',]
 
 # DATABASES
 # ------------------------------------------------------------------------------
@@ -82,7 +82,7 @@ WHITENOISE_AUTOREFRESH = DEBUG
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
 DEFAULT_FROM_EMAIL = env(
     "DJANGO_DEFAULT_FROM_EMAIL",
-    default="LearnMusic <noreply@example.com>",
+    default="LearnMusic <noreply@tootomatic.com>",
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#server-email
 SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
@@ -98,19 +98,13 @@ ACCOUNT_EMAIL_SUBJECT_PREFIX = EMAIL_SUBJECT_PREFIX
 # Django Admin URL regex.
 ADMIN_URL = env("DJANGO_ADMIN_URL", default='banana/')
 
-# Anymail
+# Email
 # ------------------------------------------------------------------------------
-# https://anymail.readthedocs.io/en/stable/installation/#installing-anymail
-INSTALLED_APPS += ["anymail"]
-# https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
-# https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
-# https://anymail.readthedocs.io/en/stable/esps/mailgun/
-EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
-#ANYMAIL = {
-#    "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
-#    "MAILGUN_SENDER_DOMAIN": env("MAILGUN_DOMAIN"),
-#    "MAILGUN_API_URL": env("MAILGUN_API_URL", default="https://api.mailgun.net/v3"),
-#}
+EMAIL_HOST = 'mail.smtp2go.com'
+EMAIL_HOST_USER = 'tootomatic'
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+EMAIL_PORT = 2525
+EMAIL_USE_TLS = True
 
 
 # LOGGING

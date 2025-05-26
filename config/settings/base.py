@@ -84,8 +84,10 @@ THIRD_PARTY_APPS = [
     "crispy_bootstrap5",
     "allauth",
     "allauth.account",
-    "allauth.mfa",
     "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "allauth.socialaccount.providers.apple",
+    "allauth.mfa",
     'widget_tweaks',
     "django_htmx",
 ]
@@ -273,27 +275,38 @@ LOGGING = {
 REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
 REDIS_SSL = REDIS_URL.startswith("rediss://")
 
-# django-allauth
-# ------------------------------------------------------------------------------
-ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", False)
-# https://docs.allauth.org/en/latest/account/configuration.html
-ACCOUNT_AUTHENTICATION_METHOD = "email"
-# https://docs.allauth.org/en/latest/account/configuration.html
-ACCOUNT_EMAIL_REQUIRED = True
-# https://docs.allauth.org/en/latest/account/configuration.html
-ACCOUNT_USERNAME_REQUIRED = False
-# https://docs.allauth.org/en/latest/account/configuration.html
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-# https://docs.allauth.org/en/latest/account/configuration.html
-ACCOUNT_EMAIL_VERIFICATION = "none"
-# https://docs.allauth.org/en/latest/account/configuration.html
-ACCOUNT_ADAPTER = "learnmusic.users.adapters.AccountAdapter"
-# https://docs.allauth.org/en/latest/account/forms.html
-ACCOUNT_FORMS = {"signup": "learnmusic.users.forms.UserSignupForm"}
-# https://docs.allauth.org/en/latest/socialaccount/configuration.html
-SOCIALACCOUNT_ADAPTER = "learnmusic.users.adapters.SocialAccountAdapter"
-# https://docs.allauth.org/en/latest/socialaccount/configuration.html
-SOCIALACCOUNT_FORMS = {"signup": "learnmusic.users.forms.UserSocialSignupForm"}
+# django-allauth  (≥ v65.8)
+# --------------------------------------------------------------------------
 
-# Your stuff...
-# ------------------------------------------------------------------------------
+ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", True)
+
+# --- NEW, replaces ACCOUNT_AUTHENTICATION_METHOD ---------------------------
+ACCOUNT_LOGIN_METHODS = {'email'}          # users enter an email to log in
+
+# --- NEW, replaces EMAIL/USERNAME/PASSWORD flags ---------------------------
+# Required fields have a *
+# Here: email is required, password1 is OPTIONAL (no star)
+ACCOUNT_SIGNUP_FIELDS = ['email*']
+
+# If you want FULLY password-less enrolment instead, drop 'password1'
+# ACCOUNT_SIGNUP_FIELDS = ['email*']
+
+ACCOUNT_PASSWORD_REQUIRED        = False   # still valid
+ACCOUNT_PASSWORD_INPUT_RENDER_VALUE = False
+ACCOUNT_LOGIN_BY_CODE_ENABLED    = True    # magic-code / passkey workflow
+
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None   # you keep a username-less user model
+ACCOUNT_EMAIL_VERIFICATION       = "none"
+
+ACCOUNT_ADAPTER        = "learnmusic.users.adapters.AccountAdapter"
+ACCOUNT_FORMS          = {"signup": "learnmusic.users.forms.UserSignupForm"}
+SOCIALACCOUNT_ADAPTER  = "learnmusic.users.adapters.SocialAccountAdapter"
+SOCIALACCOUNT_FORMS    = {"signup": "learnmusic.users.forms.UserSocialSignupForm"}
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {"APP": {"client_id": "...", "secret": "..."}},
+    "apple":  {"APP": {"client_id": "...", "secret": "..."}},
+}
+
+MFA_SUPPORTED_TYPES       = ["totp", "webauthn", "recovery_codes"]
+MFA_PASSKEY_LOGIN_ENABLED = True
