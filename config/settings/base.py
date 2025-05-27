@@ -309,4 +309,4 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 MFA_SUPPORTED_TYPES       = ["totp", "webauthn", "recovery_codes"]
-MFA_PASSKEY_LOGIN_ENABLED = True
+MFA_PASSKEY_LOGIN_ENABLED = False

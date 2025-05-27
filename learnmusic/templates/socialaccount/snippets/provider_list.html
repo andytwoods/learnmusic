@@ -1,0 +1,16 @@
+<div class="socialaccount_providers">
+  {% load socialaccount %}
+  {% for provider in socialaccount_providers %}
+    <a href="{% provider_login_url provider.id process=process scope=scope auth_params=auth_params %}"
+       class="btn btn-primary align-items-center mb-2" style="gap: 0.5rem;">
+      {% if provider.id == "google" %}
+        <i class="fab fa-google fa-lg"></i>
+      {% elif provider.id == "apple" %}
+        <i class="fab fa-apple fa-lg"></i>
+      {% else %}
+        <i class="fas fa-user-circle fa-lg"></i>
+      {% endif %}
+      <span>Continue with {{ provider.name }}</span>
+    </a>
+  {% endfor %}
+</div>
