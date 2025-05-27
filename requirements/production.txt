@@ -7,3 +7,4 @@ psycopg2-binary==2.9.10
 # Django
 # ------------------------------------------------------------------------------
 django-anymail[mailgun]==12.0  # https://github.com/anymail/django-anymail
+rollbar~=1.3.0
