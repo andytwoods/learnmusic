@@ -303,10 +303,14 @@ ACCOUNT_FORMS          = {"signup": "learnmusic.users.forms.UserSignupForm"}
 SOCIALACCOUNT_ADAPTER  = "learnmusic.users.adapters.SocialAccountAdapter"
 SOCIALACCOUNT_FORMS    = {"signup": "learnmusic.users.forms.UserSocialSignupForm"}
 
-SOCIALACCOUNT_PROVIDERS = {
-    "google": {"APP": {"client_id": "...", "secret": "..."}},
-    "apple":  {"APP": {"client_id": "...", "secret": "..."}},
-}
+# SOCIALACCOUNT_PROVIDERS = {
+#     "google": {"APP": {"client_id": "947800578588-drpgh5eeq3fd88n460u69ad7s161sfld.apps.googleusercontent.com",
+#                        "secret": "..."},
+#                "SCOPE": ["email", "profile"],
+#                "AUTH_PARAMS": {"access_type": "online"},
+#                },
+#     "apple":  {"APP": {"client_id": "...", "secret": "..."}},
+# }
 
 MFA_SUPPORTED_TYPES       = ["totp", "webauthn", "recovery_codes"]
 MFA_PASSKEY_LOGIN_ENABLED = False
