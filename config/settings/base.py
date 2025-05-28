@@ -281,12 +281,12 @@ REDIS_SSL = REDIS_URL.startswith("rediss://")
 ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", True)
 
 # --- NEW, replaces ACCOUNT_AUTHENTICATION_METHOD ---------------------------
-ACCOUNT_LOGIN_METHODS = {'email'}          # users enter an email to log in
+ACCOUNT_LOGIN_METHODS = {'email',}          # users enter an email to log in
 
 # --- NEW, replaces EMAIL/USERNAME/PASSWORD flags ---------------------------
 # Required fields have a *
 # Here: email is required, password1 is OPTIONAL (no star)
-ACCOUNT_SIGNUP_FIELDS = ['email*']
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1', ]
 
 # If you want FULLY password-less enrolment instead, drop 'password1'
 # ACCOUNT_SIGNUP_FIELDS = ['email*']

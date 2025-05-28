@@ -40,64 +40,14 @@
   </section>
 
   <section class="pt-5">
-    <div class="container">
-      <h2>Have a go now!</h2>
+    <div class="container text-center">
+      <h2 class="mb-4">Have a go now!</h2>
       {{ instruments|json_script:"instruments-data" }}
       <script>
         document.addEventListener("DOMContentLoaded", function () {
-          const instruments = JSON.parse(
-            document.getElementById('instruments-data').textContent
-          );
+          const url_start = "{{ request.scheme }}://{{ request.get_host }}/{{ practice_url }}/";
+          loadIframe(url_start + 'Trumpet/treble/Bb/Beginner/')
 
-          // Get references to the dropdown elements
-          const instrumentDropdownMenu = document.getElementById('instrumentDropdownMenu');
-          const instrumentButton = document.getElementById('instrumentButton');
-          const instrumentLevelDropdownMenu = document.getElementById('instrumentLevelDropdownMenu');
-          const instrumentLevelButton = document.getElementById('instrumentLevelButton');
-
-          // Populate the instrument-dropdown with keys of the instruments object
-          for (const instrument in instruments) {
-            const item = document.createElement('li');
-            const link = document.createElement('button');
-            link.className = 'dropdown-item';
-            link.type = 'button';
-            link.textContent = instrument;
-            link.addEventListener('click', function () {
-              // Update the main dropdown button text and populate the levels dropdown
-              instrumentButton.textContent = instrument;
-
-              // Enable and Populate the level dropdown
-              populateInstrumentLevels(instrument, instruments[instrument]);
-
-              // Enable the level dropdown
-              instrumentLevelButton.disabled = false;
-            });
-            item.appendChild(link);
-            instrumentDropdownMenu.appendChild(item);
-          }
-
-          // Function to populate the instrument-level dropdown
-          function populateInstrumentLevels(instrument, info) {
-
-            // Clear existing levels
-            instrumentLevelDropdownMenu.innerHTML = '';
-
-            // Add levels to the dropdown
-            info['levels'].forEach(level => {
-              const item = document.createElement('li');
-              const link = document.createElement('button');
-              link.className = 'dropdown-item';
-              link.type = 'button';
-              link.textContent = level;
-              link.addEventListener('click', function () {
-                instrumentLevelButton.textContent = level;
-                const url = "{{ request.scheme }}://{{ request.get_host }}/{{ practice_url }}/" + instrument + "/treble/Bb/" + level + "/";
-                loadIframe(url);
-              });
-              item.appendChild(link);
-              instrumentLevelDropdownMenu.appendChild(item);
-            });
-          }
         });
 
         function loadIframe(src) {
@@ -127,34 +77,6 @@
           container.appendChild(iframe);
         }
       </script>
-      <div>
-        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-2">
-          <!-- Instrument Dropdown -->
-          <div class="col-auto">
-            <div class="dropdown" id="instrument-dropdown">
-              <button class="btn btn-primary dropdown-toggle" type="button" id="instrumentButton"
-                      data-bs-toggle="dropdown" aria-expanded="false">
-                Select your instrument
-              </button>
-              <ul class="dropdown-menu" id="instrumentDropdownMenu">
-              </ul>
-            </div>
-          </div>
-
-          <!-- Instrument Level Dropdown -->
-          <div class="col-auto">
-            <div class="dropdown" id="instrument-level-dropdown">
-              <button class="btn btn-secondary dropdown-toggle" type="button" id="instrumentLevelButton"
-                      data-bs-toggle="dropdown" aria-expanded="false" disabled>
-                What level do you play at?
-              </button>
-              <ul class="dropdown-menu" id="instrumentLevelDropdownMenu">
-                <!-- Items will be dynamically populated -->
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </section>
   <div class="m-1">
@@ -167,15 +89,14 @@
   <section id="features" class="py-5">
     <div class="container">
       <div class="text-center mb-4">
-        <h2>Why Choose Our App?</h2>
-        <p class="text-muted">Everything you need to improve your skills as a musician.</p>
+        <h2>Why sign-up?</h2>
       </div>
       <div class="row g-2">
         <div class="col-md-4">
           <div class="card h-100 shadow-sm bg-light">
             <div class="card-body text-center">
-              <h5 class="card-title"><i class="bi bi-music-note"></i> Quick Note Practice</h5>
-              <p class="card-text">Engaging exercises to help you play notes faster and more accurately.</p>
+              <h5 class="card-title"><i class="bi bi-music-note"></i> Learn new notes</h5>
+              <p class="card-text">Exercises to help you learn new notes and improve fluency.</p>
             </div>
           </div>
         </div>
@@ -183,15 +104,15 @@
           <div class="card h-100 shadow-sm bg-light">
             <div class="card-body text-center">
               <h5 class="card-title"><i class="bi bi-bar-chart"></i> Track Your Progress</h5>
-              <p class="card-text">Get detailed insights and analytics on your improvement journey.</p>
+              <p class="card-text">Get detailed insights and analytics on where to focus.</p>
             </div>
           </div>
         </div>
         <div class="col-md-4">
           <div class="card h-100 shadow-sm bg-light">
             <div class="card-body text-center">
-              <h5 class="card-title"><i class="bi bi-question-circle"></i> Personalized Challenges</h5>
-              <p class="card-text">Tailored exercises that match your skill level and musical goals.</p>
+              <h5 class="card-title"><i class="bi bi-question-circle"></i> Fluency with transpositions</h5>
+              <p class="card-text">Create your own exercises on specific transpositions.</p>
             </div>
           </div>
         </div>
