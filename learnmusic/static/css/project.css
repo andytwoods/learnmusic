@@ -72,3 +72,39 @@ svg {
 .min-vh-100 {
   min-height: calc(var(--vh, 1vh) * 100);
 }
+
+/* Navbar enhancements */
+.navbar-dark .navbar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.85);
+  transition: color 0.2s ease, transform 0.2s ease;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.25rem;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+  color: #fff;
+  transform: translateY(-1px);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-brand {
+  transition: transform 0.2s ease;
+}
+
+.navbar-brand:hover {
+  transform: scale(1.05);
+}
+
+/* Mobile menu toggle animation */
+.navbar-toggler {
+  transition: transform 0.3s ease;
+  padding: 0.5rem;
+}
+
+.navbar-toggler:focus {
+  box-shadow: 0 0 0 0.15rem rgba(255, 255, 255, 0.25);
+}
+
+.navbar-toggler:hover {
+  transform: rotate(5deg);
+}

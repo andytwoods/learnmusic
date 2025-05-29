@@ -1,12 +1,17 @@
-{% load i18n %}
-<div class="mb-1">
-  <!-- Navbar with About moved to the right-hand side -->
-  <nav class="navbar navbar-expand-md navbar-light bg-light">
-    <div class="container-fluid">
-      <!-- Left-hand side content -->
-      <a class="navbar-brand" href="{% url 'home' %}">Tootomatic</a>
+{% load i18n static %}
+<!-- Modern Navbar with enhanced styling -->
+<header class="shadow-sm">
+  <nav class="navbar navbar-expand-md  py-2">
+    <div class="container">
+      <!-- Brand with favicon -->
+      <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+        <img src="{% static 'images/trumpet_black.png' %}" alt="Tootomatic Logo" class="me-2" width="32" height="32">
+        <span class="fw-bold">Tootomatic</span>
+      </a>
+
+      <!-- Mobile toggle button -->
       <button
-        class="navbar-toggler"
+        class="navbar-toggler border-0"
         type="button"
         data-bs-toggle="collapse"
         data-bs-target="#navbarContent"
@@ -18,42 +23,59 @@
 
       <div class="collapse navbar-collapse" id="navbarContent">
         <!-- Left-hand nav items -->
-        <ul class="navbar-nav me-auto">
+        <ul class="navbar-nav me-auto mb-2 mb-md-0">
           {% if request.user.is_authenticated %}
-            <li class="nav-item active">
-              <button
-                class="btn btn-primary"
-                onclick="window.location.href='{% url 'notes-home' %}'">
-                Learning Hub
-              </button>
+            <li class="nav-item mx-md-2">
+              <a
+                class="btn btn-light text-primary fw-medium d-flex align-items-center"
+                href="{% url 'notes-home' %}">
+                <i class="fas fa-graduation-cap me-2"></i>
+                <span>Learning Hub</span>
+              </a>
             </li>
           {% endif %}
         </ul>
 
         <!-- Right-hand nav items -->
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'about' %}">About</a>
-          </li>
+        <ul class="navbar-nav ms-auto mb-2 mb-md-0">
           {% if request.user.is_authenticated %}
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'users:detail' request.user.pk %}">{% translate "My Profile" %}</a>
+            <li class="nav-item mx-md-1">
+              <a class="nav-link d-flex align-items-center" href="{% url 'users:detail' request.user.pk %}">
+                <i class="fas fa-user me-1"></i>
+                <span>{% translate "My Profile" %}</span>
+              </a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'account_logout' %}">{% translate "Sign Out" %}</a>
+            <li class="nav-item mx-md-1">
+              <a class="nav-link d-flex align-items-center" href="{% url 'account_logout' %}">
+                <i class="fas fa-sign-out-alt me-1"></i>
+                <span>{% translate "Sign Out" %}</span>
+              </a>
             </li>
           {% else %}
             {% if ACCOUNT_ALLOW_REGISTRATION %}
-              <li class="nav-item">
-                <a id="sign-up-link" class="nav-link" href="{% url 'account_signup' %}">{% translate "Sign Up" %}</a>
+              <li class="nav-item mx-md-1">
+                <a id="sign-up-link" class="nav-link d-flex align-items-center" href="{% url 'account_signup' %}">
+                  <i class="fas fa-user-plus me-1"></i>
+                  <span>{% translate "Sign Up" %}</span>
+                </a>
+              </li>
+              <li class="nav-item mx-md-1">
+                <a id="sign-in-link" class="nav-link d-flex align-items-center" href="{% url 'account_login' %}">
+                  <i class="fas fa-sign-in-alt me-1"></i>
+                  <span>{% translate "Sign In" %}</span>
+                </a>
               </li>
             {% endif %}
-            <li class="nav-item">
-              <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">{% translate "Sign In" %}</a>
+            <li class="nav-item ms-md-1">
+              <a id="log-in-link" class="btn btn-outline-light d-flex align-items-center"
+                 href="{% url 'account_login' %}">
+                <i class="fas fa-sign-in-alt me-1"></i>
+                <span>{% translate "Sign In" %}</span>
+              </a>
             </li>
           {% endif %}
         </ul>
       </div>
     </div>
   </nav>
-</div>
+</header>

@@ -55,12 +55,12 @@
   {% endblock javascript %}
     {% include 'cookieconsent.html' %}
 </head>
-<body class="{% block bodyclass %}{% endblock bodyclass %}">
+<body class="{% block bodyclass %}d-flex flex-column min-vh-100{% endblock bodyclass %}">
 {% block body %}
   {% block navbar %}
     {% include 'navbar.html' %}
   {% endblock navbar %}
-  <div class="container">
+  <div class="container flex-grow-1">
     {% block messages %}
       {% include 'messages.html' %}
     {% endblock messages %}
@@ -71,6 +71,8 @@
     {% endblock main %}
 
   </div>
+
+  {% include 'footer.html' %}
 {% endblock body %}
 <!-- /container -->
 {% block modal %}

@@ -1,51 +1,109 @@
 {% load static %}
 <!-- Add to your head tag -->
 <link rel="stylesheet" href="{% static 'cookieconsent/cookieconsent.css' %}">
-<script src="{% static 'cookieconsent/cookieconsent.umd.js' %}"></script>
+<!-- Load cookie consent script with defer to improve page load performance -->
+<script defer src="{% static 'cookieconsent/cookieconsent.umd.js' %}"></script>
 
 <script>
-  window.addEventListener('load', function () {
-    console.log(11, CookieConsent)
-    CookieConsent.run({
-      categories: {
-        necessary: {
-          enabled: true,  // this category is enabled by default
-          readonly: true  // this category cannot be disabled
-        },
-        analytics: {
-          enabled: false  // optional category, disabled by default
-        },
-        marketing: {
-          enabled: false  // optional category, disabled by default
-        }
-      },
-      language: {
-        default: 'en',
-        translations: {
-          en: {
+  // Initialize cookie consent after DOM is fully loaded
+  document.addEventListener('DOMContentLoaded', function () {
+    // Wait a short time to ensure the script is loaded
+    setTimeout(function() {
+      if (typeof CookieConsent !== 'undefined') {
+        CookieConsent.run({
+          // Avoid automatic cookie scanning which can trigger Brave's shields
+          autoDetect: false,
+
+          // Set a custom cookie name to avoid being detected as tracking
+          cookie: {
+            name: 'tootomatic_preferences',
+            expiresAfterDays: 182, // 6 months
+            sameSite: 'Lax'
+          },
+
+          guiOptions: {
             consentModal: {
-              title: 'We use cookies',
-              description: 'We use cookies to enhance your browsing experience.',
-              acceptAllBtn: 'Accept all',
-              acceptNecessaryBtn: 'Reject all',
-              showPreferencesBtn: 'Manage preferences'
+              layout: 'box',
+              position: 'bottom right',
+              equalWeightButtons: true,
+              flipButtons: false
             },
             preferencesModal: {
-              title: 'Cookie preferences',
-              acceptAllBtn: 'Accept all',
-              acceptNecessaryBtn: 'Reject all',
-              savePreferencesBtn: 'Save preferences',
-              closeIconLabel: 'Close modal',
-              sections: [
-                {
-                  title: 'Cookie usage',
-                  description: 'We use cookies to ensure basic functionalities of the website and to enhance your online experience.'
+              layout: 'box',
+              position: 'right',
+              equalWeightButtons: true,
+              flipButtons: false
+            }
+          },
+
+          categories: {
+            necessary: {
+              enabled: true,  // this category is enabled by default
+              readonly: true  // this category cannot be disabled
+            },
+            analytics: {
+              enabled: false,  // optional category, disabled by default
+              autoClear: {
+                cookies: true
+              }
+            },
+            marketing: {
+              enabled: false,  // optional category, disabled by default
+              autoClear: {
+                cookies: true
+              }
+            }
+          },
+
+          language: {
+            default: 'en',
+            translations: {
+              en: {
+                consentModal: {
+                  title: 'Cookie preferences',
+                  description: 'This website uses essential cookies to ensure its proper operation and tracking cookies to understand how you interact with it. The latter will be set only after consent. <button type="button" data-cc="c-settings" class="cc-link">Manage settings</button> or <a href="/privacy-policy/" class="cc-link">read our privacy policy</a>.',
+                  acceptAllBtn: 'Accept all',
+                  acceptNecessaryBtn: 'Reject all',
+                  showPreferencesBtn: 'Manage preferences'
+                },
+                preferencesModal: {
+                  title: 'Privacy preferences center',
+                  acceptAllBtn: 'Accept all',
+                  acceptNecessaryBtn: 'Reject all',
+                  savePreferencesBtn: 'Save preferences',
+                  closeIconLabel: 'Close modal',
+                  serviceCounterLabel: 'Service|Services',
+                  sections: [
+                    {
+                      title: 'Cookie usage',
+                      description: 'We use cookies to ensure basic functionalities of the website and to enhance your online experience. You can choose for each category to opt-in/out whenever you want. For more details, please read our <a href="/privacy-policy/" class="cc-link">privacy policy</a>.'
+                    },
+                    {
+                      title: 'Strictly necessary cookies',
+                      description: 'These cookies are essential for the proper functioning of the website and cannot be disabled.',
+                      linkedCategory: 'necessary'
+                    },
+                    {
+                      title: 'Analytics cookies',
+                      description: 'These cookies collect information about how you use the website, which pages you visited and which links you clicked on. All of the data is anonymized and cannot be used to identify you.',
+                      linkedCategory: 'analytics'
+                    },
+                    {
+                      title: 'Marketing cookies',
+                      description: 'These cookies are used to track visitors across websites. The intention is to display ads that are relevant and engaging for the individual user.',
+                      linkedCategory: 'marketing'
+                    },
+                    {
+                      title: 'More information',
+                      description: 'For any queries in relation to our policy on cookies and your choices, please <a href="mailto:andytwoods@gmail.com" class="cc-link">contact us</a>.'
+                    }
+                  ]
                 }
-              ]
+              }
             }
           }
-        }
+        });
       }
-    });
+    }, 500);
   });
 </script>

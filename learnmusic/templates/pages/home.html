@@ -95,6 +95,14 @@
         <div class="col-md-4">
           <div class="card h-100 shadow-sm bg-light">
             <div class="card-body text-center">
+              <h5 class="card-title"><i class="bi bi-music-note"></i> Free as in beer</h5>
+              <p class="card-text">Made by a 44-year old trumpet learner / psychologist / coder</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 shadow-sm bg-light">
+            <div class="card-body text-center">
               <h5 class="card-title"><i class="bi bi-music-note"></i> Learn new notes</h5>
               <p class="card-text">Exercises to help you learn new notes and improve fluency.</p>
             </div>
@@ -149,20 +157,7 @@
     </div>
   </section>
 
-  <footer class="bg-dark text-white py-4">
-    <div class="container">
-      <div class="row">
-        <!-- About Section -->
-        <div class="col-md-4">
-          <h5>About Us</h5>
-          <p>We create tools to help musicians practice effectively and grow to their full potential.</p>
-        </div>
-        <!-- Links Section -->
-      </div>
 
-      <div class="text-center mt-3">
-        <p class="mb-0">&copy; {% now "Y" %} Tootomatic. All Rights Reserved.</p>
-      </div>
-    </div>
-  </footer>
+{% include 'footer.html' %}
+
 {% endblock body %}
