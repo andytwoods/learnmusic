@@ -74,12 +74,6 @@ jobs:
       - name: Run Unit Tests
         run: |
           source .venv/bin/activate
-          python manage.py test
+          python manage.py test learnmusic notes config
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
-
-      - name: Notify Appliku Webhook
-        if: success()
-        run: |
-          curl -X POST https://api.appliku.com/api/deploy_webhook/2789/B8FVnzRsLcIyD5HHKUexagU9Djk9hRJ_G4vJ2M6yJ6w
-

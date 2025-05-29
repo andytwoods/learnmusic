@@ -109,14 +109,38 @@
     setupSheetObserver();
   }
 
+  // Function to check if an element is centered in the viewport
+  function isElementCentered(elementId) {
+    const element = document.getElementById(elementId);
+    if (!element) return false;
+
+    const rect = element.getBoundingClientRect();
+    const windowHeight = window.innerHeight;
+    const windowWidth = window.innerWidth;
+
+    // Calculate how centered the element is (0 = perfect center)
+    const verticalCenter = Math.abs((rect.top + rect.height/2) - windowHeight/2) / windowHeight;
+    const horizontalCenter = Math.abs((rect.left + rect.width/2) - windowWidth/2) / windowWidth;
+
+    // Check if the element is reasonably centered (within 25% of center)
+    return (
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <= windowHeight &&
+      rect.right <= windowWidth &&
+      verticalCenter < 0.25 &&
+      horizontalCenter < 0.25
+    );
+  }
+
   // Update localStorage when toggle changes
   helpToggleSwitch.addEventListener('change', () => {
     localStorage.setItem('helpEnabled', helpToggleSwitch.checked);
-    // If toggled on and sheet is already visible, run tutorial immediately
-    if (helpToggleSwitch.checked && isElementVisible('sheet')) {
+    // If toggled on and sheet is already centered in the viewport, run tutorial immediately
+    if (helpToggleSwitch.checked && isElementCentered('sheet')) {
       tutorial.run();
     } else if (helpToggleSwitch.checked) {
-      // If toggled on but sheet is not visible yet, set up a new observer
+      // If toggled on but sheet is not centered yet, set up a new observer
       setupSheetObserver();
     }
   });
