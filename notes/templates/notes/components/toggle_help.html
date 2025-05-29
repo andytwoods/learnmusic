@@ -18,9 +18,10 @@
   const tutorial = (function start_tutorial() {
     let driver, driverObj;
     const start_steps = [{
+      element: '#sheet',
       popover: {
         title: "Musical score",
-        description: "We show you a note to play."
+        description: "We show you a note to play",
       }
     }]
     const end_steps = [{
@@ -32,7 +33,7 @@
       {
       popover: {
         title: "Get ready!",
-        description: "Spend a minute now practicing some notes. This first note does not count so no need to rush :) Subsequent notes we do measure how quickly you answer, though",
+        description: "Spend a minute now practicing some notes. This first note does not count. Subsequent notes we do measure how quickly you answer, though",
       }
     }
     ]
@@ -61,16 +62,62 @@
   const helpEnabled = localStorage.getItem('helpEnabled') !== 'false'; // Default to true
   helpToggleSwitch.checked = helpEnabled;
 
-  // Run tutorial if help is enabled
-  if (helpEnabled) {
-    tutorial.run();
+
+  // Set up IntersectionObserver to detect when #sheet becomes visible
+  function setupSheetObserver() {
+    const sheetElement = document.getElementById('sheet');
+    if (!sheetElement) {
+      // If sheet element doesn't exist yet, try again later
+      setupSheetObserver();
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        // Check if the element is intersecting (visible) and help is enabled
+        if (entry.isIntersecting && helpToggleSwitch.checked) {
+          // Check if the element is near the center of the viewport
+          const rect = entry.boundingClientRect;
+          const windowHeight = window.innerHeight;
+          const windowWidth = window.innerWidth;
+
+          // Calculate how centered the element is (0 = perfect center)
+          const verticalCenter = Math.abs((rect.top + rect.height/2) - windowHeight/2) / windowHeight;
+          const horizontalCenter = Math.abs((rect.left + rect.width/2) - windowWidth/2) / windowWidth;
+
+          // If the element is reasonably centered (within 25% of center)
+          if (verticalCenter < 0.25 && horizontalCenter < 0.25) {
+            setTimeout(function(){tutorial.run();}, 500);
+            // Disconnect the observer after running the tutorial once
+            observer.disconnect();
+          }
+        }
+      });
+    }, {
+      root: null, // viewport
+      threshold: 0.5, // trigger when at least 50% of the element is visible
+      rootMargin: '-20% 0px' // Create a smaller detection area (middle 60% of viewport)
+    });
+
+    observer.observe(sheetElement);
+  }
+
+  // Start observing when the DOM is fully loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupSheetObserver);
+  } else {
+    setupSheetObserver();
   }
 
   // Update localStorage when toggle changes
   helpToggleSwitch.addEventListener('change', () => {
     localStorage.setItem('helpEnabled', helpToggleSwitch.checked);
-    if (helpToggleSwitch.checked) {
+    // If toggled on and sheet is already visible, run tutorial immediately
+    if (helpToggleSwitch.checked && isElementVisible('sheet')) {
       tutorial.run();
+    } else if (helpToggleSwitch.checked) {
+      // If toggled on but sheet is not visible yet, set up a new observer
+      setupSheetObserver();
     }
   });
 
