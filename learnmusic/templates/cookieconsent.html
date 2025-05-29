@@ -1,0 +1,51 @@
+{% load static %}
+<!-- Add to your head tag -->
+<link rel="stylesheet" href="{% static 'cookieconsent/cookieconsent.css' %}">
+<script src="{% static 'cookieconsent/cookieconsent.umd.js' %}"></script>
+
+<script>
+  window.addEventListener('load', function () {
+    console.log(11, CookieConsent)
+    CookieConsent.run({
+      categories: {
+        necessary: {
+          enabled: true,  // this category is enabled by default
+          readonly: true  // this category cannot be disabled
+        },
+        analytics: {
+          enabled: false  // optional category, disabled by default
+        },
+        marketing: {
+          enabled: false  // optional category, disabled by default
+        }
+      },
+      language: {
+        default: 'en',
+        translations: {
+          en: {
+            consentModal: {
+              title: 'We use cookies',
+              description: 'We use cookies to enhance your browsing experience.',
+              acceptAllBtn: 'Accept all',
+              acceptNecessaryBtn: 'Reject all',
+              showPreferencesBtn: 'Manage preferences'
+            },
+            preferencesModal: {
+              title: 'Cookie preferences',
+              acceptAllBtn: 'Accept all',
+              acceptNecessaryBtn: 'Reject all',
+              savePreferencesBtn: 'Save preferences',
+              closeIconLabel: 'Close modal',
+              sections: [
+                {
+                  title: 'Cookie usage',
+                  description: 'We use cookies to ensure basic functionalities of the website and to enhance your online experience.'
+                }
+              ]
+            }
+          }
+        }
+      }
+    });
+  });
+</script>

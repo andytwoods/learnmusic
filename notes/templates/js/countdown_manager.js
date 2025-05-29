@@ -18,7 +18,7 @@ const countdown_manager = (function () {
 
             if (remainingTime <= 0) {
                 clearInterval(intervalId);
-                counterSpan.textContent = "Time's up!";
+                counterSpan.textContent = "Time's up! Continue if you want :)";
             }
         }, 1000);
 

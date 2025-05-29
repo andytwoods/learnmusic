@@ -24,6 +24,8 @@ const trial_manager = (function () {
         const error_message_el = document.getElementById('error-message');
         const correct_answer_el = document.getElementById('correct-answer');
 
+        const correct_message_el = document.getElementById('correct-message');
+
         api.stop = function () {
             error_message_el.style.display = 'none';
             if (callback) callback();
@@ -34,6 +36,13 @@ const trial_manager = (function () {
             callback = _callback;
             correct_answer_el.innerText = message;
             error_message_el.style.display = 'block';
+        }
+
+        api.brief_correct_message = function () {
+            correct_message_el.style.display = 'block';
+            setTimeout(function () {
+                correct_message_el.style.display = 'none';
+            }, 500);
         }
 
         return api;
@@ -62,6 +71,7 @@ const trial_manager = (function () {
         countdown_manager.start();
 
         if (answer === true) {
+            error_message_manager.brief_correct_message();
             setTimeout(function () {
                 api.next();
                 locked = false;

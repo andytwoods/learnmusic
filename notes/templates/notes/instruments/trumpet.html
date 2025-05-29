@@ -163,7 +163,8 @@ class="position-absolute bottom-0 start-0 p-3">
           if (!correct) {
             error_message = correct_keys.join(", ");
             if (error_message.length === 0) error_message = window.nothing_selected
-            error_message = "Correct answer: " + error_message + '\n' + window.error_message + ': '
+            const basic_note = document.current_note.split('/')[0];
+            error_message = "Correct answer for " + basic_note + ": " + error_message + '\n' + window.error_message + ': '
             if (keys_pressed.length > 0) {
               error_message += keys_pressed;
             } else error_message += window.nothing_selected;
