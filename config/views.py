@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 
-from notes.instruments import instruments, instrument_infos
+from notes.instrument_data import instruments, instrument_infos
 
 
 def home(request):

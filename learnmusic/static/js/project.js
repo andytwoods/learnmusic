@@ -1,16 +1,24 @@
 function getInstrumentData(instrument, callback) {
-
-// Fetch JSON from the URL
+    // Fetch JSON from the URL
     fetch('/static/instruments/' + instrument)
         .then((response) => {
             if (!response.ok) {
                 throw new Error('Network response was not ok ' + response.statusText);
             }
-            response.json().then(callback); // Parse JSON from the response
+            return response.json();
+        })
+        .then((data) => {
+            // Extract just the fingerings for backward compatibility
+            if (data.fingerings) {
+                callback(data.fingerings);
+            } else {
+                // If the JSON doesn't have the new structure, use it as is
+                callback(data);
+            }
         })
         .catch((error) => {
             console.error('Error fetching JSON:', error);
-        });/* Project specific Javascript goes here. */
+        });
 }
 
 function fade_in(element, duration) {

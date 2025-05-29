@@ -1,7 +1,7 @@
 import random
 from unittest import case
 
-from notes.instruments import instruments
+from notes.instrument_data import instruments
 
 notes = [
     "A♭ / G♯",

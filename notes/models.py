@@ -7,7 +7,7 @@ from django.utils import timezone
 from model_utils.models import TimeStampedModel
 
 from notes import tools
-from notes.instruments import instruments
+from notes.instrument_data import instruments
 
 User = get_user_model()
 

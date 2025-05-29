@@ -13,7 +13,7 @@ from django_htmx.http import HttpResponseClientRefresh
 
 from notes import tools
 from notes.forms import LearningScenarioForm
-from notes.instruments import instrument_infos, instruments
+from notes.instrument_data import instrument_infos, instruments
 from notes.models import LearningScenario, NoteRecordPackage, LevelChoices, InstrumentKeys, ClefChoices
 from notes.tools import generate_notes, compile_notes_per_skilllevel, convert_note_slash_to_db
 
