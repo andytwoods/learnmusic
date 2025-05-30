@@ -4,12 +4,15 @@ from .base import INSTALLED_APPS
 from .base import REDIS_URL
 from .base import env
 
+# Add anymail to INSTALLED_APPS
+INSTALLED_APPS += ["anymail"]
+
 # GENERAL
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ['learnmusic.applikuapp.com', 'tootomatic.com', 'www.tootomatic.com',]
+ALLOWED_HOSTS = ['learnmusic.applikuapp.com', 'tootology.com', 'www.tootology.com',]
 
 # DATABASES
 # ------------------------------------------------------------------------------
@@ -82,14 +85,14 @@ WHITENOISE_AUTOREFRESH = DEBUG
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
 DEFAULT_FROM_EMAIL = env(
     "DJANGO_DEFAULT_FROM_EMAIL",
-    default="Tootomatic <noreply@tootomatic.com>",
+    default="Tootology <contact@tootology.com>",
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#server-email
 SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-subject-prefix
 EMAIL_SUBJECT_PREFIX = env(
     "DJANGO_EMAIL_SUBJECT_PREFIX",
-    default="[Tootomatic] ",
+    default="[Tootology] ",
 )
 ACCOUNT_EMAIL_SUBJECT_PREFIX = EMAIL_SUBJECT_PREFIX
 
@@ -100,11 +103,16 @@ ADMIN_URL = env("DJANGO_ADMIN_URL", default='banana/')
 
 # Email
 # ------------------------------------------------------------------------------
-EMAIL_HOST = 'mail.smtp2go.com'
-EMAIL_HOST_USER = 'tootomatic'
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
-EMAIL_PORT = 2525
-EMAIL_USE_TLS = True
+# Use Django Anymail with SendGrid
+# Make sure to set the SENDGRID_API_KEY environment variable in production
+# To test in development:
+# 1. pip install django-anymail[sendgrid]
+# 2. Set SENDGRID_API_KEY in your environment
+# 3. Send a test email using Django's send_mail function
+EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
+ANYMAIL = {
+    "SENDGRID_API_KEY": env("SENDGRID_API_KEY"),
+}
 
 
 # LOGGING
@@ -159,4 +167,3 @@ ROLLBAR = {
 }
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-
