@@ -7,9 +7,9 @@ class TestTools(TestCase):
     def test_compile_notes_per_skilllevel(self):
         notes = [{'note': 'C', 'octave': '4', 'alter': '0'}]
         compiled = compile_notes_per_skilllevel(notes)
-        self.assertIn('beginner', compiled)
-        self.assertIn('intermediate', compiled)
-        self.assertIn('advanced', compiled)
+        self.assertIn('Beginner', compiled)
+        self.assertIn('Intermediate', compiled)
+        self.assertIn('Advanced', compiled)
 
     def test_serialise_notes(self):
         notes_str = "C 0 4;D 0 4"

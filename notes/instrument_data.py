@@ -30,11 +30,17 @@ INSTRUMENTS = load_instruments()
 
 def get_instrument(name):
     """Get data for a specific instrument."""
+    # Ensure name is properly capitalized
+    name = name.capitalize() if name else name
     return INSTRUMENTS.get(name)
 
 
 def get_instrument_range(instrument, level):
     """Get the range of notes for an instrument at a specific level."""
+    # Ensure instrument and level are properly capitalized
+    instrument = instrument.capitalize() if instrument else instrument
+    level = level.capitalize() if level else level
+
     instrument_data = get_instrument(instrument)
     if not instrument_data:
         return None, None
@@ -52,6 +58,9 @@ def get_instrument_range(instrument, level):
 
 def get_fingerings(instrument):
     """Get the fingerings for an instrument."""
+    # Ensure instrument is properly capitalized
+    instrument = instrument.capitalize() if instrument else instrument
+
     instrument_data = get_instrument(instrument)
     if not instrument_data:
         return {}

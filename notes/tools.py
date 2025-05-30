@@ -95,10 +95,10 @@ def generate_notes(lowest_note, highest_note, include_crazy_notes=False):
 
 
 def compile_notes_per_skilllevel(notes):
-    per_skilllevel = {'beginner': [], 'intermediate': [], 'advanced': []}
+    per_skilllevel = {'Beginner': [], 'Intermediate': [], 'Advanced': []}
     for note in notes:
         rt = 1500 + random.randint(0, 1000)
-        for sk in ['beginner', 'intermediate', 'advanced']:
+        for sk in ['Beginner', 'Intermediate', 'Advanced']:
             per_skilllevel[sk].append({'note': note['note'],
                                        'octave': note['octave'],
                                        'alter': note['alter'], 'rt': rt})
@@ -127,6 +127,10 @@ def serialise_note(note_str):
 
 
 def generate_serialised_notes(instrument, level):
+    # Ensure instrument and level are properly capitalized
+    instrument = instrument.capitalize() if instrument else instrument
+    level = level.capitalize() if level else level
+
     instrument_notes_info = instruments[instrument][level]
     if 'notes' in instrument_notes_info and instrument_notes_info['notes'] is not None:
         return serialise_notes(instrument_notes_info['notes'])
@@ -138,6 +142,10 @@ def generate_serialised_notes(instrument, level):
 
 
 def get_instrument_range(instrument:str, level:str):
+    # Ensure instrument and level are properly capitalized
+    instrument = instrument.capitalize() if instrument else instrument
+    level = level.capitalize() if level else level
+
     instrument_notes_info = instruments[instrument][level]
     if 'notes' in instrument_notes_info and instrument_notes_info['notes'] is not None:
         _notes = instrument_notes_info['notes'].split(';')

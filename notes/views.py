@@ -92,7 +92,9 @@ def edit_learningscenario_notes(request, pk: int):
 
 
 def common_context(instrument_name: str, clef: str, sound: bool):
-    instrument_info = instrument_infos[instrument_name]
+    # Ensure instrument_name is properly capitalized
+    capitalized_instrument = instrument_name.capitalize() if instrument_name else instrument_name
+    instrument_info = instrument_infos[capitalized_instrument]
     if sound:
         instrument_template = 'notes/instruments/mic_input.html'
         score_css = 'justify-content-center'
@@ -131,21 +133,24 @@ def practice(request, learningscenario_id: int, sound: bool = False):
 
 
 def practice_try(request, instrument: str, clef: str, key: str, level: str, sound: bool = False):
-    serialised_notes = tools.generate_serialised_notes(instrument, level)
+    # Ensure instrument is properly capitalized
+    capitalized_instrument = instrument.capitalize() if instrument else instrument
 
-    instrument_info = instrument_infos[instrument]
+    serialised_notes = tools.generate_serialised_notes(capitalized_instrument, level)
+
+    instrument_info = instrument_infos[capitalized_instrument]
 
     my_instruments = instrument_infos.keys()
-    levels = instruments.get(instrument, {}).keys()
+    levels = instruments.get(capitalized_instrument, {}).keys()
 
     context = {
         'learningscenario_id': PRACTICE_TRY,
         'progress': serialised_notes,
         'key': instrument_info['common_keys'][0],
-        'transpose_key': key,
+        'transpose_key': key.capitalize() if key else '',
         'level': level,
         'sound': sound,
-        'instrument': instrument,
+        'instrument': capitalized_instrument,  # Use capitalized instrument name for consistency
         'levels': levels,
         'instruments': my_instruments,
         'clef': clef,
@@ -153,7 +158,7 @@ def practice_try(request, instrument: str, clef: str, key: str, level: str, soun
         'clefs': [clef[1] for clef in ClefChoices.choices],
     }
 
-    context.update(common_context(instrument_name=instrument, clef=clef, sound=sound))
+    context.update(common_context(instrument_name=capitalized_instrument, clef=clef, sound=sound))
 
     rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
                                               for n in serialised_notes])
@@ -194,10 +199,13 @@ def learningscenario_graph(request, learningscenario_id):
 
 
 def learningscenario_graph_try(request, instrument: str, level: str):
+    # Ensure instrument is properly capitalized
+    capitalized_instrument = instrument.capitalize() if instrument else instrument
+
     if request.method == 'POST':
         serialised_notes = json.loads(request.body)
     else:
-        serialised_notes = tools.generate_serialised_notes(instrument, level.capitalize())
+        serialised_notes = tools.generate_serialised_notes(capitalized_instrument, level.capitalize())
 
     rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
                                               for n in serialised_notes])
