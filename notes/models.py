@@ -1,9 +1,11 @@
 import copy
+from datetime import timedelta
 from typing import Any, List
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils import timezone
+from django.utils.timezone import now
 from model_utils.models import TimeStampedModel
 
 from notes import tools
@@ -162,6 +164,54 @@ class LearningScenario(TimeStampedModel):
         if self.transpose_key == BlankTransposingKey.BLANK:
             return self.key
         return self.transpose_key
+
+    @classmethod
+    def add_history(cls, learningscenarios):
+        # For each learning scenario, get practice history from the date of creation
+        for scenario in learningscenarios:
+            # Initialize practice history dictionary
+            practice_history = {}
+
+            # Get the creation date of the learning scenario
+            creation_date = scenario.created.date()
+            today = now().date()
+            days_since_creation = (today - creation_date).days
+
+            # Get all practice sessions for this learning scenario
+            packages = NoteRecordPackage.objects.filter(
+                learningscenario=scenario
+            )
+
+            # Create a dictionary with dates as keys and practice status as values
+            for i in range(days_since_creation + 1):  # +1 to include today
+                date = today - timedelta(days=i)
+                date_str = date.strftime("%Y-%m-%d")
+                practice_history[date_str] = False
+
+            # Mark dates with practice sessions as True
+            for package in packages:
+                date_str = package.created.date().strftime("%Y-%m-%d")
+                practice_history[date_str] = True
+
+            # Calculate current streak
+            streak_count = 0
+            current_date = today
+
+            # Count consecutive days with practice, starting from today and going backwards
+            while True:
+                date_str = current_date.strftime("%Y-%m-%d")
+                if date_str in practice_history and practice_history[date_str]:
+                    streak_count += 1
+                    current_date = current_date - timedelta(days=1)
+                else:
+                    break
+
+            # Sort practice history by date (oldest first)
+            sorted_practice_history = {k: practice_history[k] for k in sorted(practice_history.keys())}
+
+            # Add practice history and streak count to the learning scenario object
+            scenario.practice_history = sorted_practice_history
+            scenario.streak_count = streak_count
 
 
 class NoteRecordPackage(TimeStampedModel):

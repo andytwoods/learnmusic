@@ -135,6 +135,29 @@
               Last practiced: <span class="badge rounded-pill bg-secondary">{{ learningscenario.last_practiced }}</span>
               <br>
               Days-old: <span class="badge rounded-pill bg-secondary">{{ learningscenario.days_old }}</span>
+
+              <!-- GitHub-style contribution grid -->
+              <div class="mt-3">
+                <p class="mb-1">
+                  Practice History:
+                  <span class="badge rounded-pill bg-success">{{ learningscenario.streak_count }} day streak</span>
+                </p>
+                <div class="d-flex flex-wrap" style="gap: 3px;">
+                  {% with items=learningscenario.practice_history.items %}
+                    {% for date, practiced in items %}
+                      <div
+                        class="contribution-square"
+                        style="
+                          width: 12px;
+                          height: 12px;
+                          background-color: {% if practiced %}#2cba00{% else %}#ebedf0{% endif %};
+                          border-radius: 2px;"
+                        title="{{ date }}: {% if practiced %}Practiced{% else %}No practice{% endif %}"
+                      ></div>
+                    {% endfor %}
+                  {% endwith %}
+                </div>
+              </div>
             </div>
           </div>
         </div>

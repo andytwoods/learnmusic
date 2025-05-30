@@ -34,8 +34,14 @@ def notes_home(request):
         else:
             raise Exception("unknown action")
         return HttpResponse('', status=200)
+
+    # Get all learning scenarios for the user
+    learningscenarios = LearningScenario.objects.filter(user=request.user).order_by('-created')
+
+    LearningScenario.add_history(learningscenarios)
+
     context = {
-        'learningscenarios': LearningScenario.objects.filter(user=request.user).order_by('-created'),
+        'learningscenarios': learningscenarios,
     }
     return render(request, 'notes/learning_home.html', context=context)
 
