@@ -62,31 +62,5 @@
 
 {% block inline_javascript %}
     {{ block.super }}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Get all buttons on the login page
-            const buttons = document.querySelectorAll('button, a.btn');
 
-            // Add click event listener to each button
-            buttons.forEach(function(button) {
-                button.addEventListener('click', function(e) {
-                    // Disable all buttons to prevent double-clicking
-                    buttons.forEach(function(btn) {
-                        if (btn.tagName === 'BUTTON') {
-                            btn.disabled = true;
-                        } else if (btn.tagName === 'A') {
-                            // For anchor tags styled as buttons
-                            btn.classList.add('disabled');
-                            btn.setAttribute('aria-disabled', 'true');
-                            // Store the original click handler
-                            btn.onclick = function(e) {
-                                e.preventDefault();
-                                return false;
-                            };
-                        }
-                    });
-                });
-            });
-        });
-    </script>
 {% endblock inline_javascript %}
