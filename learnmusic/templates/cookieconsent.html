@@ -7,6 +7,12 @@
 <script>
   // Initialize cookie consent after DOM is fully loaded
   document.addEventListener('DOMContentLoaded', function () {
+    // Check if the page is inside an iframe
+    if (window.self !== window.top) {
+      // Skip cookie consent initialization if in an iframe
+      return;
+    }
+
     // Wait a short time to ensure the script is loaded
     setTimeout(function() {
       if (typeof CookieConsent !== 'undefined') {
