@@ -1,12 +1,33 @@
 
 {% if messages %}
-  {% for message in messages %}
-    <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-      {{ message }}
-      <button type="button"
-              class="btn-close"
-              data-bs-dismiss="alert"
-              aria-label="Close"></button>
-    </div>
-  {% endfor %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      {% for message in messages %}
+        // Map Django message tags to SweetAlert2 icon types
+        var iconType = 'info';
+        {% if message.tags %}
+          {% if 'success' in message.tags %}
+            iconType = 'success';
+          {% elif 'error' in message.tags %}
+            iconType = 'error';
+          {% elif 'warning' in message.tags %}
+            iconType = 'warning';
+          {% elif 'info' in message.tags %}
+            iconType = 'info';
+          {% endif %}
+        {% endif %}
+
+        // Display the message using SweetAlert2
+        Swal.fire({
+          title: '',
+          text: '{{ message|escapejs }}',
+          icon: iconType,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 5000,
+          timerProgressBar: true
+        });
+      {% endfor %}
+    });
+  </script>
 {% endif %}

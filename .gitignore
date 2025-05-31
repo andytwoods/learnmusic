@@ -332,3 +332,4 @@ learnmusic/media/
 .envs/*
 !.envs/.local/
 .aider*
+sendgrid.env
