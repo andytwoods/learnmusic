@@ -5,7 +5,7 @@ from factory import Faker
 from factory import post_generation
 from factory.django import DjangoModelFactory
 
-from learnmusic.users.models import User
+from learnmusic.users.models import User, LoginCodeRequest
 
 
 class UserFactory(DjangoModelFactory[User]):
@@ -38,3 +38,12 @@ class UserFactory(DjangoModelFactory[User]):
     class Meta:
         model = User
         django_get_or_create = ["email"]
+
+
+class LoginCodeRequestFactory(DjangoModelFactory):
+    email = Faker("email")
+    ip_address = "127.0.0.1"
+    requested_at = Faker("date_time", tzinfo=None)
+
+    class Meta:
+        model = LoginCodeRequest

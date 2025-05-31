@@ -1,13 +1,29 @@
 
 from typing import ClassVar
+from datetime import timedelta
 
 from django.contrib.auth.models import AbstractUser
-from django.db.models import CharField, BooleanField
-from django.db.models import EmailField
+from django.db.models import CharField, BooleanField, EmailField, GenericIPAddressField, DateTimeField, Model
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from .managers import UserManager
+
+
+class LoginCodeRequest(Model):
+    email = EmailField()
+    ip_address = GenericIPAddressField()
+    requested_at = DateTimeField(default=timezone.now)
+
+    @classmethod
+    def too_many_recent(cls, email, ip, limit=5, window_minutes=10):
+        cutoff = timezone.now() - timedelta(minutes=window_minutes)
+        return cls.objects.filter(
+            email=email,
+            ip_address=ip,
+            requested_at__gte=cutoff,
+        ).count() >= limit
 
 
 class User(AbstractUser):

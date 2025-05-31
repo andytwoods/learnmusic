@@ -5,6 +5,9 @@ import typing
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
+from django.utils.timezone import now
 
 if typing.TYPE_CHECKING:
     from allauth.socialaccount.models import SocialLogin
@@ -12,10 +15,25 @@ if typing.TYPE_CHECKING:
 
     from learnmusic.users.models import User
 
+from learnmusic.users.models import LoginCodeRequest
+
 
 class AccountAdapter(DefaultAccountAdapter):
     def is_open_for_signup(self, request: HttpRequest) -> bool:
         return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
+
+    def send_login_code(self, request, user, **kwargs):
+        email = user.email
+        ip = request.META.get("REMOTE_ADDR", "")
+
+        if LoginCodeRequest.too_many_recent(email, ip):
+            raise ValidationError(_("Too many login code requests. Please try again later."))
+
+        # Log this request
+        LoginCodeRequest.objects.create(email=email, ip_address=ip, requested_at=now())
+
+        # Call the default sending behaviour
+        super().send_login_code(request, user, **kwargs)
 
 
 class SocialAccountAdapter(DefaultSocialAccountAdapter):

@@ -1,7 +1,6 @@
-
 {% if messages %}
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       {% for message in messages %}
         // Map Django message tags to SweetAlert2 icon types
         var iconType = 'info';
@@ -25,7 +24,10 @@
           position: 'top-end',
           showConfirmButton: false,
           timer: 5000,
-          timerProgressBar: true
+          timerProgressBar: true,
+          showCloseButton: true,        // Adds an X button in the corner
+          allowOutsideClick: true,
+
         });
       {% endfor %}
     });

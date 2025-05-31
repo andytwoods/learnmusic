@@ -90,6 +90,7 @@ THIRD_PARTY_APPS = [
     "allauth.mfa",
     'widget_tweaks',
     "django_htmx",
+    'axes',
 ]
 
 LOCAL_APPS = [
@@ -109,6 +110,7 @@ MIGRATION_MODULES = {"sites": "learnmusic.contrib.sites.migrations"}
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#authentication-backends
 AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
@@ -156,6 +158,7 @@ MIDDLEWARE = [
     "django_htmx.middleware.HtmxMiddleware",
     'rollbar.contrib.django.middleware.RollbarNotifierMiddleware',
     'config.settings.rollbar_custom_middleware.CustomRollbarNotifierMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
 
 # STATIC
@@ -290,6 +293,10 @@ ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1', ]
 
 # If you want FULLY password-less enrolment instead, drop 'password1'
 # ACCOUNT_SIGNUP_FIELDS = ['email*']
+
+ACCOUNT_LOGIN_BY_CODE_ENABLED = True
+ACCOUNT_LOGIN_ATTEMPT_LIMIT   = 5
+ACCOUNT_LOGIN_ATTEMPT_TIMEOUT = 600
 
 ACCOUNT_PASSWORD_REQUIRED        = False   # still valid
 ACCOUNT_PASSWORD_INPUT_RENDER_VALUE = False
