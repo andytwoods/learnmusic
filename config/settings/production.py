@@ -105,9 +105,10 @@ ADMIN_URL = env("DJANGO_ADMIN_URL", default='banana/')
 # ------------------------------------------------------------------------------
 # Use Django Anymail with SendGrid
 # Make sure to set the SENDGRID_API_KEY environment variable in production
-EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
+EMAIL_BACKEND = "anymail.backends.mailersend.EmailBackend"
+
 ANYMAIL = {
-    "SENDGRID_API_KEY": env("SENDGRID_API_KEY"),
+    "MAILERSEND_API_TOKEN": env('EMAIL_API_KEY'),
 }
 
 
