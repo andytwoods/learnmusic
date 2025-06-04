@@ -239,6 +239,8 @@ EMAIL_BACKEND = env(
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-timeout
 EMAIL_TIMEOUT = 5
+# Default email address to use for various automated correspondence
+DEFAULT_FROM_EMAIL = env("DJANGO_DEFAULT_FROM_EMAIL", default="noreply@learnmusic.com")
 
 # ADMIN
 # ------------------------------------------------------------------------------

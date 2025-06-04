@@ -7,6 +7,32 @@
   <script src="{% static 'js/vexflow.js' %}"></script>
 {% endblock javascript %}
 
+{% block css %}
+  {{ block.super }}
+  <style>
+    .stave-resize-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .stave-resize-controls button {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .stave-resize-controls button:hover {
+      background-color: #6c757d;
+      color: white;
+    }
+  </style>
+{% endblock css %}
+
 {% block title %}
   {{ instrument }} note trainer{% if key %}, {{ key }}{% endif %}
 {% endblock %}
@@ -60,6 +86,15 @@
 
         <div class="col-9 align-self-center text-center" id="sheet-container">
           <div id="sheet"></div>
+          <!-- Stave magnification controls -->
+          <div class="stave-resize-controls mt-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="decrease-magnification" title="Zoom out (decrease size)">
+              <i class="fas fa-search-minus"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="increase-magnification" title="Zoom in (increase size)">
+              <i class="fas fa-search-plus"></i>
+            </button>
+          </div>
         </div>
         <div id="right-of-sheet-placeholder"></div>
 
@@ -128,6 +163,15 @@
     document.addEventListener("DOMContentLoaded", function () {
       window.special_condition = 'first_trial';
       trial_manager.next();
+
+      // Connect stave magnification controls
+      document.getElementById('increase-magnification').addEventListener('click', function() {
+        stave_manager.increaseMagnification();
+      });
+
+      document.getElementById('decrease-magnification').addEventListener('click', function() {
+        stave_manager.decreaseMagnification();
+      });
     });
   </script>
 

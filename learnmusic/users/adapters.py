@@ -6,6 +6,7 @@ from allauth.account.adapter import DefaultAccountAdapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
 from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import now
 
@@ -21,6 +22,25 @@ from learnmusic.users.models import LoginCodeRequest
 class AccountAdapter(DefaultAccountAdapter):
     def is_open_for_signup(self, request: HttpRequest) -> bool:
         return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
+
+    def save_user(self, request, user, form, commit=True):
+        """
+        Saves a new user and sends a notification email to the admin.
+        """
+        user = super().save_user(request, user, form, commit)
+
+        # Send notification email to admin
+        if settings.ADMINS:
+            admin_emails = [admin_email for _, admin_email in settings.ADMINS]
+            send_mail(
+                subject="New User Registration",
+                message=f"A new user has registered on LearnMusic:\n\nEmail: {user.email}\nName: {user.name}",
+                from_email=settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else None,
+                recipient_list=admin_emails,
+                fail_silently=True,
+            )
+
+        return user
 
     def send_login_code(self, request, user, **kwargs):
         email = user.email
@@ -63,4 +83,24 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                 user.name = first_name
                 if last_name := data.get("last_name"):
                     user.name += f" {last_name}"
+        return user
+
+    def save_user(self, request, sociallogin, form=None):
+        """
+        Saves a newly signed-up social login and sends a notification email to the admin.
+        """
+        user = super().save_user(request, sociallogin, form)
+
+        # Send notification email to admin
+        if settings.ADMINS:
+            admin_emails = [admin_email for _, admin_email in settings.ADMINS]
+            provider = sociallogin.account.provider.capitalize()
+            send_mail(
+                subject=f"New {provider} Social Login",
+                message=f"A new user has registered on LearnMusic using {provider}:\n\nEmail: {user.email}\nName: {user.name}",
+                from_email=settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else None,
+                recipient_list=admin_emails,
+                fail_silently=True,
+            )
+
         return user
