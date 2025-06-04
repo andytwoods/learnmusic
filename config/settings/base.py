@@ -296,7 +296,7 @@ ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1', ]
 # If you want FULLY password-less enrolment instead, drop 'password1'
 # ACCOUNT_SIGNUP_FIELDS = ['email*']
 
-ACCOUNT_LOGIN_BY_CODE_ENABLED = True
+
 ACCOUNT_LOGIN_ATTEMPT_LIMIT   = 5
 ACCOUNT_LOGIN_ATTEMPT_TIMEOUT = 600
 
@@ -305,7 +305,7 @@ ACCOUNT_PASSWORD_INPUT_RENDER_VALUE = False
 ACCOUNT_LOGIN_BY_CODE_ENABLED    = True    # magic-code / passkey workflow
 
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None   # you keep a username-less user model
-ACCOUNT_EMAIL_VERIFICATION       = "none"
+ACCOUNT_EMAIL_VERIFICATION       = "mandatory"
 
 ACCOUNT_ADAPTER        = "learnmusic.users.adapters.AccountAdapter"
 ACCOUNT_FORMS          = {"signup": "learnmusic.users.forms.UserSignupForm"}
