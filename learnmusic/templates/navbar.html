@@ -47,7 +47,6 @@
             </li>
             <li class="nav-item mx-md-1">
               <a class="nav-link d-flex align-items-center" href="{% url 'account_logout' %}">
-                <i class="fas fa-sign-out-alt me-1"></i>
                 <span>{% translate "Sign Out" %}</span>
               </a>
             </li>
@@ -55,13 +54,11 @@
             {% if ACCOUNT_ALLOW_REGISTRATION %}
               <li class="nav-item mx-md-1">
                 <a id="sign-up-link" class="nav-link d-flex align-items-center" href="{% url 'account_signup' %}">
-                  <i class="fas fa-user-plus me-1"></i>
                   <span>{% translate "Sign Up" %}</span>
                 </a>
               </li>
               <li class="nav-item mx-md-1">
                 <a id="sign-in-link" class="nav-link d-flex align-items-center" href="{% url 'account_login' %}">
-                  <i class="fas fa-sign-in-alt me-1"></i>
                   <span>{% translate "Sign In" %}</span>
                 </a>
               </li>
@@ -69,7 +66,6 @@
             <li class="nav-item ms-md-1">
               <a id="log-in-link" class="btn btn-outline-light d-flex align-items-center"
                  href="{% url 'account_login' %}">
-                <i class="fas fa-sign-in-alt me-1"></i>
                 <span>{% translate "Sign In" %}</span>
               </a>
             </li>

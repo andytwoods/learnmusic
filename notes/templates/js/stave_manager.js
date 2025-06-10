@@ -128,6 +128,8 @@ const stave_manager = (function () {
   api.updateNote = function (noteStr) {
     api.currentNote = noteStr; // remember for future redraws
 
+    freshRenderer(); // start from a clean surface so old notes vanish
+
     const transposed = transpose(noteStr);
     const stemDir    = calcStemDirection(transposed);
 
