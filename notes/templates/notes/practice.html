@@ -88,10 +88,10 @@
           <div id="sheet"></div>
           <!-- Stave magnification controls -->
           <div class="stave-resize-controls mt-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary" id="decrease-magnification" title="Zoom out (decrease size)">
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="increase-magnification" title="Zoom out (increase size)">
               <i class="fas fa-search-minus"></i>
             </button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" id="increase-magnification" title="Zoom in (increase size)">
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="decrease-magnification" title="Zoom in (decrease size)">
               <i class="fas fa-search-plus"></i>
             </button>
           </div>
@@ -122,9 +122,8 @@
 
   <script>
 
-    function sendResultsToBackend(data) {
 
-      // Sending the POST request to the backend
+    function sendSingleNoteResultToBackend(note, reactionTime, correct) {
       {% if package_id %}
         fetch("{% url 'practice-data' package_id=package_id %}", {
           method: 'POST', // HTTP method
@@ -132,10 +131,15 @@
             'Content-Type': 'application/json',
             'X-CSRFToken': "{{ csrf_token }}"
           },
-          body: JSON.stringify(data) // Convert the list to JSON format
+          body: JSON.stringify({
+            note: note.note,
+            alter: note.alter,
+            octave: note.octave,
+            reaction_time: reactionTime,
+            correct: correct
+          })
         });
       {% endif %}
-
     }
   </script>
 

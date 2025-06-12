@@ -63,7 +63,7 @@ const trial_manager = (function () {
             window.special_condition = '';
         } else if (!session_manager.current_note.skipRecording) {
             session_manager.update_data(rt, answer);
-            sendResultsToBackend(window.progress_data);
+            sendSingleNoteResultToBackend(session_manager.current_note, rt, answer);
         }
 
 

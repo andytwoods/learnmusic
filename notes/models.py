@@ -214,6 +214,36 @@ class LearningScenario(TimeStampedModel):
             scenario.streak_count = streak_count
 
 
+class NoteRecord(TimeStampedModel):
+    """
+    Model to store individual note practice results.
+    Each record represents a single note practice attempt.
+    """
+    learningscenario = models.ForeignKey(LearningScenario, on_delete=models.CASCADE)
+    note = models.CharField(max_length=1)  # e.g., 'A', 'B', 'C', etc.
+    alter = models.CharField(max_length=2, blank=True)  # e.g., '1' for sharp, '-1' for flat
+    octave = models.CharField(max_length=1)  # e.g., '3', '4', etc.
+    reaction_time = models.IntegerField()  # in milliseconds
+    correct = models.BooleanField()  # True if the answer was correct, False otherwise
+
+    def __str__(self):
+        note_str = f"{self.note}"
+        if self.alter == '1':
+            note_str += '#'
+        elif self.alter == '-1':
+            note_str += 'b'
+        note_str += f"/{self.octave}"
+        return f"{note_str} - {self.correct} - {self.reaction_time}ms"
+
+    @property
+    def user(self):
+        return self.learningscenario.user
+
+    @property
+    def instrument(self):
+        return self.learningscenario.instrument_name
+
+
 class NoteRecordPackage(TimeStampedModel):
     learningscenario = models.ForeignKey(LearningScenario, on_delete=models.CASCADE)
     log = models.JSONField(null=True, blank=True)
@@ -232,6 +262,77 @@ class NoteRecordPackage(TimeStampedModel):
     def instrument(self):
         return self.learningscenario.instrument
 
+    def add_result(self, json_data):
+        """
+        Add a result to the log. If the combination of alter, note, and octave already exists in the log,
+        update that element. Otherwise, add the entire json_data to the log.
+
+        Args:
+            json_data (dict): Data containing alter, note, octave, correct, and reaction_time
+        """
+        # Initialize log if it's None
+        if self.log is None:
+            self.log = []
+
+        # Extract the key fields from json_data
+        alter = json_data.get('alter', '0')
+        note = json_data.get('note', '')
+        octave = json_data.get('octave', '')
+        correct = json_data.get('correct', False)
+        reaction_time = json_data.get('reaction_time', '')
+
+        # Check if this note combination already exists in the log
+        found = False
+        for item in self.log:
+            if (item.get('alter') == alter and
+                item.get('note') == note and
+                item.get('octave') == octave):
+                # Found a match, update this item
+                found = True
+
+                # Initialize correct and reaction_time_log lists if they don't exist
+                if 'correct' not in item or not isinstance(item['correct'], list):
+                    item['correct'] = []
+                if 'reaction_time_log' not in item or not isinstance(item['reaction_time_log'], list):
+                    item['reaction_time_log'] = []
+
+                # Add the new data to the lists
+                item['correct'].append(correct)
+                item['reaction_time_log'].append(int(reaction_time) if reaction_time else 0)
+
+                # Update n (count of attempts)
+                item['n'] = len(item['correct'])
+                break
+
+        # If no match was found, add the new item to the log
+        if not found:
+            new_item = {
+                'alter': alter,
+                'note': note,
+                'octave': octave,
+                'correct': [correct] if correct is not None else [],
+                'reaction_time_log': [int(reaction_time) if reaction_time else 0],
+                'n': 1
+            }
+            self.log.append(new_item)
+
+        # Save the updated log
+        self.save()
+
     def process_answers(self, json_data):
         self.log = json_data
         self.save()
+
+        # Also create individual NoteRecord entries for each note in the json_data
+        for note_data in json_data:
+            # For each reaction time and correct value pair, create a NoteRecord
+            for i in range(len(note_data.get('reaction_time_log', []))):
+                if i < len(note_data.get('correct', [])):  # Ensure we have a corresponding correct value
+                    NoteRecord.objects.create(
+                        learningscenario=self.learningscenario,
+                        note=note_data.get('note', ''),
+                        alter=note_data.get('alter', ''),
+                        octave=note_data.get('octave', ''),
+                        reaction_time=note_data.get('reaction_time_log', [])[i],
+                        correct=note_data.get('correct', [])[i]
+                    )

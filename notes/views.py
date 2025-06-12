@@ -14,7 +14,7 @@ from django_htmx.http import HttpResponseClientRefresh
 from notes import tools
 from notes.forms import LearningScenarioForm
 from notes.instrument_data import instrument_infos, instruments
-from notes.models import LearningScenario, NoteRecordPackage, LevelChoices, InstrumentKeys, ClefChoices
+from notes.models import LearningScenario, NoteRecordPackage, NoteRecord, LevelChoices, InstrumentKeys, ClefChoices
 from notes.tools import generate_notes, compile_notes_per_skilllevel, convert_note_slash_to_db
 
 PRACTICE_TRY = 'practice-try'
@@ -180,8 +180,19 @@ def practice_try(request, instrument: str, clef: str, key: str, level: str, soun
 @login_required
 def practice_data(request, package_id: int):
     json_data = json.loads(request.body)
-    package = NoteRecordPackage.objects.get(id=package_id)
-    package.process_answers(json_data)
+    package: NoteRecordPackage = NoteRecordPackage.objects.get(id=package_id)
+    package.add_result(json_data)
+
+    noterecord: NoteRecord = NoteRecord(
+        learningscenario=package.learningscenario,
+        note=json_data.get('note', ''),
+        alter=json_data.get('alter', ''),
+        octave=json_data.get('octave', ''),
+        reaction_time=json_data.get('reaction_time', 0),
+        correct=json_data.get('correct', False)
+    )
+    noterecord.save()
+
 
     return JsonResponse({'success': True})
 
@@ -237,8 +248,8 @@ def progress_data_view(request, learningscenario_id):
     # 1. Decide the time window
     earliest_date = now() - timedelta(days=30)  # last 30 days as example
 
-    # 2. Retrieve all NoteRecordPackage items for this user in that range
-    packages = NoteRecordPackage.objects.filter(
+    # 2. Retrieve all NoteRecord items for this learning scenario in that range
+    note_records = NoteRecord.objects.filter(
         learningscenario__id=learningscenario_id,
         created__gte=earliest_date
     )
@@ -256,51 +267,43 @@ def progress_data_view(request, learningscenario_id):
     grouped_by_date = {}
     grouped_by_note = {}
 
-    for pkg in packages:
-        if not pkg.log:
-            continue
+    for record in note_records:
+        # Format note name
+        note_name = f"{record.note}{record.octave}"
+        if record.alter == '1':
+            note_name += '#'
+        elif record.alter == '-1':
+            note_name += 'b'
 
-        for record in pkg.log:
-            # Example record structure:
-            # {
-            #   "note": "F", "octave": "3", "alter": "1",
-            #   "reaction_time_log": [181],
-            #   "correct": [false]
-            # }
-            note_name = f"{record['note']}{record['octave']}"
-            if record['alter'] == '1':
-                note_name += '#'
-            elif record['alter'] == '-1':
-                note_name += 'b'
+        date_key = record.created.strftime("%Y-%m-%d")  # daily grouping example
 
-            attempts_count = len(record['correct'])
-            correct_count = sum(record['correct'])  # sum of booleans => count of `True`
+        # Initialize dictionaries if not present
+        if date_key not in grouped_by_date:
+            grouped_by_date[date_key] = {
+                "sum_correct": 0,
+                "sum_total": 0,
+                "reaction_times": []  # store all reaction times here
+            }
 
-            date_key = pkg.created.strftime("%Y-%m-%d")  # daily grouping example
+        # Update date-based stats
+        grouped_by_date[date_key]["sum_total"] += 1
+        if record.correct:
+            grouped_by_date[date_key]["sum_correct"] += 1
+        grouped_by_date[date_key]["reaction_times"].append(record.reaction_time)
 
-            # Initialize dictionaries if not present
-            if date_key not in grouped_by_date:
-                grouped_by_date[date_key] = {
-                    "sum_correct": 0,
-                    "sum_total": 0,
-                    "reaction_times": []  # store all reaction times here
-                }
+        # Initialize note-based stats if needed
+        if note_name not in grouped_by_note:
+            grouped_by_note[note_name] = {
+                "sum_correct": 0,
+                "sum_total": 0,
+                "reaction_times": []
+            }
 
-            grouped_by_date[date_key]["sum_correct"] += correct_count
-            grouped_by_date[date_key]["sum_total"] += attempts_count
-            # Extend the list with all reaction times
-            grouped_by_date[date_key]["reaction_times"].extend(record['reaction_time_log'])
-
-            if note_name not in grouped_by_note:
-                grouped_by_note[note_name] = {
-                    "sum_correct": 0,
-                    "sum_total": 0,
-                    "reaction_times": []
-                }
-
-            grouped_by_note[note_name]["sum_correct"] += correct_count
-            grouped_by_note[note_name]["sum_total"] += attempts_count
-            grouped_by_note[note_name]["reaction_times"].extend(record['reaction_time_log'])
+        # Update note-based stats
+        grouped_by_note[note_name]["sum_total"] += 1
+        if record.correct:
+            grouped_by_note[note_name]["sum_correct"] += 1
+        grouped_by_note[note_name]["reaction_times"].append(record.reaction_time)
 
     # Optionally, if you need a custom-sorted approach to notes
     grouped_by_note_sorted = tools.sort_notes(grouped_by_note)

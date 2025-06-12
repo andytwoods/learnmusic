@@ -208,3 +208,204 @@ class TestLearningScenarioMethods(TestCase):
                 break
 
         self.assertTrue(new_note_found)
+
+
+class TestNoteRecordPackage(TestCase):
+    def setUp(self):
+        self.user = UserFactory()
+        self.learning_scenario = LearningScenarioFactory(user=self.user)
+        self.package = NoteRecordPackage.objects.create(learningscenario=self.learning_scenario)
+
+    def test_add_result_to_empty_log(self):
+        """Test adding a result to an empty log."""
+        # Ensure log is empty
+        self.package.log = None
+        self.package.save()
+
+        # Test data
+        json_data = {
+            'alter': '0',
+            'note': 'C',
+            'octave': '4',
+            'correct': True,
+            'reaction_time': '1000'
+        }
+
+        # Add result
+        self.package.add_result(json_data)
+
+        # Verify result was added correctly
+        self.assertIsNotNone(self.package.log)
+        self.assertEqual(len(self.package.log), 1)
+
+        # Check the added item
+        item = self.package.log[0]
+        self.assertEqual(item['alter'], '0')
+        self.assertEqual(item['note'], 'C')
+        self.assertEqual(item['octave'], '4')
+        self.assertEqual(item['correct'], [True])
+        self.assertEqual(item['reaction_time_log'], [1000])
+        self.assertEqual(item['n'], 1)
+
+    def test_add_result_to_non_empty_log(self):
+        """Test adding a new note to a non-empty log."""
+        # Initialize log with an existing note
+        self.package.log = [{
+            'alter': '0',
+            'note': 'C',
+            'octave': '4',
+            'correct': [True],
+            'reaction_time_log': [1000],
+            'n': 1
+        }]
+        self.package.save()
+
+        # Test data for a different note
+        json_data = {
+            'alter': '0',
+            'note': 'D',
+            'octave': '4',
+            'correct': True,
+            'reaction_time': '1500'
+        }
+
+        # Add result
+        self.package.add_result(json_data)
+
+        # Verify result was added correctly
+        self.assertEqual(len(self.package.log), 2)
+
+        # Check the added item
+        item = self.package.log[1]
+        self.assertEqual(item['alter'], '0')
+        self.assertEqual(item['note'], 'D')
+        self.assertEqual(item['octave'], '4')
+        self.assertEqual(item['correct'], [True])
+        self.assertEqual(item['reaction_time_log'], [1500])
+        self.assertEqual(item['n'], 1)
+
+    def test_update_existing_note(self):
+        """Test updating an existing note in the log."""
+        # Initialize log with an existing note
+        self.package.log = [{
+            'alter': '0',
+            'note': 'C',
+            'octave': '4',
+            'correct': [True],
+            'reaction_time_log': [1000],
+            'n': 1
+        }]
+        self.package.save()
+
+        # Test data for the same note
+        json_data = {
+            'alter': '0',
+            'note': 'C',
+            'octave': '4',
+            'correct': False,
+            'reaction_time': '2000'
+        }
+
+        # Add result (should update existing note)
+        self.package.add_result(json_data)
+
+        # Verify log still has only one item
+        self.assertEqual(len(self.package.log), 1)
+
+        # Check the updated item
+        item = self.package.log[0]
+        self.assertEqual(item['alter'], '0')
+        self.assertEqual(item['note'], 'C')
+        self.assertEqual(item['octave'], '4')
+        self.assertEqual(item['correct'], [True, False])
+        self.assertEqual(item['reaction_time_log'], [1000, 2000])
+        self.assertEqual(item['n'], 2)
+
+    def test_edge_cases(self):
+        """Test edge cases like null values and empty strings."""
+        # Initialize empty log
+        self.package.log = []
+        self.package.save()
+
+        # Test with missing values
+        json_data = {
+            'note': 'E',
+            'octave': '4'
+            # Missing 'alter', 'correct', and 'reaction_time'
+        }
+
+        # Add result
+        self.package.add_result(json_data)
+
+        # Verify result was added with default values
+        self.assertEqual(len(self.package.log), 1)
+        item = self.package.log[0]
+        self.assertEqual(item['alter'], '0')  # Default value
+        self.assertEqual(item['note'], 'E')
+        self.assertEqual(item['octave'], '4')
+        self.assertEqual(item['correct'], [False])  # Default value
+        self.assertEqual(item['reaction_time_log'], [0])  # Default value
+        self.assertEqual(item['n'], 1)
+
+        # Test with empty string for reaction_time
+        json_data = {
+            'alter': '1',
+            'note': 'F',
+            'octave': '4',
+            'correct': True,
+            'reaction_time': ''
+        }
+
+        # Add result
+        self.package.add_result(json_data)
+
+        # Verify result was added with default reaction_time
+        self.assertEqual(len(self.package.log), 2)
+        item = self.package.log[1]
+        self.assertEqual(item['reaction_time_log'], [0])  # Empty string converted to 0
+
+        # Test with None for correct
+        json_data = {
+            'alter': '-1',
+            'note': 'B',
+            'octave': '3',
+            'correct': None,
+            'reaction_time': '3000'
+        }
+
+        # Add result
+        self.package.add_result(json_data)
+
+        # Verify result was added with empty correct list
+        self.assertEqual(len(self.package.log), 3)
+        item = self.package.log[2]
+        self.assertEqual(item['correct'], [])  # None converted to empty list
+
+    def test_initialize_lists_if_not_exist(self):
+        """Test that correct and reaction_time_log are initialized if they don't exist."""
+        # Initialize log with an item missing the lists
+        self.package.log = [{
+            'alter': '0',
+            'note': 'C',
+            'octave': '4',
+            # Missing 'correct' and 'reaction_time_log'
+        }]
+        self.package.save()
+
+        # Test data for the same note
+        json_data = {
+            'alter': '0',
+            'note': 'C',
+            'octave': '4',
+            'correct': True,
+            'reaction_time': '1000'
+        }
+
+        # Add result
+        self.package.add_result(json_data)
+
+        # Verify lists were initialized
+        item = self.package.log[0]
+        self.assertEqual(item['correct'], [True])
+        self.assertEqual(item['reaction_time_log'], [1000])
+        self.assertEqual(item['n'], 1)
