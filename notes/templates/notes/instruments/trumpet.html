@@ -42,11 +42,11 @@ class="position-absolute bottom-0 start-0 p-3">
   </div>
 </div>
 
-<div id='trumpet-right' class="position-absolute">
+<div id='trumpet-right' class="position-absolute fs-6">
   {% block keys %}
-    <button class="valve rounded-pill input-button my-3 p-4 trumpet-b3 position-absolute" data-valve="3">3</button>
-    <button class="valve rounded-pill input-button my-3 p-4 trumpet-b2 position-absolute" data-valve="2">2</button>
-    <button class="valve rounded-pill input-button my-3 p-4 trumpet-b1 position-absolute" data-valve="1">1</button>
+    <button class="valve rounded-pill input-button my-3 p-4 trumpet-b3 position-absolute" data-valve="3">Valve 3</button>
+    <button class="valve rounded-pill input-button my-3 p-4 trumpet-b2 position-absolute" data-valve="2">Valve 2</button>
+    <button class="valve rounded-pill input-button my-3 p-4 trumpet-b1 position-absolute" data-valve="1">Valve 1</button>
   {% endblock keys %}
 </div>
 
@@ -190,14 +190,17 @@ class="position-absolute bottom-0 start-0 p-3">
   ;
 </script>
 
+
+
 <script>
   window.tutorial_instrument_specific_steps = [{
     popover: {
       element: '.card',
       side: "bottom",
       title: "Trumpet valves",
-
-      description: "Pretend you are holding a trumpet. Press down the correct valves. You can adjust the valve positions. Or use the number keys."
+      align: 'center',
+      description: "Pretend you are holding a trumpet. Press down the correct valves. You can adjust the valve positions. " +
+        "Or use the number keys.<br><img style='width:100%' src='{% static 'instruments/trumpet.jpg' %}' alt='trumpet'>"
     }
   },
     {

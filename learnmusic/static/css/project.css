@@ -108,3 +108,8 @@ svg {
 .navbar-toggler:hover {
   transform: rotate(5deg);
 }
+
+.driver-popover {
+    width: clamp(280px, 90vw, 700px);
+    max-width: none;        /* remove the hard 400 px max in driver.css */
+}
