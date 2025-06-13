@@ -46,10 +46,22 @@
 
     // --- Constants ---
     const cacheKey = "valveRangeInputCache";
-    const RECALCULATION_DELAY = 16; // ~60fps for smoother updates
     const gap = 10;
     const minimumHorizontalDistance = 50;
     const maxTiltAngle = 90;
+
+    // Detect if user is on a mobile device
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    // Use different frame rates for mobile vs desktop
+    const RECALCULATION_DELAY = isMobileDevice ? 32 : 16; // 30fps for mobile, 60fps for desktop
+
+    // Log device type and optimization strategy
+    console.log(`Device detected as: ${isMobileDevice ? 'Mobile' : 'Desktop'}`);
+    console.log(`Using ${isMobileDevice ? 'mobile' : 'desktop'} optimizations with ${RECALCULATION_DELAY}ms delay (${Math.round(1000/RECALCULATION_DELAY)}fps)`);
+
+    // Pre-calculate some values to avoid repeated calculations
+    const maxTiltAngleRatio = maxTiltAngle / 100;
 
     const initialValvePositions = [...valves].map(valve => ({
       top: parseInt(valve.style.top || '0'),
@@ -64,19 +76,43 @@
     let tiltAngle = 0;
     let separationOffset = 0;
     let animationFrameId = null;
+    let lastUpdateTime = 0;
 
-    // --- Throttling Function ---
+    // --- Throttling Function optimized for both desktop and mobile ---
     function throttle(callback, limit) {
       let waiting = false;
-      return function (...args) {
-        if (!waiting) {
-          waiting = true;
-          setTimeout(() => {
+      let lastTime = 0;
+
+      // Simpler throttling for desktop for better responsiveness
+      if (!isMobileDevice) {
+        return function (...args) {
+          if (!waiting) {
+            waiting = true;
+            requestAnimationFrame(() => {
+              callback.apply(this, args);
+              waiting = false;
+            });
+          }
+        };
+      }
+      // More aggressive throttling for mobile to save battery
+      else {
+        return function (...args) {
+          const now = performance.now();
+
+          if (!waiting && now - lastTime >= limit) {
+            lastTime = now;
             callback.apply(this, args);
-            waiting = false;
-          }, limit);
-        }
-      };
+          } else if (!waiting) {
+            waiting = true;
+            requestAnimationFrame(() => {
+              lastTime = performance.now();
+              callback.apply(this, args);
+              waiting = false;
+            });
+          }
+        };
+      }
     }
 
     // --- Cache Management ---
@@ -96,22 +132,33 @@
     }
 
     function loadFromCacheAndApply() {
-      const cachedValues = localStorage.getItem(cacheKey);
-      if (cachedValues) {
-        const sliderValues = JSON.parse(cachedValues);
+      try {
+        const cachedValues = localStorage.getItem(cacheKey);
+        if (cachedValues) {
+          const sliderValues = JSON.parse(cachedValues);
 
-        instrument_input_tilt.value = sliderValues.tilt || 0;
-        instrument_input_vertical.value = sliderValues.vertical || 0;
-        instrument_input_horizontal.value = sliderValues.horizontal || 0;
-        instrument_input_separation.value = sliderValues.separation || 0;
+          // Set slider values with default fallback
+          instrument_input_tilt.value = sliderValues.tilt || 0;
+          instrument_input_vertical.value = sliderValues.vertical || 0;
+          instrument_input_horizontal.value = sliderValues.horizontal || 0;
+          instrument_input_separation.value = sliderValues.separation || 0;
 
-        verticalOffset = parseInt(sliderValues.vertical || 0) * 4;
-        horizontalOffset = parseInt(sliderValues.horizontal || 0) * 4;
-        tiltAngle = (parseInt(sliderValues.tilt || 0) / 100) * maxTiltAngle;
-        separationOffset = parseInt(sliderValues.separation || 0);
+          // Use parseFloat for more accurate calculations
+          verticalOffset = parseFloat(sliderValues.vertical || 0) * 4;
+          horizontalOffset = parseFloat(sliderValues.horizontal || 0) * 4;
+          tiltAngle = parseFloat(sliderValues.tilt || 0) * maxTiltAngleRatio; // Use pre-calculated ratio
+          separationOffset = parseFloat(sliderValues.separation || 0);
 
-        update_valve_positions();
-        console.log("Slider values restored from cache:", sliderValues);
+          // Schedule the update on the next animation frame for smoother initial rendering
+          requestAnimationFrame(() => {
+            update_valve_positions();
+            console.log("Slider values restored from cache:", sliderValues);
+          });
+        }
+      } catch (error) {
+        // Handle any errors gracefully
+        console.error("Error loading from cache:", error);
+        reset_valves(); // Reset to default values if there's an error
       }
     }
 
@@ -119,19 +166,37 @@
     function update_valve_positions() {
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
 
+      // Different update strategies for mobile vs desktop
+      if (isMobileDevice) {
+        // Throttle updates based on time for mobile devices
+        const now = performance.now();
+        if (now - lastUpdateTime < RECALCULATION_DELAY) {
+          animationFrameId = requestAnimationFrame(update_valve_positions);
+          return;
+        }
+        lastUpdateTime = now;
+      }
+
       animationFrameId = requestAnimationFrame(() => {
         const currentSeparation = initialSeparation + separationOffset;
 
+        // Pre-calculate values outside the loop
+        const angleInRadians = (Math.PI / 180) * tiltAngle;
+        const sinValue = Math.sin(angleInRadians);
+        const cosValue = Math.cos(angleInRadians);
+
         for (let i = 0; i < valves.length; i++) {
           const initialTop = initialValvePositions[i].top;
-          const angleInRadians = (Math.PI / 180) * tiltAngle;
-          const tiltHorizontalOffset = i * currentSeparation * Math.sin(angleInRadians);
-          const tiltVerticalOffset = i * currentSeparation * Math.cos(angleInRadians);
+
+          // Use pre-calculated sin and cos values
+          const tiltHorizontalOffset = i * currentSeparation * sinValue;
+          const tiltVerticalOffset = i * currentSeparation * cosValue;
 
           const computedRight = minimumHorizontalDistance + horizontalOffset + tiltHorizontalOffset;
           const computedTop = initialTop + verticalOffset + tiltVerticalOffset;
 
-          valves[i].style.transform = `translate(${computedRight}px, ${computedTop}px)`;
+          // Use hardware-accelerated transform with translateX/translateY for better performance
+          valves[i].style.transform = `translate3d(${computedRight}px, ${computedTop}px, 0)`;
         }
         animationFrameId = null;
       });
@@ -161,29 +226,48 @@
       console.log("Sliders reset and cache cleared");
     }
 
-    // --- Event Listeners ---
+    // --- Event Listeners with passive option for better touch performance ---
     dropdownMenuButton.addEventListener('hidden.bs.dropdown', saveToCache);
     instrument_input_reset.addEventListener('click', reset_valves);
 
-    instrument_input_tilt.addEventListener('input', throttle((event) => {
-      tiltAngle = (parseInt(event.target.value) / 100) * maxTiltAngle;
-      update_valve_positions();
-    }, RECALCULATION_DELAY));
+    // Helper function to add passive event listeners
+    function addPassiveInputListener(element, handler) {
+      // Always add input event listener for all devices
+      element.addEventListener('input', handler, { passive: true });
 
-    instrument_input_vertical.addEventListener('input', throttle((event) => {
-      verticalOffset = parseInt(event.target.value) * 4;
-      update_valve_positions();
-    }, RECALCULATION_DELAY));
+      // Only add touch-specific event listeners for mobile devices
+      if (isMobileDevice) {
+        element.addEventListener('touchmove', handler, { passive: true });
+      }
+    }
 
-    instrument_input_horizontal.addEventListener('input', throttle((event) => {
-      horizontalOffset = parseInt(event.target.value) * 4;
+    // Optimized input handlers with fewer calculations
+    const tiltHandler = throttle((event) => {
+      // Use the pre-calculated ratio
+      tiltAngle = parseFloat(event.target.value) * maxTiltAngleRatio;
       update_valve_positions();
-    }, RECALCULATION_DELAY));
+    }, RECALCULATION_DELAY);
 
-    instrument_input_separation.addEventListener('input', throttle((event) => {
-      separationOffset = parseInt(event.target.value);
+    const verticalHandler = throttle((event) => {
+      verticalOffset = parseFloat(event.target.value) * 4;
       update_valve_positions();
-    }, RECALCULATION_DELAY));
+    }, RECALCULATION_DELAY);
+
+    const horizontalHandler = throttle((event) => {
+      horizontalOffset = parseFloat(event.target.value) * 4;
+      update_valve_positions();
+    }, RECALCULATION_DELAY);
+
+    const separationHandler = throttle((event) => {
+      separationOffset = parseFloat(event.target.value);
+      update_valve_positions();
+    }, RECALCULATION_DELAY);
+
+    // Add event listeners with passive option
+    addPassiveInputListener(instrument_input_tilt, tiltHandler);
+    addPassiveInputListener(instrument_input_vertical, verticalHandler);
+    addPassiveInputListener(instrument_input_horizontal, horizontalHandler);
+    addPassiveInputListener(instrument_input_separation, separationHandler);
 
     loadFromCacheAndApply();
     update_valve_positions();
