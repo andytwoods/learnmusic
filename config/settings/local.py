@@ -67,3 +67,4 @@ INSTALLED_APPS += ["django_extensions"]
 
 # Your stuff...
 # ------------------------------------------------------------------------------
+AXES_ENABLED = False
