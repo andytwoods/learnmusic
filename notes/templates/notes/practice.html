@@ -30,6 +30,7 @@
       background-color: #6c757d;
       color: white;
     }
+
   </style>
 {% endblock css %}
 
@@ -107,6 +108,7 @@
 {#      {% include 'notes/components/toggle_progress.html' %}#}
       {% include 'notes/components/toggle_help.html' %}
     </div>
+
   </div>
 
   {{ progress|json_script:"progress-data" }}
@@ -193,4 +195,5 @@
     // Optional: Update on window resize (for responsive effects)
     window.addEventListener('resize', setViewportHeight);
   </script>
+
 {% endblock body %}

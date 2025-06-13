@@ -5,6 +5,10 @@ from django.urls import path
 from notes import views
 
 urlpatterns = [
+    # Reminder settings HTMX endpoints
+    path("reminder-settings-button/", views.reminder_settings_button, name="reminder-settings-button"),
+    path("reminder-settings-form/", views.reminder_settings_form, name="reminder-settings-form"),
+    path("reminder-settings-submit/", views.reminder_settings_submit, name="reminder-settings-submit"),
     path('progress-data/<int:learningscenario_id>/', views.progress_data_view, name='progress_data'),
     path("progress/<int:learningscenario_id>/", views.progress, name='see-progress'),
     path("practice/", views.notes_home, name="notes-home"),

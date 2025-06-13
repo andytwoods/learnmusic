@@ -1,5 +1,5 @@
 import json
-from datetime import timedelta
+from datetime import timedelta, datetime
 from statistics import median  # Python 3.4+ has a built-in median function
 
 from django.contrib import messages
@@ -10,6 +10,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils.timezone import now
 from django_htmx.http import HttpResponseClientRefresh
+from zoneinfo import available_timezones, ZoneInfo
 
 from notes import tools
 from notes.forms import LearningScenarioForm
@@ -242,6 +243,115 @@ def progress(request, learningscenario_id: int):
         'learningscenario': LearningScenario.objects.get(id=learningscenario_id),
     }
     return render(request, 'progress.html', context=context)
+
+
+@login_required
+def reminder_settings_button(request):
+    """
+    Renders the reminder settings button HTMX fragment.
+    """
+    return render(request, 'notes/htmx/_reminder_settings_button.html')
+
+
+@login_required
+def reminder_settings_form(request):
+    """
+    Renders the reminder settings form HTMX fragment.
+    """
+    # Get the user's current reminder settings
+    user = request.user
+    profile = user.profile  # This will create a profile if it doesn't exist
+    reminder_time = profile.reminder_time
+    current_timezone = profile.timezone
+
+    # Check if reminders are disabled
+    reminders_disabled = reminder_time == "DISABLED"
+
+    # If reminders are disabled, set a default time for the form
+    if reminders_disabled:
+        reminder_time = "18:00"  # Default to 6 PM if reminders are disabled
+
+    # Create a list of common timezones for the form
+    common_timezones = [
+        ('UTC', 'UTC'),
+        ('US/Pacific', 'US/Pacific'),
+        ('US/Mountain', 'US/Mountain'),
+        ('US/Central', 'US/Central'),
+        ('US/Eastern', 'US/Eastern'),
+        ('Europe/London', 'Europe/London'),
+        ('Europe/Berlin', 'Europe/Berlin'),
+        ('Europe/Paris', 'Europe/Paris'),
+        ('Asia/Tokyo', 'Asia/Tokyo'),
+        ('Australia/Sydney', 'Australia/Sydney'),
+    ]
+
+    # Add all available timezones as options with UTC offset in hours
+    all_timezones = []
+    now_utc = datetime.now(ZoneInfo("UTC"))
+
+    for tz_name in available_timezones():
+        try:
+            # Calculate the UTC offset in hours
+            now_tz = now_utc.astimezone(ZoneInfo(tz_name))
+            offset_seconds = now_tz.utcoffset().total_seconds()
+            offset_hours = offset_seconds / 3600
+
+            # Format the offset as +/-HH:MM
+            sign = "+" if offset_hours >= 0 else "-"
+            abs_offset = abs(offset_hours)
+            offset_str = f"{sign}{int(abs_offset):02d}:{int((abs_offset % 1) * 60):02d}"
+
+            # Create the display text with timezone name and UTC offset
+            display_text = f"{tz_name} (UTC{offset_str})"
+
+            all_timezones.append((tz_name, display_text))
+        except Exception as e:
+            # If there's an error with a timezone, just use the name without offset
+            all_timezones.append((tz_name, tz_name))
+
+    # Sort timezones by UTC offset
+    all_timezones.sort(key=lambda x: now_utc.astimezone(ZoneInfo(x[0])).utcoffset().total_seconds())
+
+    context = {
+        'reminder_time': reminder_time,
+        'current_timezone': current_timezone,
+        'timezones': all_timezones,
+        'reminders_disabled': reminders_disabled,
+    }
+
+    return render(request, 'notes/htmx/_reminder_settings_form.html', context)
+
+
+@login_required
+def reminder_settings_submit(request):
+    """
+    Handles the submission of the reminder settings form.
+    """
+    if request.method == 'POST':
+        # Check if the user is removing reminders
+        if request.POST.get('remove_reminders') == 'true':
+            # Save special values to indicate reminders are disabled
+            user = request.user
+            profile = user.profile
+            profile.reminder_time = "DISABLED"
+            profile.save()
+        else:
+            # Normal save operation
+            reminder_time = request.POST.get('reminder_time')
+            timezone = request.POST.get('timezone')
+
+            # Save the settings to the user's profile
+            user = request.user
+            profile = user.profile  # This will create a profile if it doesn't exist
+            profile.reminder_time = reminder_time
+            profile.timezone = timezone
+            profile.save()
+
+        # Return the reminder settings button
+        return render(request, 'notes/htmx/_reminder_settings_button.html')
+
+    # If not a POST request, redirect to the form
+    return redirect('reminder-settings-form')
 
 
 def progress_data_view(request, learningscenario_id):

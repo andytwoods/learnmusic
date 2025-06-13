@@ -3,7 +3,7 @@ from typing import ClassVar
 from datetime import timedelta
 
 from django.contrib.auth.models import AbstractUser
-from django.db.models import CharField, BooleanField, EmailField, GenericIPAddressField, DateTimeField, Model
+from django.db.models import CharField, BooleanField, EmailField, GenericIPAddressField, DateTimeField, Model, OneToOneField, CASCADE, TimeField
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -47,3 +47,23 @@ class User(AbstractUser):
 
     def get_absolute_url(self) -> str:
         return reverse("users:detail", kwargs={"pk": self.id})
+
+    @property
+    def profile(self):
+        """
+        Returns the user's profile. Creates it if it doesn't exist.
+        """
+        profile, created = UserProfile.objects.get_or_create(user=self)
+        return profile
+
+
+class UserProfile(Model):
+    """
+    User profile model for storing additional user information.
+    """
+    user = OneToOneField(User, on_delete=CASCADE, related_name="user_profile")
+    reminder_time = CharField(max_length=5, default="18:00", help_text="Time for daily practice reminders (HH:MM)")
+    timezone = CharField(max_length=50, default="UTC", help_text="User's timezone for reminders")
+
+    def __str__(self):
+        return f"{self.user.email}'s Profile"

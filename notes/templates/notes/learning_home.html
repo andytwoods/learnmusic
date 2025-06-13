@@ -164,11 +164,141 @@
       </div>
     {% endfor %}
   </div>
-  <div class="row justify-content-center align-items-center mb-5">
-    <div class="col-md-4">
-      <a href="{% url 'new-learning-scenario' %}?" class="btn btn-primary btn-lg">
-        <i class="fas fa-plus"></i> Set up a new learning scenario
+  <div class="text-center m-5 g-3">
+    <div class="">
+      <a href="{% url 'new-learning-scenario' %}?" class="btn btn-primary btn-lg m-1">
+        <i class="fas fa-plus"></i> New learning scenario
       </a>
+      <div id="reminder-settings-container">
+        <!-- Daily reminders button - visible by default -->
+        <button id="daily-reminders-btn" class="btn btn-success btn-lg mt-3">
+          <i class="fas fa-bell"></i> Daily reminders
+        </button>
+
+        <!-- Reminder settings button - hidden by default -->
+        <button id="reminder-settings-btn" style="display: none;" class="btn btn-success btn-lg mt-3" hx-get="{% url 'reminder-settings-form' %}" hx-target="#reminder-settings-container" hx-swap="innerHTML" hx-no-confirm='true'>
+          <i class="fas fa-bell"></i> Reminder settings
+        </button>
+      </div>
     </div>
   </div>
+
+  <!-- PWA Installation Script -->
+  <script>
+    let deferredPrompt;
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const dailyRemindersBtn = document.getElementById('daily-reminders-btn');
+
+      const reminderSettingsBtn = document.getElementById('reminder-settings-btn');
+
+      // Check if the app is already installed
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        // App is already installed, show reminder settings button and hide daily reminders button
+        if (dailyRemindersBtn && reminderSettingsBtn) {
+          dailyRemindersBtn.style.display = 'none';
+          reminderSettingsBtn.style.display = 'inline-block';
+        }
+      } else {
+        // Listen for the beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+          // Prevent the default browser install prompt
+          e.preventDefault();
+          // Save the event for later
+          deferredPrompt = e;
+
+          // Enable the button
+          if (dailyRemindersBtn) {
+            dailyRemindersBtn.disabled = false;
+          }
+        });
+      }
+
+      // Add click event to the daily reminders button
+      if (dailyRemindersBtn) {
+        dailyRemindersBtn.addEventListener('click', async () => {
+          if (deferredPrompt) {
+            // Show SweetAlert with installation instructions
+            Swal.fire({
+              title: 'Install Tootology App',
+              html: `
+                <div class="text-start">
+                  <p>To receive daily practice reminders, you need to install Tootology as an app on your device.</p>
+                  <p><strong>Benefits:</strong></p>
+                  <ul>
+                    <li>One click install</li>
+                    <li>Get daily practice reminders</li>
+                    <li>Practice offline, anytime</li>
+                    <li>Easy access from your home screen</li>
+                  </ul>
+                  <p>Click the "Install Now" button below to install.</p>
+                </div>
+              `,
+              icon: 'info',
+              showCancelButton: true,
+              confirmButtonText: 'Install Now',
+              cancelButtonText: 'Maybe Later',
+              confirmButtonColor: '#28a745',
+              cancelButtonColor: '#6c757d',
+            }).then((result) => {
+              if (result.isConfirmed) {
+                // Show the install prompt
+                deferredPrompt.prompt();
+
+                // Wait for the user to respond to the prompt
+                deferredPrompt.userChoice.then((choiceResult) => {
+                  if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                    // The appinstalled event will handle showing the reminder settings button
+                  } else {
+                    console.log('User dismissed the install prompt');
+                  }
+                  // Clear the saved prompt
+                  deferredPrompt = null;
+                });
+              }
+            });
+          } else {
+            // If deferredPrompt is not available, show instructions for manual installation
+            Swal.fire({
+              title: 'Install Tootology App',
+              html: `
+                <div class="text-start">
+                  <p>To install Tootology as an app:</p>
+                  <ol>
+                    <li>Click the menu button in your browser (⋮ or ⋯)</li>
+                    <li>Select "Install Tootology" or "Add to Home Screen"</li>
+                    <li>Follow the on-screen instructions</li>
+                  </ol>
+                  <p>Once installed, you'll be able to receive daily practice reminders!</p>
+                </div>
+              `,
+              icon: 'info',
+              confirmButtonText: 'Got it',
+              confirmButtonColor: '#28a745',
+            });
+          }
+        });
+      }
+
+      // Listen for the appinstalled event
+      window.addEventListener('appinstalled', (e) => {
+        console.log('App was installed');
+
+        // Show success message
+        Swal.fire({
+          title: 'Installation Successful!',
+          text: 'Tootology has been installed. You can now receive daily practice reminders!',
+          icon: 'success',
+          confirmButtonColor: '#28a745',
+        }).then(() => {
+          // Show reminder settings button and hide daily reminders button
+          if (dailyRemindersBtn && reminderSettingsBtn) {
+            dailyRemindersBtn.style.display = 'none';
+            reminderSettingsBtn.style.display = 'inline-block';
+          }
+        });
+      });
+    });
+  </script>
 {% endblock content %}
