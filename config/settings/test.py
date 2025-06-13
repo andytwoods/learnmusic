@@ -36,3 +36,15 @@ TEMPLATES[0]["OPTIONS"]["debug"] = True  # type: ignore[index]
 MEDIA_URL = "http://media.testserver/"
 # Your stuff...
 # ------------------------------------------------------------------------------
+AXES_ENABLED = False
+
+# Properly disable Django Axes for tests
+if not AXES_ENABLED:
+    # Remove Axes middleware
+    MIDDLEWARE = [m for m in MIDDLEWARE if not m.startswith('axes.')]
+
+    # Remove Axes authentication backend
+    AUTHENTICATION_BACKENDS = [auth for auth in AUTHENTICATION_BACKENDS if not auth.startswith('axes.')]
+
+    # Remove Axes from INSTALLED_APPS
+    INSTALLED_APPS = [app for app in INSTALLED_APPS if app != 'axes']
