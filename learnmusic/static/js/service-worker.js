@@ -13,6 +13,7 @@ const urlsToCache = [
   '/static/favicon/favicon-16x16.png',
   '/static/favicon/favicon-32x32.png',
   '/static/favicon/apple-touch-icon.png',
+  '/static/favicon/site.webmanifest',
   '/static/offline.html'
 ];
 

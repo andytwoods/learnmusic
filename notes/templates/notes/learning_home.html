@@ -189,11 +189,18 @@
 
     document.addEventListener("DOMContentLoaded", function() {
       const dailyRemindersBtn = document.getElementById('daily-reminders-btn');
-
       const reminderSettingsBtn = document.getElementById('reminder-settings-btn');
+
+      // Debug info for PWA installation
+      console.log("PWA Debug Info:");
+      console.log("- Is in standalone mode:", window.matchMedia('(display-mode: standalone)').matches);
+      console.log("- Is in iOS:", /iPad|iPhone|iPod/.test(navigator.userAgent));
+      console.log("- Is HTTPS:", window.location.protocol === 'https:');
+      console.log("- Has service worker:", 'serviceWorker' in navigator);
 
       // Check if the app is already installed
       if (window.matchMedia('(display-mode: standalone)').matches) {
+        console.log("App is already installed and running in standalone mode");
         // App is already installed, show reminder settings button and hide daily reminders button
         if (dailyRemindersBtn && reminderSettingsBtn) {
           dailyRemindersBtn.style.display = 'none';
@@ -202,6 +209,7 @@
       } else {
         // Listen for the beforeinstallprompt event
         window.addEventListener('beforeinstallprompt', (e) => {
+          console.log("beforeinstallprompt event fired - PWA is installable");
           // Prevent the default browser install prompt
           e.preventDefault();
           // Save the event for later
@@ -212,6 +220,16 @@
             dailyRemindersBtn.disabled = false;
           }
         });
+
+        // Log if the beforeinstallprompt event doesn't fire after a reasonable time
+        setTimeout(() => {
+          if (!deferredPrompt) {
+            console.log("beforeinstallprompt event did not fire after 3 seconds. Possible reasons:");
+            console.log("- PWA criteria not met (manifest, service worker, https, etc.)");
+            console.log("- User has already installed the app");
+            console.log("- Browser doesn't support PWA installation");
+          }
+        }, 3000);
       }
 
       // Add click event to the daily reminders button
@@ -224,19 +242,13 @@
               html: `
                 <div class="text-start">
                   <p>To receive daily practice reminders, you need to install Tootology as an app on your device.</p>
-                  <p><strong>Benefits:</strong></p>
-                  <ul>
-                    <li>One click install</li>
-                    <li>Get daily practice reminders</li>
-                    <li>Easy access from your home screen</li>
-                  </ul>
-                  <p>Click the "Install Now" button below to install.</p>
+                  <p>Click the "Install Now" button below. Your browser will then ask you for confirmation.</p>
                 </div>
               `,
               icon: 'info',
               showCancelButton: true,
               confirmButtonText: 'Install Now',
-              cancelButtonText: 'Maybe Later',
+              cancelButtonText: 'Cancel',
               confirmButtonColor: '#28a745',
               cancelButtonColor: '#6c757d',
             }).then((result) => {
@@ -269,7 +281,8 @@
                     <li>Select "Install Tootology" or "Add to Home Screen"</li>
                     <li>Follow the on-screen instructions</li>
                   </ol>
-                  <p>Once installed, you'll be able to receive daily practice reminders!</p>
+                  <p>Once installed, you'll be able to receive daily practice reminders!
+                     You set up when, in the next step.</p>
                 </div>
               `,
               icon: 'info',
