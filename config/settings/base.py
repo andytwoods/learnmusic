@@ -91,7 +91,6 @@ THIRD_PARTY_APPS = [
     'widget_tweaks',
     "django_htmx",
     'axes',
-    'webpush',
 ]
 
 LOCAL_APPS = [
@@ -325,16 +324,6 @@ SOCIALACCOUNT_FORMS    = {"signup": "learnmusic.users.forms.UserSocialSignupForm
 MFA_SUPPORTED_TYPES       = ["totp", "webauthn", "recovery_codes"]
 MFA_PASSKEY_LOGIN_ENABLED = False
 
-# Web Push Notifications
-# ------------------------------------------------------------------------------
-# VAPID keys for Web Push notifications
-# In production, generate your own keys using:
-# python manage.py webpush_generate_vapid_keys
-WEBPUSH_SETTINGS = {
-    "VAPID_PUBLIC_KEY": "BLxlYAWZ5bdzvI_3UmOY7MHD0lJMqYRxxRlVdE_-Q3cAJv4QHKr0K2hz6GQ6LF_O-cvAQwHFj5qXBGLvQZP9UY8",
-    "VAPID_PRIVATE_KEY": "WDnLFhK5csGNcSHMBkVpXwGgKpo5zNZJOvKz_5vxHWg",
-    "VAPID_ADMIN_EMAIL": "admin@example.com"
-}
 
 # Huey Task Queue
 # ------------------------------------------------------------------------------

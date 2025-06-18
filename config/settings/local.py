@@ -73,9 +73,9 @@ AXES_ENABLED = False
 # ------------------------------------------------------------------------------
 HUEY = {
     'name': 'learnmusic',
-    'immediate': False,  # Set to True for synchronous execution (no separate consumer process needed)
+    'immediate': True,
     'connection': {
-        'filename': str(BASE_DIR / "huey.sqlite3"),  # SQLite database for task storage
+        'database': str(BASE_DIR / "huey.sqlite3"),  # SQLite database for task storage
     },
     'consumer': {
         'workers': 1,

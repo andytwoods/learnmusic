@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load webpush_notifications %}
 
 {% block title %}
   Learning manager
@@ -181,11 +180,6 @@
           <i class="fas fa-bell"></i> Reminder settings
         </button>
 
-        <!-- Web Push Notifications -->
-        <div class="mt-3">
-          {% webpush_button with_class="btn btn-info" %}
-          <small class="d-block mt-1 text-muted">Allow notifications to receive practice reminders</small>
-        </div>
       </div>
     </div>
   </div>

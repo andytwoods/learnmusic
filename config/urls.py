@@ -33,6 +33,7 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
     path("", include("notes.urls")),
+
     path('test-rollbar/', views.test_rollbar, name='test-rollbar'),
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
