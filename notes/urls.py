@@ -1,10 +1,13 @@
 # ruff: noqa
 from django.contrib.auth.decorators import login_required
-from django.urls import path
+from django.urls import path, include
 
 from notes import views
 
 urlpatterns = [
+    # Web Push
+    path('webpush/', include('webpush.urls')),
+
     # Reminder settings HTMX endpoints
     path("reminder-settings-button/", views.reminder_settings_button, name="reminder-settings-button"),
     path("reminder-settings-form/", views.reminder_settings_form, name="reminder-settings-form"),

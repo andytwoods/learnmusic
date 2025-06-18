@@ -68,3 +68,18 @@ INSTALLED_APPS += ["django_extensions"]
 # Your stuff...
 # ------------------------------------------------------------------------------
 AXES_ENABLED = False
+
+# Huey configuration for local development
+# ------------------------------------------------------------------------------
+HUEY = {
+    'name': 'learnmusic',
+    'immediate': False,  # Set to True for synchronous execution (no separate consumer process needed)
+    'connection': {
+        'filename': str(BASE_DIR / "huey.sqlite3"),  # SQLite database for task storage
+    },
+    'consumer': {
+        'workers': 1,
+        'worker_type': 'thread',
+    },
+    'backend_class': 'huey.contrib.sql_huey.SqlHuey',  # Use SQLite backend
+}

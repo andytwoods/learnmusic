@@ -257,19 +257,39 @@ def reminder_settings_button(request):
 def reminder_settings_form(request):
     """
     Renders the reminder settings form HTMX fragment.
+
+    This view converts the reminder time from UTC (as stored in the database) to the user's
+    local timezone for display in the form. This ensures that users see the reminder time
+    in their own timezone, even though it's stored in UTC in the database.
     """
     # Get the user's current reminder settings
     user = request.user
     profile = user.profile  # This will create a profile if it doesn't exist
-    reminder_time = profile.reminder_time
+    utc_reminder_time = profile.reminder_time
     current_timezone = profile.timezone
 
     # Check if reminders are disabled
-    reminders_disabled = reminder_time == "DISABLED"
+    reminders_disabled = utc_reminder_time == "DISABLED"
 
     # If reminders are disabled, set a default time for the form
     if reminders_disabled:
-        reminder_time = "18:00"  # Default to 6 PM if reminders are disabled
+        local_reminder_time = "18:00"  # Default to 6 PM if reminders are disabled
+    else:
+        # Convert the UTC time to the user's local timezone
+        # Parse the UTC time (HH:MM)
+        hour, minute = map(int, utc_reminder_time.split(':'))
+
+        # Create a datetime object for today at the specified time in UTC
+        utc_tz = ZoneInfo("UTC")
+        now = datetime.now(utc_tz)
+        utc_dt = datetime(now.year, now.month, now.day, hour, minute, tzinfo=utc_tz)
+
+        # Convert to the user's timezone
+        user_tz = ZoneInfo(current_timezone)
+        local_dt = utc_dt.astimezone(user_tz)
+
+        # Format as HH:MM
+        local_reminder_time = local_dt.strftime("%H:%M")
 
     # Create a list of common timezones for the form
     common_timezones = [
@@ -313,7 +333,7 @@ def reminder_settings_form(request):
     all_timezones.sort(key=lambda x: now_utc.astimezone(ZoneInfo(x[0])).utcoffset().total_seconds())
 
     context = {
-        'reminder_time': reminder_time,
+        'reminder_time': local_reminder_time,
         'current_timezone': current_timezone,
         'timezones': all_timezones,
         'reminders_disabled': reminders_disabled,
@@ -326,6 +346,11 @@ def reminder_settings_form(request):
 def reminder_settings_submit(request):
     """
     Handles the submission of the reminder settings form.
+
+    This view converts the reminder time from the user's local timezone to UTC before saving
+    it to the database. This ensures that all reminder times are stored in a consistent timezone
+    (UTC) in the database, regardless of the user's local timezone. The user's timezone is still
+    stored for display purposes, but the actual reminder time is in UTC.
     """
     if request.method == 'POST':
         # Check if the user is removing reminders
@@ -337,14 +362,36 @@ def reminder_settings_submit(request):
             profile.save()
         else:
             # Normal save operation
-            reminder_time = request.POST.get('reminder_time')
-            timezone = request.POST.get('timezone')
+            local_reminder_time = request.POST.get('reminder_time')
+            user_timezone = request.POST.get('timezone')
 
-            # Save the settings to the user's profile
+            # Save the timezone to the user's profile
             user = request.user
             profile = user.profile  # This will create a profile if it doesn't exist
-            profile.reminder_time = reminder_time
-            profile.timezone = timezone
+
+            # Only convert the time if it's not disabled
+            if local_reminder_time != "DISABLED":
+                # Convert the reminder time from local timezone to UTC
+                # Parse the local time (HH:MM)
+                hour, minute = map(int, local_reminder_time.split(':'))
+
+                # Create a datetime object for today at the specified time in the user's timezone
+                user_tz = ZoneInfo(user_timezone)
+                now = datetime.now(user_tz)
+                local_dt = datetime(now.year, now.month, now.day, hour, minute, tzinfo=user_tz)
+
+                # Convert to UTC
+                utc_dt = local_dt.astimezone(ZoneInfo("UTC"))
+
+                # Format as HH:MM
+                utc_reminder_time = utc_dt.strftime("%H:%M")
+
+                # Save the UTC time
+                profile.reminder_time = utc_reminder_time
+            else:
+                profile.reminder_time = local_reminder_time
+
+            profile.timezone = user_timezone
             profile.save()
 
         # Return the reminder settings button

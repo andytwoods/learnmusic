@@ -164,3 +164,21 @@ ROLLBAR = {
 }
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+# Huey configuration for production
+# ------------------------------------------------------------------------------
+HUEY = {
+    'name': 'learnmusic',
+    'immediate': False,
+    'connection': {
+        'host': REDIS_URL.split('://')[1].split(':')[0] if '://' in REDIS_URL else 'localhost',
+        'port': int(REDIS_URL.split(':')[-1].split('/')[0]) if ':' in REDIS_URL else 6379,
+        'db': int(REDIS_URL.split('/')[-1]) if '/' in REDIS_URL else 0,
+        'ssl': REDIS_SSL,
+    },
+    'consumer': {
+        'workers': 2,
+        'worker_type': 'thread',
+    },
+    'backend_class': 'huey.RedisHuey',  # Use Redis backend
+}

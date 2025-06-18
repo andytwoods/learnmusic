@@ -62,8 +62,9 @@ class UserProfile(Model):
     User profile model for storing additional user information.
     """
     user = OneToOneField(User, on_delete=CASCADE, related_name="user_profile")
-    reminder_time = CharField(max_length=5, default="18:00", help_text="Time for daily practice reminders (HH:MM)")
+    reminder_time = CharField(max_length=5, default="18:00", help_text="Time for daily practice reminders (HH:MM) in UTC")
     timezone = CharField(max_length=50, default="UTC", help_text="User's timezone for reminders")
+    reminder_sent = DateTimeField(null=True, blank=True, help_text="Last time a reminder was sent")
 
     def __str__(self):
         return f"{self.user.email}'s Profile"
