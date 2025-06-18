@@ -179,6 +179,16 @@
         <button id="reminder-settings-btn" style="display: none;" class="btn btn-success btn-lg mt-3" hx-get="{% url 'reminder-settings-form' %}" hx-target="#reminder-settings-container" hx-swap="innerHTML" hx-no-confirm='true'>
           <i class="fas fa-bell"></i> Reminder settings
         </button>
+
+        <!-- Push notifications button - hidden by default -->
+        <button id="enable-notifications-btn" style="display: none;" class="btn btn-info btn-sm mt-3 ms-2">
+          <i class="fas fa-bell"></i> Enable Push Notifications
+        </button>
+
+        <!-- Notification status indicator -->
+        <div id="notification-status" class="mt-2" style="display: none;">
+          <span class="badge bg-success">Push notifications enabled</span>
+        </div>
       </div>
     </div>
   </div>
@@ -186,10 +196,13 @@
   <!-- PWA Installation Script -->
   <script>
     let deferredPrompt;
+    let swRegistration = null;
 
     document.addEventListener("DOMContentLoaded", function() {
       const dailyRemindersBtn = document.getElementById('daily-reminders-btn');
       const reminderSettingsBtn = document.getElementById('reminder-settings-btn');
+      const enableNotificationsBtn = document.getElementById('enable-notifications-btn');
+      const notificationStatus = document.getElementById('notification-status');
 
       // Debug info for PWA installation
       console.log("PWA Debug Info:");
@@ -197,6 +210,7 @@
       console.log("- Is in iOS:", /iPad|iPhone|iPod/.test(navigator.userAgent));
       console.log("- Is HTTPS:", window.location.protocol === 'https:');
       console.log("- Has service worker:", 'serviceWorker' in navigator);
+      console.log("- Has push manager:", 'PushManager' in window);
 
       // Check if the app is already installed
       if (window.matchMedia('(display-mode: standalone)').matches) {
@@ -309,8 +323,190 @@
             dailyRemindersBtn.style.display = 'none';
             reminderSettingsBtn.style.display = 'inline-block';
           }
+
+          // After installation, check if we can enable push notifications
+          initializePushNotifications();
         });
       });
+
+      // Initialize push notifications
+      initializePushNotifications();
+
+      // Function to initialize push notifications
+      function initializePushNotifications() {
+        // Check if service worker, push manager, and notifications are supported
+        if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+          console.log('Push notifications not supported in this browser');
+          return;
+        }
+
+        // Get the service worker registration
+        navigator.serviceWorker.ready
+          .then(registration => {
+            console.log('Service Worker is ready');
+            swRegistration = registration;
+
+            // Check notification permission
+            const notificationPermission = Notification.permission;
+
+            if (notificationPermission === 'granted') {
+              console.log('Notification permission already granted');
+              // Check if already subscribed
+              checkSubscription();
+            } else if (notificationPermission === 'denied') {
+              console.log('Notification permission denied');
+            } else {
+              // Show the enable notifications button
+              if (enableNotificationsBtn) {
+                enableNotificationsBtn.style.display = 'inline-block';
+                enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
+              }
+            }
+          })
+          .catch(error => {
+            console.error('Service Worker registration failed:', error);
+          });
+      }
+
+      // Function to request notification permission
+      function requestNotificationPermission() {
+        Notification.requestPermission()
+          .then(permission => {
+            if (permission === 'granted') {
+              console.log('Notification permission granted');
+              // Subscribe to push notifications
+              subscribeToPushNotifications();
+            } else {
+              console.log('Notification permission denied');
+              Swal.fire({
+                title: 'Notifications Blocked',
+                text: 'You have blocked notifications. To enable them, please update your browser settings.',
+                icon: 'info',
+                confirmButtonColor: '#28a745'
+              });
+            }
+          });
+      }
+
+      // Function to check existing subscription
+      function checkSubscription() {
+        if (!swRegistration) return;
+
+        swRegistration.pushManager.getSubscription()
+          .then(subscription => {
+            if (subscription) {
+              console.log('User is already subscribed to push notifications');
+              updateSubscriptionOnServer(subscription);
+              updatePushNotificationUI(true);
+            } else {
+              console.log('User is not subscribed to push notifications');
+              // Show the enable notifications button
+              if (enableNotificationsBtn) {
+                enableNotificationsBtn.style.display = 'inline-block';
+                enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
+              }
+            }
+          })
+          .catch(error => {
+            console.error('Error checking subscription:', error);
+          });
+      }
+
+      // Function to subscribe to push notifications
+      function subscribeToPushNotifications() {
+        if (!swRegistration) return;
+
+        // Application server public key (this should be generated on your server)
+        // For testing, you can generate a key pair using the web-push library
+        const applicationServerPublicKey = 'BLBx-hf2WrL2qEa0qKb-aCJbcxEvyn_XGOQVeZ_K_QP1GsX4RnmBF6IGTIBVpbMFnd_SGTfLQVgqzPJzIkKn-Xo';
+
+        // Convert the public key to a Uint8Array
+        function urlB64ToUint8Array(base64String) {
+          const padding = '='.repeat((4 - base64String.length % 4) % 4);
+          const base64 = (base64String + padding)
+            .replace(/\-/g, '+')
+            .replace(/_/g, '/');
+
+          const rawData = window.atob(base64);
+          const outputArray = new Uint8Array(rawData.length);
+
+          for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+          }
+          return outputArray;
+        }
+
+        const convertedApplicationServerPublicKey = urlB64ToUint8Array(applicationServerPublicKey);
+
+        // Subscribe the user
+        swRegistration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: convertedApplicationServerPublicKey
+        })
+        .then(subscription => {
+          console.log('User is subscribed to push notifications:', subscription);
+          updateSubscriptionOnServer(subscription);
+          updatePushNotificationUI(true);
+        })
+        .catch(error => {
+          console.error('Failed to subscribe to push notifications:', error);
+          updatePushNotificationUI(false);
+        });
+      }
+
+      // Function to update subscription on server
+      function updateSubscriptionOnServer(subscription) {
+        // Convert the subscription to a JSON string
+        const subscriptionJson = JSON.stringify(subscription);
+        console.log('Sending subscription to server:', subscriptionJson);
+
+        // Send the subscription to your server
+        fetch('/api/save-subscription/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: subscriptionJson
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to save subscription on server');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Subscription saved on server:', data);
+        })
+        .catch(error => {
+          console.error('Error saving subscription:', error);
+        });
+      }
+
+      // Function to update the UI based on subscription status
+      function updatePushNotificationUI(subscribed) {
+        if (subscribed) {
+          // Hide the enable notifications button
+          if (enableNotificationsBtn) {
+            enableNotificationsBtn.style.display = 'none';
+          }
+
+          // Show the notification status
+          if (notificationStatus) {
+            notificationStatus.style.display = 'block';
+          }
+        } else {
+          // Show the enable notifications button
+          if (enableNotificationsBtn) {
+            enableNotificationsBtn.style.display = 'inline-block';
+          }
+
+          // Hide the notification status
+          if (notificationStatus) {
+            notificationStatus.style.display = 'none';
+          }
+        }
+      }
     });
   </script>
 {% endblock content %}

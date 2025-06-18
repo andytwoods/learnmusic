@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 APPS_DIR = BASE_DIR / "learnmusic"
 env = environ.Env()
 
-READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=False)
+READ_DOT_ENV_FILE = env.bool("DJANGO_READ_DOT_ENV_FILE", default=True)
 if READ_DOT_ENV_FILE:
     # OS environment variables take precedence over variables from .env
     env.read_env(str(BASE_DIR / ".env"))
@@ -323,3 +323,15 @@ SOCIALACCOUNT_FORMS    = {"signup": "learnmusic.users.forms.UserSocialSignupForm
 
 MFA_SUPPORTED_TYPES       = ["totp", "webauthn", "recovery_codes"]
 MFA_PASSKEY_LOGIN_ENABLED = False
+
+ADMIN_EMAIL = 'contact@tootology.com'
+
+# Push Notifications
+# ------------------------------------------------------------------------------
+# VAPID keys for Web Push notifications
+# Generate using: python -m pywebpush.cli --generate_key
+# or online at: https://web-push-codelab.glitch.me/
+VAPID_PRIVATE_KEY = env("VAPID_PRIVATE_KEY")
+VAPID_PUBLIC_KEY = env("VAPID_PUBLIC_KEY")
+VAPID_ADMIN_EMAIL = env("VAPID_ADMIN_EMAIL", default=ADMIN_EMAIL)
+

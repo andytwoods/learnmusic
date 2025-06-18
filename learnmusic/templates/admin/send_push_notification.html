@@ -1,0 +1,86 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        .notification-form {
+            max-width: 800px;
+            margin: 20px 0;
+        }
+        .notification-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .notification-form input[type="text"],
+        .notification-form textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .notification-form textarea {
+            min-height: 100px;
+        }
+        .user-list {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .user-list h3 {
+            margin-top: 0;
+        }
+        .user-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url 'admin:users_user_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; {% trans 'Send Push Notification' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>{% trans 'Send Push Notification' %}</h1>
+
+    <div class="user-list">
+        <h3>{% trans 'Recipients' %}</h3>
+        <p>{% trans 'The following users will receive this notification:' %}</p>
+        <ul>
+            {% for user in users %}
+                <li>{{ user.email }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <form method="post" class="notification-form">
+        {% csrf_token %}
+
+        <div class="form-row">
+            <label for="title">{% trans 'Notification Title:' %}</label>
+            <input type="text" id="title" name="title" value="Tootology Notification" required>
+        </div>
+
+        <div class="form-row">
+            <label for="message">{% trans 'Notification Message:' %}</label>
+            <textarea id="message" name="message" placeholder="Enter your notification message here..." required></textarea>
+        </div>
+
+        <div class="submit-row">
+            <input type="submit" value="{% trans 'Send Notification' %}" class="default">
+            <a href="{% url 'admin:users_user_changelist' %}" class="button cancel-link">{% trans 'Cancel' %}</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
