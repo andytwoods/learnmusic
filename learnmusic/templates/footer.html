@@ -1,9 +1,12 @@
+{% load static %}
 <footer class="bg-dark text-white py-5">
   <div class="container">
     <div class="row gy-4">
       <!-- About Section -->
       <div class="col-md-5">
-        <h5 class="fw-bold mb-3 border-start border-primary border-3 ps-3">About Us</h5>
+        <h5 class="fw-bold mb-3 border-start border-primary border-3 ps-3">About Us
+        </h5>
+
         <p class="text-light opacity-75">We create tools to help musicians practice effectively and grow to their full potential.</p>
         <div class="mt-4">
           <a href="{% url 'practice-try' instrument='Trumpet' clef='Treble' key='Bb' level='Beginner' %}" class="btn btn-outline-light btn-sm me-2"><i class="fas fa-music me-1"></i> Try Now</a>
@@ -52,7 +55,7 @@
         <p class="mb-md-0 text-light opacity-75 small">&copy; {% now "Y" %} Tootology. All Rights Reserved.</p>
       </div>
       <div class="col-md-6 text-md-end">
-        <p class="mb-0 text-light opacity-75 small">Made with <i class="fas fa-heart text-danger"></i> for and by musicians</p>
+        <p class="mb-0 text-light opacity-75 small">Made with <i class="fas fa-heart text-danger"></i> for and by         <img src="{% static 'images/trumpet_colour.svg' %}" alt="Trumpet" class="me-2" width="32" height="32">musicians</p>
       </div>
     </div>
   </div>
