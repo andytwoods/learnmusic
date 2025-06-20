@@ -1,33 +1,25 @@
-<div class="dropdown">
-  <!-- Dropdown toggle button with gear icon -->
-  <button class="btn btn-light dropdown-toggle" type="button"
-          id="dropdownMenuButton1" data-bs-toggle="dropdown"
-          aria-expanded="false">
-    <i class="text-muted fas text-faded fa-cog"></i> Adjust valve positions
-  </button>
+<style>
+  .draggable {
+    cursor: move;
+    transition: transform 0.1s ease;
+    border: 2px dashed #007bff !important;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5) !important;
+  }
 
-  <!-- Dropdown menu -->
-  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
-    <li class="px-3 py-2">
-      <label for="instrument-input-tilt" class="form-label">Adjust Tilt</label>
-      <input type="range" id="instrument-input-tilt" class="form-range" style="width: 150px;" step='.1' min="-100" max="100" value="0">
-    </li>
-    <li class="px-3 py-2">
-      <label for="instrument-input-vertical" class="form-label">Adjust vertical position</label>
-      <input type="range" id="instrument-input-vertical" class="form-range" style="width: 150px;" step='.1' min="0" max="100" value="0">
-    </li>
-    <li class="px-3 py-2">
-      <label for="instrument-input-horizontal" class="form-label">Adjust horizontal position</label>
-      <input type="range" id="instrument-input-horizontal" class="form-range" style="width: 150px;"  step='.1' min="-100" max="100" value="0">
-    </li>
-    <li class="px-3 py-2">
-      <label for="instrument-input-separation" class="form-label">Adjust gap</label>
-      <input type="range" id="instrument-input-separation" class="form-range" style="width: 150px;" step='.1' min="0" max="100" value="0">
-    </li>
-    <li class="px-3 py-2 text-center">
-      <button id="reset-button" class="btn btn-primary" style="margin-top: 10px;">Reset</button>
-    </li>
-  </ul>
+  .draggable:hover {
+    transform: scale(1.05);
+  }
+</style>
+
+<div>
+  <!-- Toggle button with gear icon -->
+  <div class="d-flex align-items-center mb-2">
+    <button class="btn btn-light btn-sm" type="button" id="valveToggleButton">
+      <i class="text-muted fas text-faded fa-up-down-left-right"></i> <span id="toggleButtonText">Reposition</span>
+    </button>
+    <button id="reset-button" class="btn btn-light btn-sm ms-2">Reset</button>
+  </div>
+
 </div>
 
 <script>
@@ -36,240 +28,199 @@
     const valves_container = document.getElementById('trumpet-right');
     const valves = valves_container.children;
 
-    const instrument_input_tilt = document.getElementById('instrument-input-tilt');
-    const instrument_input_vertical = document.getElementById('instrument-input-vertical');
-    const instrument_input_horizontal = document.getElementById('instrument-input-horizontal');
-    const instrument_input_separation = document.getElementById('instrument-input-separation');
     const instrument_input_reset = document.getElementById('reset-button');
 
-    const dropdownMenuButton = document.getElementById('dropdownMenuButton1');
+    const valveToggleButton = document.getElementById('valveToggleButton');
+    const toggleButtonText = document.getElementById('toggleButtonText');
 
     // --- Constants ---
-    const cacheKey = "valveRangeInputCache";
-    const gap = 10;
-    const minimumHorizontalDistance = 50;
-    const maxTiltAngle = 90;
+    const valvePositionsCacheKey = "valvePositionsCache";
 
     // Detect if user is on a mobile device
     const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-    // Use different frame rates for mobile vs desktop
-    const RECALCULATION_DELAY = isMobileDevice ? 32 : 16; // 30fps for mobile, 60fps for desktop
-
-    // Log device type and optimization strategy
-    console.log(`Device detected as: ${isMobileDevice ? 'Mobile' : 'Desktop'}`);
-    console.log(`Using ${isMobileDevice ? 'mobile' : 'desktop'} optimizations with ${RECALCULATION_DELAY}ms delay (${Math.round(1000/RECALCULATION_DELAY)}fps)`);
-
-    // Pre-calculate some values to avoid repeated calculations
-    const maxTiltAngleRatio = maxTiltAngle / 100;
 
     const initialValvePositions = [...valves].map(valve => ({
       top: parseInt(valve.style.top || '0'),
       right: parseInt(valve.style.right || '0'),
     }));
 
-    const initialSeparation = valves[0].offsetWidth + gap;
-
-    // --- Dynamic Variables ---
-    let verticalOffset = 0;
-    let horizontalOffset = 0;
-    let tiltAngle = 0;
-    let separationOffset = 0;
-    let animationFrameId = null;
-    let lastUpdateTime = 0;
-
-    // --- Throttling Function optimized for both desktop and mobile ---
-    function throttle(callback, limit) {
-      let waiting = false;
-      let lastTime = 0;
-
-      // Simpler throttling for desktop for better responsiveness
-      if (!isMobileDevice) {
-        return function (...args) {
-          if (!waiting) {
-            waiting = true;
-            requestAnimationFrame(() => {
-              callback.apply(this, args);
-              waiting = false;
-            });
-          }
-        };
-      }
-      // More aggressive throttling for mobile to save battery
-      else {
-        return function (...args) {
-          const now = performance.now();
-
-          if (!waiting && now - lastTime >= limit) {
-            lastTime = now;
-            callback.apply(this, args);
-          } else if (!waiting) {
-            waiting = true;
-            requestAnimationFrame(() => {
-              lastTime = performance.now();
-              callback.apply(this, args);
-              waiting = false;
-            });
-          }
-        };
-      }
-    }
-
-    // --- Cache Management ---
-    function saveToCache() {
-      const currentValues = {
-        tilt: instrument_input_tilt.value,
-        vertical: instrument_input_vertical.value,
-        horizontal: instrument_input_horizontal.value,
-        separation: instrument_input_separation.value,
-      };
-
-      const cachedValues = JSON.parse(localStorage.getItem(cacheKey));
-      if (JSON.stringify(currentValues) !== JSON.stringify(cachedValues)) {
-        localStorage.setItem(cacheKey, JSON.stringify(currentValues));
-        console.log("Slider values saved to cache:", currentValues);
-      }
-    }
-
-    function loadFromCacheAndApply() {
-      try {
-        const cachedValues = localStorage.getItem(cacheKey);
-        if (cachedValues) {
-          const sliderValues = JSON.parse(cachedValues);
-
-          // Set slider values with default fallback
-          instrument_input_tilt.value = sliderValues.tilt || 0;
-          instrument_input_vertical.value = sliderValues.vertical || 0;
-          instrument_input_horizontal.value = sliderValues.horizontal || 0;
-          instrument_input_separation.value = sliderValues.separation || 0;
-
-          // Use parseFloat for more accurate calculations
-          verticalOffset = parseFloat(sliderValues.vertical || 0) * 4;
-          horizontalOffset = parseFloat(sliderValues.horizontal || 0) * 4;
-          tiltAngle = parseFloat(sliderValues.tilt || 0) * maxTiltAngleRatio; // Use pre-calculated ratio
-          separationOffset = parseFloat(sliderValues.separation || 0);
-
-          // Schedule the update on the next animation frame for smoother initial rendering
-          requestAnimationFrame(() => {
-            update_valve_positions();
-            console.log("Slider values restored from cache:", sliderValues);
-          });
-        }
-      } catch (error) {
-        // Handle any errors gracefully
-        console.error("Error loading from cache:", error);
-        reset_valves(); // Reset to default values if there's an error
-      }
-    }
-
-    // --- Optimised Valve Position Update ---
-    function update_valve_positions() {
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-
-      // Different update strategies for mobile vs desktop
-      if (isMobileDevice) {
-        // Throttle updates based on time for mobile devices
-        const now = performance.now();
-        if (now - lastUpdateTime < RECALCULATION_DELAY) {
-          animationFrameId = requestAnimationFrame(update_valve_positions);
-          return;
-        }
-        lastUpdateTime = now;
-      }
-
-      animationFrameId = requestAnimationFrame(() => {
-        const currentSeparation = initialSeparation + separationOffset;
-
-        // Pre-calculate values outside the loop
-        const angleInRadians = (Math.PI / 180) * tiltAngle;
-        const sinValue = Math.sin(angleInRadians);
-        const cosValue = Math.cos(angleInRadians);
-
-        for (let i = 0; i < valves.length; i++) {
-          const initialTop = initialValvePositions[i].top;
-
-          // Use pre-calculated sin and cos values
-          const tiltHorizontalOffset = i * currentSeparation * sinValue;
-          const tiltVerticalOffset = i * currentSeparation * cosValue;
-
-          const computedRight = minimumHorizontalDistance + horizontalOffset + tiltHorizontalOffset;
-          const computedTop = initialTop + verticalOffset + tiltVerticalOffset;
-
-          // Use hardware-accelerated transform with translateX/translateY for better performance
-          valves[i].style.transform = `translate3d(${computedRight}px, ${computedTop}px, 0)`;
-        }
-        animationFrameId = null;
-      });
-    }
 
     // --- Reset Function ---
     function reset_valves() {
-      if (instrument_input_tilt.value === "0" &&
-          instrument_input_vertical.value === "0" &&
-          instrument_input_horizontal.value === "0" &&
-          instrument_input_separation.value === "0") {
-        return;
+      // Reset valve positions to their original positions as specified in the HTML
+      for (let i = 0; i < valves.length; i++) {
+        // Remove any transform styles to restore original position
+        valves[i].style.transform = '';
+        // Clear any other positioning styles that might have been added
+        valves[i].style.top = '';
+        valves[i].style.right = '';
+        valves[i].style.bottom = '';
+        valves[i].style.left = '';
       }
 
-      instrument_input_tilt.value = 0;
-      instrument_input_vertical.value = 0;
-      instrument_input_horizontal.value = 0;
-      instrument_input_separation.value = 0;
+      // Clear cache
+      localStorage.removeItem(valvePositionsCacheKey);
 
-      verticalOffset = 0;
-      horizontalOffset = 0;
-      tiltAngle = 0;
-      separationOffset = 0;
-
-      localStorage.removeItem(cacheKey);
-      update_valve_positions();
-      console.log("Sliders reset and cache cleared");
+      console.log("Valve positions reset to original HTML positions, cache cleared");
     }
 
-    // --- Event Listeners with passive option for better touch performance ---
-    dropdownMenuButton.addEventListener('hidden.bs.dropdown', saveToCache);
+    // --- Drag Functionality ---
+    let isDragMode = false;
+    let draggedValve = null;
+    let startX, startY, startTop, startRight;
+
+    // Function to enable/disable drag mode
+    function toggleDragMode() {
+      isDragMode = !isDragMode;
+
+      if (isDragMode) {
+        // Enable drag mode
+        toggleButtonText.textContent = "Save Positions";
+        enableValveDragging();
+      } else {
+        // Disable drag mode and save positions
+        toggleButtonText.textContent = "Enable Drag Mode";
+        disableValveDragging();
+        saveValvePositionsToCache();
+      }
+    }
+
+    // Enable dragging on all valves
+    function enableValveDragging() {
+      for (let i = 0; i < valves.length; i++) {
+        valves[i].classList.add("draggable");
+        valves[i].addEventListener("mousedown", startDrag);
+        valves[i].addEventListener("touchstart", startDrag, { passive: false });
+      }
+      document.addEventListener("mousemove", drag);
+      document.addEventListener("touchmove", drag, { passive: false });
+      document.addEventListener("mouseup", endDrag);
+      document.addEventListener("touchend", endDrag);
+    }
+
+    // Disable dragging on all valves
+    function disableValveDragging() {
+      for (let i = 0; i < valves.length; i++) {
+        valves[i].classList.remove("draggable");
+        valves[i].removeEventListener("mousedown", startDrag);
+        valves[i].removeEventListener("touchstart", startDrag);
+      }
+      document.removeEventListener("mousemove", drag);
+      document.removeEventListener("touchmove", drag);
+      document.removeEventListener("mouseup", endDrag);
+      document.removeEventListener("touchend", endDrag);
+    }
+
+    // Start dragging a valve
+    function startDrag(e) {
+      e.preventDefault();
+
+      // Get the valve element
+      draggedValve = e.target;
+
+      // Get the starting position
+      const touch = e.type === 'touchstart' ? e.touches[0] : e;
+      startX = touch.clientX;
+      startY = touch.clientY;
+
+      // Get the current position of the valve
+      const computedStyle = window.getComputedStyle(draggedValve);
+      const transform = computedStyle.transform;
+
+      // Extract the translate values from the transform matrix
+      if (transform && transform !== 'none') {
+        const matrix = new DOMMatrix(transform);
+        startRight = matrix.m41; // translateX value
+        startTop = matrix.m42;   // translateY value
+      } else {
+        startRight = 0;
+        startTop = 0;
+      }
+    }
+
+    // Drag the valve
+    function drag(e) {
+      if (!draggedValve) return;
+
+      e.preventDefault();
+
+      // Get the current position
+      const touch = e.type === 'touchmove' ? e.touches[0] : e;
+      const deltaX = touch.clientX - startX;
+      const deltaY = touch.clientY - startY;
+
+      // Update the valve position
+      const newRight = startRight + deltaX;
+      const newTop = startTop + deltaY;
+
+      // Apply the new position
+      draggedValve.style.transform = `translate3d(${newRight}px, ${newTop}px, 0)`;
+    }
+
+    // End dragging
+    function endDrag() {
+      draggedValve = null;
+    }
+
+    // Save valve positions to cache
+    function saveValvePositionsToCache() {
+      const positions = [];
+
+      for (let i = 0; i < valves.length; i++) {
+        const computedStyle = window.getComputedStyle(valves[i]);
+        const transform = computedStyle.transform;
+
+        let translateX = 0;
+        let translateY = 0;
+
+        if (transform && transform !== 'none') {
+          const matrix = new DOMMatrix(transform);
+          translateX = matrix.m41;
+          translateY = matrix.m42;
+        }
+
+        positions.push({
+          index: i,
+          translateX: translateX,
+          translateY: translateY
+        });
+      }
+
+      localStorage.setItem(valvePositionsCacheKey, JSON.stringify(positions));
+      console.log("Valve positions saved to cache:", positions);
+    }
+
+    // Load valve positions from cache
+    function loadValvePositionsFromCache() {
+
+      return
+      try {
+        const cachedPositions = localStorage.getItem(valvePositionsCacheKey);
+
+        if (cachedPositions) {
+          const positions = JSON.parse(cachedPositions);
+
+          for (let i = 0; i < positions.length; i++) {
+            const position = positions[i];
+            const valve = valves[position.index];
+
+            if (valve) {
+              valve.style.transform = `translate3d(${position.translateX}px, ${position.translateY}px, 0)`;
+            }
+          }
+
+          console.log("Valve positions loaded from cache:", positions);
+        }
+      } catch (error) {
+        console.error("Error loading valve positions from cache:", error);
+      }
+    }
+
+    // --- Event Listeners ---
+    valveToggleButton.addEventListener('click', toggleDragMode);
     instrument_input_reset.addEventListener('click', reset_valves);
 
-    // Helper function to add passive event listeners
-    function addPassiveInputListener(element, handler) {
-      // Always add input event listener for all devices
-      element.addEventListener('input', handler, { passive: true });
-
-      // Only add touch-specific event listeners for mobile devices
-      if (isMobileDevice) {
-        element.addEventListener('touchmove', handler, { passive: true });
-      }
-    }
-
-    // Optimized input handlers with fewer calculations
-    const tiltHandler = throttle((event) => {
-      // Use the pre-calculated ratio
-      tiltAngle = parseFloat(event.target.value) * maxTiltAngleRatio;
-      update_valve_positions();
-    }, RECALCULATION_DELAY);
-
-    const verticalHandler = throttle((event) => {
-      verticalOffset = parseFloat(event.target.value) * 4;
-      update_valve_positions();
-    }, RECALCULATION_DELAY);
-
-    const horizontalHandler = throttle((event) => {
-      horizontalOffset = parseFloat(event.target.value) * 4;
-      update_valve_positions();
-    }, RECALCULATION_DELAY);
-
-    const separationHandler = throttle((event) => {
-      separationOffset = parseFloat(event.target.value);
-      update_valve_positions();
-    }, RECALCULATION_DELAY);
-
-    // Add event listeners with passive option
-    addPassiveInputListener(instrument_input_tilt, tiltHandler);
-    addPassiveInputListener(instrument_input_vertical, verticalHandler);
-    addPassiveInputListener(instrument_input_horizontal, horizontalHandler);
-    addPassiveInputListener(instrument_input_separation, separationHandler);
-
-    loadFromCacheAndApply();
-    update_valve_positions();
+    // Load valve positions from cache
+    loadValvePositionsFromCache();
   });
 </script>
