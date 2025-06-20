@@ -1,14 +1,17 @@
 // Service Worker for Tootology Practice PWA
 
-const CACHE_NAME = 'tootology-practice-v2';
-const STATIC_CACHE_NAME = 'tootology-static-v2';
-const DYNAMIC_CACHE_NAME = 'tootology-dynamic-v2';
+const CACHE_NAME = 'tootology-practice-v3';
+const STATIC_CACHE_NAME = 'tootology-static-v3';
+const DYNAMIC_CACHE_NAME = 'tootology-dynamic-v3';
 
 // Assets to cache on install
 const urlsToCache = [
   '/',
   '/practice/',
   '/notes/learning/',
+  '/reminder-settings-form/',
+  '/reminder-settings-submit/',
+  '/reminder-settings-button/',
   '/static/css/project.css',
   '/static/js/project.js',
   '/static/js/vexflow.js',

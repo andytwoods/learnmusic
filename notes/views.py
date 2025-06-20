@@ -41,8 +41,12 @@ def notes_home(request):
 
     LearningScenario.add_history(learningscenarios)
 
+    # Get the VAPID public key from settings for push notifications
+    from django.conf import settings
+
     context = {
         'learningscenarios': learningscenarios,
+        'vapid_public_key': settings.VAPID_PUBLIC_KEY,
     }
     return render(request, 'notes/learning_home.html', context=context)
 
@@ -250,7 +254,17 @@ def reminder_settings_button(request):
     """
     Renders the reminder settings button HTMX fragment.
     """
-    return render(request, 'notes/htmx/_reminder_settings_button.html')
+    try:
+        return render(request, 'notes/htmx/_reminder_settings_button.html')
+    except Exception as e:
+        # If there's an error, provide a simple button that will still work
+        print(f"Error in reminder_settings_button: {str(e)}")
+        html = """
+        <button class="btn btn-success btn-lg mt-3" hx-get="/reminder-settings-form/" hx-target="#reminder-settings-container" hx-swap="innerHTML" hx-no-confirm='true'>
+          <i class="fas fa-bell"></i> Reminder settings
+        </button>
+        """
+        return HttpResponse(html)
 
 
 @login_required
@@ -262,84 +276,108 @@ def reminder_settings_form(request):
     local timezone for display in the form. This ensures that users see the reminder time
     in their own timezone, even though it's stored in UTC in the database.
     """
-    # Get the user's current reminder settings
-    user = request.user
-    profile = user.profile  # This will create a profile if it doesn't exist
-    utc_reminder_time = profile.reminder_time
-    current_timezone = profile.timezone
+    try:
+        # Get the user's current reminder settings
+        user = request.user
+        profile = user.profile  # This will create a profile if it doesn't exist
+        utc_reminder_time = profile.reminder_time
+        current_timezone = profile.timezone
 
-    # Check if reminders are disabled
-    reminders_disabled = utc_reminder_time == "DISABLED"
+        # Check if reminders are disabled
+        reminders_disabled = utc_reminder_time == "DISABLED"
 
-    # If reminders are disabled, set a default time for the form
-    if reminders_disabled:
-        local_reminder_time = "18:00"  # Default to 6 PM if reminders are disabled
-    else:
-        # Convert the UTC time to the user's local timezone
-        # Parse the UTC time (HH:MM)
-        hour, minute = map(int, utc_reminder_time.split(':'))
+        # If reminders are disabled, set a default time for the form
+        if reminders_disabled:
+            local_reminder_time = "18:00"  # Default to 6 PM if reminders are disabled
+        else:
+            try:
+                # Convert the UTC time to the user's local timezone
+                # Parse the UTC time (HH:MM)
+                hour, minute = map(int, utc_reminder_time.split(':'))
 
-        # Create a datetime object for today at the specified time in UTC
-        utc_tz = ZoneInfo("UTC")
-        now = datetime.now(utc_tz)
-        utc_dt = datetime(now.year, now.month, now.day, hour, minute, tzinfo=utc_tz)
+                # Create a datetime object for today at the specified time in UTC
+                utc_tz = ZoneInfo("UTC")
+                now = datetime.now(utc_tz)
+                utc_dt = datetime(now.year, now.month, now.day, hour, minute, tzinfo=utc_tz)
 
-        # Convert to the user's timezone
-        user_tz = ZoneInfo(current_timezone)
-        local_dt = utc_dt.astimezone(user_tz)
+                # Convert to the user's timezone
+                user_tz = ZoneInfo(current_timezone)
+                local_dt = utc_dt.astimezone(user_tz)
 
-        # Format as HH:MM
-        local_reminder_time = local_dt.strftime("%H:%M")
+                # Format as HH:MM
+                local_reminder_time = local_dt.strftime("%H:%M")
+            except Exception as e:
+                # If there's an error with timezone conversion, use the UTC time directly
+                local_reminder_time = utc_reminder_time
+                # Log the error for debugging
+                print(f"Error converting timezone: {str(e)}")
 
-    # Create a list of common timezones for the form
-    common_timezones = [
-        ('UTC', 'UTC'),
-        ('US/Pacific', 'US/Pacific'),
-        ('US/Mountain', 'US/Mountain'),
-        ('US/Central', 'US/Central'),
-        ('US/Eastern', 'US/Eastern'),
-        ('Europe/London', 'Europe/London'),
-        ('Europe/Berlin', 'Europe/Berlin'),
-        ('Europe/Paris', 'Europe/Paris'),
-        ('Asia/Tokyo', 'Asia/Tokyo'),
-        ('Australia/Sydney', 'Australia/Sydney'),
-    ]
+        # Create a list of common timezones for the form
+        common_timezones = [
+            ('UTC', 'UTC'),
+            ('US/Pacific', 'US/Pacific'),
+            ('US/Mountain', 'US/Mountain'),
+            ('US/Central', 'US/Central'),
+            ('US/Eastern', 'US/Eastern'),
+            ('Europe/London', 'Europe/London'),
+            ('Europe/Berlin', 'Europe/Berlin'),
+            ('Europe/Paris', 'Europe/Paris'),
+            ('Asia/Tokyo', 'Asia/Tokyo'),
+            ('Australia/Sydney', 'Australia/Sydney'),
+        ]
 
-    # Add all available timezones as options with UTC offset in hours
-    all_timezones = []
-    now_utc = datetime.now(ZoneInfo("UTC"))
-
-    for tz_name in available_timezones():
+        # Add all available timezones as options with UTC offset in hours
+        all_timezones = []
         try:
-            # Calculate the UTC offset in hours
-            now_tz = now_utc.astimezone(ZoneInfo(tz_name))
-            offset_seconds = now_tz.utcoffset().total_seconds()
-            offset_hours = offset_seconds / 3600
+            now_utc = datetime.now(ZoneInfo("UTC"))
 
-            # Format the offset as +/-HH:MM
-            sign = "+" if offset_hours >= 0 else "-"
-            abs_offset = abs(offset_hours)
-            offset_str = f"{sign}{int(abs_offset):02d}:{int((abs_offset % 1) * 60):02d}"
+            for tz_name in available_timezones():
+                try:
+                    # Calculate the UTC offset in hours
+                    now_tz = now_utc.astimezone(ZoneInfo(tz_name))
+                    offset_seconds = now_tz.utcoffset().total_seconds()
+                    offset_hours = offset_seconds / 3600
 
-            # Create the display text with timezone name and UTC offset
-            display_text = f"{tz_name} (UTC{offset_str})"
+                    # Format the offset as +/-HH:MM
+                    sign = "+" if offset_hours >= 0 else "-"
+                    abs_offset = abs(offset_hours)
+                    offset_str = f"{sign}{int(abs_offset):02d}:{int((abs_offset % 1) * 60):02d}"
 
-            all_timezones.append((tz_name, display_text))
+                    # Create the display text with timezone name and UTC offset
+                    display_text = f"{tz_name} (UTC{offset_str})"
+
+                    all_timezones.append((tz_name, display_text))
+                except Exception as e:
+                    # If there's an error with a timezone, just use the name without offset
+                    all_timezones.append((tz_name, tz_name))
+
+            # Sort timezones by UTC offset
+            all_timezones.sort(key=lambda x: now_utc.astimezone(ZoneInfo(x[0])).utcoffset().total_seconds())
         except Exception as e:
-            # If there's an error with a timezone, just use the name without offset
-            all_timezones.append((tz_name, tz_name))
+            # If there's an error with timezone handling, use the common timezones only
+            all_timezones = common_timezones
+            # Log the error for debugging
+            print(f"Error processing timezones: {str(e)}")
 
-    # Sort timezones by UTC offset
-    all_timezones.sort(key=lambda x: now_utc.astimezone(ZoneInfo(x[0])).utcoffset().total_seconds())
+        context = {
+            'reminder_time': local_reminder_time,
+            'current_timezone': current_timezone,
+            'timezones': all_timezones,
+            'reminders_disabled': reminders_disabled,
+        }
 
-    context = {
-        'reminder_time': local_reminder_time,
-        'current_timezone': current_timezone,
-        'timezones': all_timezones,
-        'reminders_disabled': reminders_disabled,
-    }
-
-    return render(request, 'notes/htmx/_reminder_settings_form.html', context)
+        return render(request, 'notes/htmx/_reminder_settings_form.html', context)
+    except Exception as e:
+        # If there's an error, provide a simplified form with minimal functionality
+        print(f"Error in reminder_settings_form: {str(e)}")
+        context = {
+            'reminder_time': "18:00",  # Default to 6 PM
+            'current_timezone': "UTC",
+            'timezones': [('UTC', 'UTC')],  # Only provide UTC as an option
+            'reminders_disabled': False,
+            'error_message': "There was an error loading your reminder settings. Using default values."
+        }
+        return render(request, 'notes/htmx/_reminder_settings_form.html', context)
 
 
 @login_required
@@ -352,53 +390,71 @@ def reminder_settings_submit(request):
     (UTC) in the database, regardless of the user's local timezone. The user's timezone is still
     stored for display purposes, but the actual reminder time is in UTC.
     """
-    if request.method == 'POST':
-        # Check if the user is removing reminders
-        if request.POST.get('remove_reminders') == 'true':
-            # Save special values to indicate reminders are disabled
-            user = request.user
-            profile = user.profile
-            profile.reminder_time = "DISABLED"
-            profile.save()
-        else:
-            # Normal save operation
-            local_reminder_time = request.POST.get('reminder_time')
-            user_timezone = request.POST.get('timezone')
-
-            # Save the timezone to the user's profile
-            user = request.user
-            profile = user.profile  # This will create a profile if it doesn't exist
-
-            # Only convert the time if it's not disabled
-            if local_reminder_time != "DISABLED":
-                # Convert the reminder time from local timezone to UTC
-                # Parse the local time (HH:MM)
-                hour, minute = map(int, local_reminder_time.split(':'))
-
-                # Create a datetime object for today at the specified time in the user's timezone
-                user_tz = ZoneInfo(user_timezone)
-                now = datetime.now(user_tz)
-                local_dt = datetime(now.year, now.month, now.day, hour, minute, tzinfo=user_tz)
-
-                # Convert to UTC
-                utc_dt = local_dt.astimezone(ZoneInfo("UTC"))
-
-                # Format as HH:MM
-                utc_reminder_time = utc_dt.strftime("%H:%M")
-
-                # Save the UTC time
-                profile.reminder_time = utc_reminder_time
+    try:
+        if request.method == 'POST':
+            # Check if the user is removing reminders
+            if request.POST.get('remove_reminders') == 'true':
+                # Save special values to indicate reminders are disabled
+                user = request.user
+                profile = user.profile
+                profile.reminder_time = "DISABLED"
+                profile.save()
             else:
-                profile.reminder_time = local_reminder_time
+                # Normal save operation
+                local_reminder_time = request.POST.get('reminder_time')
+                user_timezone = request.POST.get('timezone')
 
-            profile.timezone = user_timezone
-            profile.save()
+                # Save the timezone to the user's profile
+                user = request.user
+                profile = user.profile  # This will create a profile if it doesn't exist
 
-        # Return the reminder settings button
-        return render(request, 'notes/htmx/_reminder_settings_button.html')
+                # Only convert the time if it's not disabled
+                if local_reminder_time != "DISABLED":
+                    try:
+                        # Convert the reminder time from local timezone to UTC
+                        # Parse the local time (HH:MM)
+                        hour, minute = map(int, local_reminder_time.split(':'))
 
-    # If not a POST request, redirect to the form
-    return redirect('reminder-settings-form')
+                        # Create a datetime object for today at the specified time in the user's timezone
+                        user_tz = ZoneInfo(user_timezone)
+                        now = datetime.now(user_tz)
+                        local_dt = datetime(now.year, now.month, now.day, hour, minute, tzinfo=user_tz)
+
+                        # Convert to UTC
+                        utc_dt = local_dt.astimezone(ZoneInfo("UTC"))
+
+                        # Format as HH:MM
+                        utc_reminder_time = utc_dt.strftime("%H:%M")
+
+                        # Save the UTC time
+                        profile.reminder_time = utc_reminder_time
+                    except Exception as e:
+                        # If there's an error with timezone conversion, use the local time directly
+                        profile.reminder_time = local_reminder_time
+                        # Log the error for debugging
+                        print(f"Error converting timezone in submit: {str(e)}")
+                else:
+                    profile.reminder_time = local_reminder_time
+
+                profile.timezone = user_timezone
+                profile.save()
+
+            # Return the reminder settings button
+            return render(request, 'notes/htmx/_reminder_settings_button.html')
+
+        # If not a POST request, redirect to the form
+        return redirect('reminder-settings-form')
+    except Exception as e:
+        # If there's an error, provide a helpful error message
+        print(f"Error in reminder_settings_submit: {str(e)}")
+        context = {
+            'error_message': "There was an error saving your reminder settings. Please try again.",
+            'reminder_time': request.POST.get('reminder_time', "18:00"),
+            'current_timezone': request.POST.get('timezone', "UTC"),
+            'timezones': [('UTC', 'UTC')],  # Only provide UTC as an option
+            'reminders_disabled': False
+        }
+        return render(request, 'notes/htmx/_reminder_settings_form.html', context)
 
 
 def progress_data_view(request, learningscenario_id):

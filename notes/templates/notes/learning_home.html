@@ -224,8 +224,6 @@
         // Listen for the beforeinstallprompt event
         window.addEventListener('beforeinstallprompt', (e) => {
           console.log("beforeinstallprompt event fired - PWA is installable");
-          // Prevent the default browser install prompt
-          e.preventDefault();
           // Save the event for later
           deferredPrompt = e;
 
@@ -329,11 +327,27 @@
         });
       });
 
-      // Initialize push notifications
+      // Initialize push notifications - this will check if the browser supports push notifications
+      // and show the appropriate UI elements
       initializePushNotifications();
 
       // Function to initialize push notifications
+      // This function checks if the browser supports push notifications,
+      // gets the service worker registration, and checks the notification permission.
+      // Based on these checks, it shows or hides the appropriate UI elements.
       function initializePushNotifications() {
+        console.log('Initializing push notifications...');
+
+        // Always show the button on Mac to ensure it's visible
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        if (isMac) {
+          console.log('Mac detected, ensuring notification button is visible');
+          if (enableNotificationsBtn) {
+            enableNotificationsBtn.style.display = 'inline-block';
+            enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
+          }
+        }
+
         // Check if service worker, push manager, and notifications are supported
         if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
           console.log('Push notifications not supported in this browser');
@@ -348,6 +362,7 @@
 
             // Check notification permission
             const notificationPermission = Notification.permission;
+            console.log('Current notification permission:', notificationPermission);
 
             if (notificationPermission === 'granted') {
               console.log('Notification permission already granted');
@@ -357,6 +372,7 @@
               console.log('Notification permission denied');
             } else {
               // Show the enable notifications button
+              console.log('Notification permission is default, showing button');
               if (enableNotificationsBtn) {
                 enableNotificationsBtn.style.display = 'inline-block';
                 enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
@@ -365,10 +381,18 @@
           })
           .catch(error => {
             console.error('Service Worker registration failed:', error);
+            // Show the button anyway if service worker registration fails
+            if (enableNotificationsBtn) {
+              console.log('Showing notification button despite service worker error');
+              enableNotificationsBtn.style.display = 'inline-block';
+              enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
+            }
           });
       }
 
-      // Function to request notification permission
+      // Function to request notification permission from the user
+      // This function is called when the user clicks the "Enable Push Notifications" button
+      // It requests permission to show notifications and, if granted, subscribes the user to push notifications
       function requestNotificationPermission() {
         Notification.requestPermission()
           .then(permission => {
@@ -378,6 +402,7 @@
               subscribeToPushNotifications();
             } else {
               console.log('Notification permission denied');
+              // Show a message to the user explaining how to enable notifications if they were denied
               Swal.fire({
                 title: 'Notifications Blocked',
                 text: 'You have blocked notifications. To enable them, please update your browser settings.',
@@ -390,14 +415,35 @@
 
       // Function to check existing subscription
       function checkSubscription() {
-        if (!swRegistration) return;
+        // Check if we're on a Mac - if so, we want to ensure the button is visible
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+
+        if (!swRegistration) {
+          console.log('No service worker registration available');
+          // On Mac, show the button even without service worker registration
+          if (isMac && enableNotificationsBtn) {
+            console.log('Mac detected, showing notification button despite missing registration');
+            enableNotificationsBtn.style.display = 'inline-block';
+            enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
+          }
+          return;
+        }
 
         swRegistration.pushManager.getSubscription()
           .then(subscription => {
             if (subscription) {
               console.log('User is already subscribed to push notifications');
               updateSubscriptionOnServer(subscription);
-              updatePushNotificationUI(true);
+              // On Mac, we might still want to show the button even if subscribed
+              if (isMac) {
+                console.log('Mac detected, showing notification button despite existing subscription');
+                if (enableNotificationsBtn) {
+                  enableNotificationsBtn.style.display = 'inline-block';
+                  enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
+                }
+              } else {
+                updatePushNotificationUI(true);
+              }
             } else {
               console.log('User is not subscribed to push notifications');
               // Show the enable notifications button
@@ -409,16 +455,24 @@
           })
           .catch(error => {
             console.error('Error checking subscription:', error);
+            // On Mac, show the button even if there's an error checking subscription
+            if (isMac && enableNotificationsBtn) {
+              console.log('Mac detected, showing notification button despite subscription error');
+              enableNotificationsBtn.style.display = 'inline-block';
+              enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
+            }
           });
       }
 
       // Function to subscribe to push notifications
+      // This function is called after the user grants notification permission
+      // It subscribes the user to push notifications using the Web Push API
+      // and sends the subscription information to the server
       function subscribeToPushNotifications() {
         if (!swRegistration) return;
 
-        // Application server public key (this should be generated on your server)
-        // For testing, you can generate a key pair using the web-push library
-        const applicationServerPublicKey = 'BLBx-hf2WrL2qEa0qKb-aCJbcxEvyn_XGOQVeZ_K_QP1GsX4RnmBF6IGTIBVpbMFnd_SGTfLQVgqzPJzIkKn-Xo';
+        // Application server public key from Django settings
+        const applicationServerPublicKey = '{{ vapid_public_key }}';
 
         // Convert the public key to a Uint8Array
         function urlB64ToUint8Array(base64String) {
@@ -455,6 +509,8 @@
       }
 
       // Function to update subscription on server
+      // This function sends the push subscription information to the server
+      // so it can be stored in the database and used to send push notifications to the user
       function updateSubscriptionOnServer(subscription) {
         // Convert the subscription to a JSON string
         const subscriptionJson = JSON.stringify(subscription);
@@ -484,16 +540,35 @@
       }
 
       // Function to update the UI based on subscription status
+      // This function shows or hides UI elements based on whether the user is subscribed to push notifications
+      // If subscribed, it hides the "Enable Push Notifications" button and shows the "Push notifications enabled" status
+      // If not subscribed, it shows the "Enable Push Notifications" button and hides the status
       function updatePushNotificationUI(subscribed) {
-        if (subscribed) {
-          // Hide the enable notifications button
-          if (enableNotificationsBtn) {
-            enableNotificationsBtn.style.display = 'none';
-          }
+        // Check if we're on a Mac - if so, we want to ensure the button is visible
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
-          // Show the notification status
-          if (notificationStatus) {
-            notificationStatus.style.display = 'block';
+        if (subscribed) {
+          if (isMac) {
+            console.log('Mac detected, keeping notification button visible despite subscription');
+            // On Mac, always show the button
+            if (enableNotificationsBtn) {
+              enableNotificationsBtn.style.display = 'inline-block';
+            }
+
+            // Also show the notification status
+            if (notificationStatus) {
+              notificationStatus.style.display = 'block';
+            }
+          } else {
+            // Hide the enable notifications button on non-Mac platforms
+            if (enableNotificationsBtn) {
+              enableNotificationsBtn.style.display = 'none';
+            }
+
+            // Show the notification status
+            if (notificationStatus) {
+              notificationStatus.style.display = 'block';
+            }
           }
         } else {
           // Show the enable notifications button

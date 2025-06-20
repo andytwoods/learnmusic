@@ -3,6 +3,11 @@
     <h5 class="mb-0">Daily Practice Reminder Settings</h5>
   </div>
   <div class="card-body">
+    {% if error_message %}
+    <div class="alert alert-danger mb-4">
+      <i class="fas fa-exclamation-triangle me-2"></i>{{ error_message }}
+    </div>
+    {% endif %}
     {% if reminders_disabled %}
     <div class="alert alert-warning mb-4">
       <i class="fas fa-bell-slash me-2"></i>Practice reminders are currently disabled.
