@@ -56,12 +56,17 @@
 
     <div class="user-list">
         <h3>{% trans 'Recipients' %}</h3>
-        <p>{% trans 'The following users will receive this notification:' %}</p>
-        <ul>
-            {% for user in users %}
-                <li>{{ user.email }}</li>
-            {% endfor %}
-        </ul>
+        {% if is_all_users %}
+            <p>{% trans 'This notification will be sent to ALL users with push notification subscriptions.' %}</p>
+            <p>{% trans 'Total recipients:' %} <strong>{{ users.count }}</strong></p>
+        {% else %}
+            <p>{% trans 'The following users will receive this notification:' %}</p>
+            <ul>
+                {% for user in users %}
+                    <li>{{ user.email }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
     </div>
 
     <form method="post" class="notification-form">

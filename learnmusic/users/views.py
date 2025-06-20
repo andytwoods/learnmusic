@@ -54,7 +54,7 @@ user_redirect_view = UserRedirectView.as_view()
 def save_subscription(request):
     """
     API endpoint to save a push notification subscription.
-    Expects a JSON payload with the subscription details.
+    Expects a JSON payload with the subscription details from the Web Push API.
     """
     try:
         # Parse the JSON data
@@ -62,8 +62,9 @@ def save_subscription(request):
 
         # Extract subscription details
         endpoint = data.get('endpoint')
-        p256dh = data.get('keys', {}).get('p256dh')
-        auth = data.get('keys', {}).get('auth')
+        keys = data.get('keys', {})
+        p256dh = keys.get('p256dh')
+        auth = keys.get('auth')
 
         if not all([endpoint, p256dh, auth]):
             return JsonResponse({'status': 'error', 'message': 'Missing required subscription data'}, status=400)

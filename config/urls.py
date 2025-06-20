@@ -12,6 +12,7 @@ from learnmusic.users.views import save_subscription
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path("service-worker.js", views.service_worker, name="service-worker"),
     path("api/save-subscription/", save_subscription, name="save-subscription"),
     path(
         "about/",

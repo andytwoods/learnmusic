@@ -74,8 +74,10 @@ self.addEventListener("fetch", event => {
 			const fetchAndUpdate = fetch(request)
 				.then(resp => {
 					if (resp && resp.status === 200) {
+						// Clone the response before using it
+						const respToCache = resp.clone();
 						caches.open(DYNAMIC_CACHE)
-							.then(cache => cache.put(request, resp.clone()));
+							.then(cache => cache.put(request, respToCache));
 					}
 					return resp;
 				})
