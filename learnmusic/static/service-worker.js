@@ -1,0 +1,3 @@
+/*
+This file is intentionally left empty after removing push notification functionality.
+*/
