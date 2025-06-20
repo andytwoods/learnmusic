@@ -119,7 +119,10 @@ class="position-absolute bottom-0 start-0 p-3">
         document.querySelectorAll('.input-button').forEach((button) => {
 
           button.addEventListener('pointerdown', () => {
-            buttonlogic(button.dataset.valve); // Trigger button logic
+            // Only trigger button logic if drag mode is not enabled
+            if (!window.isDraggingEnabled) {
+              buttonlogic(button.dataset.valve); // Trigger button logic
+            }
           });
 
         });

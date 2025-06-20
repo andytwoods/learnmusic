@@ -24,6 +24,9 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
+    // Initialize the global flag for instrument_manager
+    window.isDraggingEnabled = false;
+
     // --- Cached Elements ---
     const valves_container = document.getElementById('trumpet-right');
     const valves = valves_container.children;
@@ -72,6 +75,9 @@
     // Function to enable/disable drag mode
     function toggleDragMode() {
       isDragMode = !isDragMode;
+
+      // Set global flag for instrument_manager to check
+      window.isDraggingEnabled = isDragMode;
 
       if (isDragMode) {
         // Enable drag mode
