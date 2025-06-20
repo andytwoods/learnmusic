@@ -3,7 +3,6 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.conf import settings
-import os
 
 from notes.instrument_data import instruments, instrument_infos
 
@@ -37,25 +36,3 @@ def test_rollbar(request):
     a = None
     a.hello()  # Creating an error with an invalid line of code
     return HttpResponse("Hello, world. You're at the pollapp index.")
-
-
-def service_worker(request):
-    """
-    Serve the service worker from the root URL with the appropriate headers.
-    This allows the service worker to have a scope of '/' even though it's
-    physically located in the static directory.
-    """
-    # Path to the service worker file in the static directory
-    sw_path = os.path.join(settings.STATICFILES_DIRS[0], 'service-worker.js')
-
-    # Read the service worker file
-    with open(sw_path, 'rb') as f:
-        content = f.read()
-
-    # Create a response with the service worker content
-    response = HttpResponse(content, content_type='application/javascript')
-
-    # Add the Service-Worker-Allowed header to allow the service worker to control the entire site
-    response['Service-Worker-Allowed'] = '/'
-
-    return response

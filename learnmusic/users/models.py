@@ -70,21 +70,3 @@ class UserProfile(Model):
         return f"{self.user.email}'s Profile"
 
 
-class PushNotificationSubscription(Model):
-    """
-    Model to store push notification subscription information for users.
-    Each user can have multiple subscriptions (one per device/browser).
-    """
-    user = ForeignKey(User, on_delete=CASCADE, related_name="push_subscriptions")
-    endpoint = TextField()
-    p256dh = CharField(max_length=255)
-    auth = CharField(max_length=255)
-    created_at = DateTimeField(auto_now_add=True)
-    updated_at = DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Push Notification Subscription"
-        verbose_name_plural = "Push Notification Subscriptions"
-
-    def __str__(self):
-        return f"Push subscription for {self.user.email}"

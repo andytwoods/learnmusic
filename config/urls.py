@@ -8,12 +8,9 @@ from django.views import defaults as default_views
 from django.views.generic import TemplateView
 
 from config import views
-from learnmusic.users.views import save_subscription
 
 urlpatterns = [
     path("", views.home, name="home"),
-    path("service-worker.js", views.service_worker, name="service-worker"),
-    path("api/save-subscription/", save_subscription, name="save-subscription"),
     path(
         "about/",
         TemplateView.as_view(template_name="pages/about.html"),

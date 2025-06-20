@@ -48,7 +48,6 @@ def notes_home(request):
     # Pass it directly to the template without additional encoding
     context = {
         'learningscenarios': learningscenarios,
-        'vapid_public_key': settings.VAPID_PUBLIC_KEY,
     }
     return render(request, 'notes/learning_home.html', context=context)
 

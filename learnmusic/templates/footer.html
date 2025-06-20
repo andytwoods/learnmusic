@@ -1,61 +1,46 @@
 {% load static %}
-<footer class="bg-dark text-white py-5">
+<footer class="bg-dark text-white py-2 py-md-3">      <!-- xs: py-2  md+: py-3 -->
   <div class="container">
-    <div class="row gy-4">
-      <!-- About Section -->
-      <div class="col-md-5">
-        <h5 class="fw-bold mb-3 border-start border-primary border-3 ps-3">About Us
-        </h5>
+    <div class="row gy-2 gy-md-3">                   <!-- xs: 0.5 rem   md+: 1 rem -->
+      <!-- About -->
+      <div class="col-12 col-md-5 mb-3 mb-md-0">
+        <h6 class="fw-bold mb-2 border-start border-primary border-3 ps-2 ps-md-3">About Us</h6>
+        <p class="small mb-2 opacity-75">We create tools to help musicians practise effectively and grow to their full potential.</p>
 
-        <p class="text-light opacity-75">We create tools to help musicians practice effectively and grow to their full potential.</p>
-        <div class="mt-4">
-          <a href="{% url 'practice-try' instrument='Trumpet' clef='Treble' key='Bb' level='Beginner' %}" class="btn btn-outline-light btn-sm me-2"><i class="fas fa-music me-1"></i> Try Now</a>
-        </div>
       </div>
 
       <!-- Quick Links -->
-      <div class="col-md-3">
-        <h5 class="fw-bold mb-3 border-start border-primary border-3 ps-3">Quick Links</h5>
-        <ul class="list-unstyled">
-          <li class="mb-2">
-            <a href="{% url 'home' %}" class="text-decoration-none text-light"><i class="fas fa-home me-2"></i>Home</a>
-          </li>
-          <li class="mb-2">
-            <a href="{% url 'account_login' %}" class="text-decoration-none text-light"><i class="fas fa-sign-in-alt me-2"></i>Sign In</a>
-          </li>
+      <div class="col-6 col-md-3">
+        <h6 class="fw-bold mb-2 border-start border-primary border-3 ps-2 ps-md-3">Quick Links</h6>
+        <ul class="list-unstyled mb-0">
+          <li><a href="{% url 'home' %}" class="small text-white text-decoration-none"><i class="fas fa-home me-2"></i>Home</a></li>
+          <li class="mt-1"><a href="{% url 'account_login' %}" class="small text-white text-decoration-none"><i class="fas fa-sign-in-alt me-2"></i>Sign In</a></li>
         </ul>
       </div>
 
-      <!-- Legal Links -->
-      <div class="col-md-4">
-        <h5 class="fw-bold mb-3 border-start border-primary border-3 ps-3">Legal</h5>
-        <ul class="list-unstyled">
-          <li class="mb-2">
-            <a href="{% url 'privacy-policy' %}" class="text-decoration-none text-light"><i class="fas fa-shield-alt me-2"></i>Privacy Policy</a>
-          </li>
-          <li class="mb-2">
-            <a href="{% url 'terms-conditions' %}" class="text-decoration-none text-light"><i class="fas fa-file-contract me-2"></i>Terms & Conditions</a>
-          </li>
+      <!-- Legal / Contact -->
+      <div class="col-6 col-md-4">
+        <h6 class="fw-bold mb-2 border-start border-primary border-3 ps-2 ps-md-3">Legal</h6>
+        <ul class="list-unstyled mb-0">
+          <li><a href="{% url 'privacy-policy' %}" class="small text-white text-decoration-none"><i class="fas fa-shield-alt me-2"></i>Privacy Policy</a></li>
+          <li class="mt-1"><a href="{% url 'terms-conditions' %}" class="small text-white text-decoration-none"><i class="fas fa-file-contract me-2"></i>Terms & Conditions</a></li>
         </ul>
-
-        <!-- Contact Section -->
-        <div class="mt-4">
-          <h6 class="text-light mb-3">Contact Us</h6>
-          <p class="text-light opacity-75 small mb-2">
-            <i class="fas fa-envelope me-2"></i>contact@tootology.com
-          </p>
-        </div>
+        <h6 class="text-white small mt-3 mb-1">Contact Us</h6>
+        <p class="small opacity-75 mb-0"><i class="fas fa-envelope me-2"></i>contact@tootology.com</p>
       </div>
     </div>
 
-    <hr class="mt-4 mb-3 border-secondary">
+    <hr class="my-3 border-secondary">
 
     <div class="row align-items-center">
-      <div class="col-md-6">
-        <p class="mb-md-0 text-light opacity-75 small">&copy; {% now "Y" %} Tootology. All Rights Reserved.</p>
+      <div class="col-12 col-md-6 text-centre text-md-start mb-2 mb-md-0">
+        <p class="small opacity-75 mb-0">&copy; {% now "Y" %} Tootology. All rights reserved.</p>
       </div>
-      <div class="col-md-6 text-md-end">
-        <p class="mb-0 text-light opacity-75 small">Made with <i class="fas fa-heart text-danger"></i> for and by         <img src="{% static 'images/trumpet_colour.svg' %}" alt="Trumpet" class="me-2" width="32" height="32">musicians</p>
+      <div class="col-12 col-md-6 text-centre text-md-end">
+        <p class="small opacity-75 mb-0">
+          Made with <i class="fas fa-heart text-danger"></i> for and by
+          <img src="{% static 'images/trumpet_colour.svg' %}" alt="Trumpet" width="20" height="20" class="mx-1">musicians
+        </p>
       </div>
     </div>
   </div>

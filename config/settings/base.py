@@ -326,14 +326,6 @@ MFA_PASSKEY_LOGIN_ENABLED = False
 
 ADMIN_EMAIL = 'contact@tootology.com'
 
-# Push Notifications
-# ------------------------------------------------------------------------------
-# VAPID keys for Web Push notifications
-# Generate using: python -m pywebpush.cli --generate_key
-# or online at: https://web-push-codelab.glitch.me/
-VAPID_PRIVATE_KEY = env("VAPID_PRIVATE_KEY")
-VAPID_PUBLIC_KEY = env("VAPID_PUBLIC_KEY")
-VAPID_ADMIN_EMAIL = env("VAPID_ADMIN_EMAIL", default=ADMIN_EMAIL)
 
 
 # Huey Task Queue
