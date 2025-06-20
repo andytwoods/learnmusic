@@ -1,191 +1,122 @@
-// Service Worker for Tootology Practice PWA
+/*  Service Worker – Tootology PWA
+    scope: “/”  (registered once from base.html)
+    strategy:  • navigation = network-first → offline.html fallback
+               • same-origin static = stale-while-revalidate
+               • push notifications = Notifications API
+*/
 
-const CACHE_NAME = 'tootology-practice-v3';
-const STATIC_CACHE_NAME = 'tootology-static-v3';
-const DYNAMIC_CACHE_NAME = 'tootology-dynamic-v3';
+const VERSION         = "v4";
+const STATIC_CACHE    = `tootology-static-${VERSION}`;
+const DYNAMIC_CACHE   = `tootology-dynamic-${VERSION}`;
 
-// Assets to cache on install
-const urlsToCache = [
-  '/',
-  '/practice/',
-  '/notes/learning/',
-  '/reminder-settings-form/',
-  '/reminder-settings-submit/',
-  '/reminder-settings-button/',
-  '/static/css/project.css',
-  '/static/js/project.js',
-  '/static/js/vexflow.js',
-  '/static/js/chart.js',
-  '/static/favicon/android-chrome-192x192.png',
-  '/static/favicon/android-chrome-512x512.png',
-  '/static/favicon/favicon-16x16.png',
-  '/static/favicon/favicon-32x32.png',
-  '/static/favicon/apple-touch-icon.png',
-  '/static/favicon/site.webmanifest',
-  '/static/offline.html',
-  'https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css',
-  'https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js',
-  'https://cdn.jsdelivr.net/npm/sweetalert2@11',
-  'https://unpkg.com/htmx.org@2.0.4',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css'
+const STATIC_ASSETS = [
+	"/",
+	"/static/offline.html",
+
+	/* core UI */
+	"/static/css/project.css",
+	"/static/js/project.js",
+
+	/* icons / manifest */
+	"/static/favicon/android-chrome-192x192.png",
+	"/static/favicon/android-chrome-512x512.png",
+	"/static/favicon/favicon-32x32.png",
+	"/static/favicon/favicon-16x16.png",
+	"/static/favicon/apple-touch-icon.png",
+	"/static/favicon/site.webmanifest"
 ];
 
-// Install event - cache assets
-self.addEventListener('install', event => {
-  console.log('[Service Worker] Installing Service Worker...');
-  event.waitUntil(
-    caches.open(STATIC_CACHE_NAME)
-      .then(cache => {
-        console.log('[Service Worker] Pre-caching app shell');
-        return cache.addAll(urlsToCache);
-      })
-      .then(() => {
-        console.log('[Service Worker] Installation complete');
-        return self.skipWaiting();
-      })
-  );
+/* ---------- install ----------------------------------------------------- */
+self.addEventListener("install", event => {
+	event.waitUntil(
+		caches.open(STATIC_CACHE)
+			.then(cache => cache.addAll(STATIC_ASSETS))
+			.then(() => self.skipWaiting())
+	);
 });
 
-// Activate event - clean up old caches
-self.addEventListener('activate', event => {
-  console.log('[Service Worker] Activating Service Worker...');
-  const cacheWhitelist = [STATIC_CACHE_NAME, DYNAMIC_CACHE_NAME];
-  event.waitUntil(
-    caches.keys()
-      .then(cacheNames => {
-        return Promise.all(
-          cacheNames.map(cacheName => {
-            if (cacheWhitelist.indexOf(cacheName) === -1) {
-              console.log('[Service Worker] Deleting old cache:', cacheName);
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      })
-      .then(() => {
-        console.log('[Service Worker] Claiming clients');
-        return self.clients.claim();
-      })
-  );
+/* ---------- activate ---------------------------------------------------- */
+self.addEventListener("activate", event => {
+	event.waitUntil(
+		caches.keys().then(keys =>
+			Promise.all(
+				keys
+					.filter(key => ![STATIC_CACHE, DYNAMIC_CACHE].includes(key))
+					.map(key => caches.delete(key))
+			)
+		).then(() => self.clients.claim())
+	);
 });
 
-// Helper function to determine if a request should be cached
-function isRequestCacheable(request) {
-  const url = new URL(request.url);
+/* ---------- helpers ----------------------------------------------------- */
+const sameOrigin = req => new URL(req.url).origin === location.origin;
 
-  // Don't cache API calls or admin pages
-  if (url.pathname.startsWith('/api/') ||
-      url.pathname.startsWith('/admin/')) {
-    return false;
-  }
+/* ---------- fetch ------------------------------------------------------- */
+self.addEventListener("fetch", event => {
+	const { request } = event;
 
-  // Only cache GET requests
-  if (request.method !== 'GET') {
-    return false;
-  }
+	/* ignore non-GET or cross-origin – let the browser handle them */
+	if (request.method !== "GET" || !sameOrigin(request)) return;
 
-  return true;
-}
+	/* HTML – network-first, fallback to offline */
+	if (request.headers.get("accept")?.includes("text/html")) {
+		event.respondWith(
+			fetch(request)
+				.then(resp => resp)
+				.catch(() => caches.match("/static/offline.html"))
+		);
+		return;
+	}
 
-// Fetch event - implement stale-while-revalidate strategy
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(cachedResponse => {
-        // Return cached response immediately if available (stale)
-        const fetchPromise = fetch(event.request.clone())
-          .then(networkResponse => {
-            // If we got a valid response and the request is cacheable
-            if (networkResponse && networkResponse.status === 200 && isRequestCacheable(event.request)) {
-              // Cache the new response for next time
-              const responseToCache = networkResponse.clone();
-              caches.open(DYNAMIC_CACHE_NAME)
-                .then(cache => {
-                  cache.put(event.request, responseToCache);
-                });
-            }
-            return networkResponse;
-          })
-          .catch(error => {
-            console.log('[Service Worker] Fetch failed:', error);
-
-            // If it's an HTML request, return the offline page
-            if (event.request.headers.get('Accept').includes('text/html')) {
-              return caches.match('/static/offline.html');
-            }
-
-            // For other resources, we've already returned the cached version if available
-            // or we'll just let the error propagate
-          });
-
-        // Return the cached response if we have it, otherwise wait for the network response
-        return cachedResponse || fetchPromise;
-      })
-  );
+	/* other static files – stale-while-revalidate */
+	event.respondWith(
+		caches.match(request).then(cached => {
+			const fetchAndUpdate = fetch(request)
+				.then(resp => {
+					if (resp && resp.status === 200) {
+						caches.open(DYNAMIC_CACHE)
+							.then(cache => cache.put(request, resp.clone()));
+					}
+					return resp;
+				})
+				.catch(() => cached); // network failed – use cache if we have it
+			return cached || fetchAndUpdate;
+		})
+	);
 });
 
-// Push notification event handler
-self.addEventListener('push', event => {
-  console.log('[Service Worker] Push received');
+/* ---------- push -------------------------------------------------------- */
+self.addEventListener("push", event => {
+	let data = {};
+	try { data = event.data?.json() ?? {}; } catch { data.body = event.data?.text(); }
 
-  let notificationData = {};
+	const title   = data.title || "Time to practise!";
+	const options = {
+		body   : data.body  || "Open Tootology and start your drill.",
+		icon   : "/static/favicon/android-chrome-192x192.png",
+		badge  : "/static/favicon/favicon-32x32.png",
+		data   : data.data  || {},
+		actions: data.actions || [
+			{ action: "open",  title: "Open App" },
+			{ action: "close", title: "Dismiss"  }
+		]
+	};
 
-  if (event.data) {
-    try {
-      notificationData = event.data.json();
-    } catch (e) {
-      notificationData = {
-        title: 'Tootology Notification',
-        body: event.data.text(),
-        icon: '/static/favicon/android-chrome-192x192.png'
-      };
-    }
-  } else {
-    notificationData = {
-      title: 'Tootology Notification',
-      body: 'New notification from Tootology',
-      icon: '/static/favicon/android-chrome-192x192.png'
-    };
-  }
-
-  const options = {
-    body: notificationData.body || 'Time to practice!',
-    icon: notificationData.icon || '/static/favicon/android-chrome-192x192.png',
-    badge: '/static/favicon/favicon-32x32.png',
-    data: notificationData.data || {},
-    actions: notificationData.actions || [
-      { action: 'open', title: 'Open App' },
-      { action: 'close', title: 'Dismiss' }
-    ]
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(notificationData.title || 'Tootology Notification', options)
-  );
+	event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// Notification click event handler
-self.addEventListener('notificationclick', event => {
-  console.log('[Service Worker] Notification click received', event);
+/* ---------- notification click ----------------------------------------- */
+self.addEventListener("notificationclick", event => {
+	event.notification.close();
+	if (event.action === "close") return;
 
-  event.notification.close();
-
-  if (event.action === 'open' || !event.action) {
-    // Open the app and focus if already open
-    event.waitUntil(
-      clients.matchAll({ type: 'window' })
-        .then(clientList => {
-          // If we have a client, focus it
-          for (const client of clientList) {
-            if (client.url.includes('/notes/learning/') && 'focus' in client) {
-              return client.focus();
-            }
-          }
-          // Otherwise open a new window
-          if (clients.openWindow) {
-            return clients.openWindow('/notes/learning/');
-          }
-        })
-    );
-  }
+	event.waitUntil(
+		clients.matchAll({ type: "window", includeUncontrolled: true })
+			.then(list => {
+				for (const client of list) {
+					if (client.url.includes("/notes/learning/")) return client.focus();
+				}
+				return clients.openWindow("/notes/learning/");
+			})
+	);
 });
