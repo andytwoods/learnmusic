@@ -35,17 +35,14 @@
   </style>
 {% endblock button_css %}
 
-<div id='trumpet-ux' style="display: none"
-class="position-absolute bottom-0 start-0 p-3">
+<div id='trumpet-ux' style="display: none">
   {% include 'notes/instruments/trumpet_menu.html' %}
 </div>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const trumpet_ux = document.getElementById('trumpet-ux');
-    const card_bottom = document.getElementById('cardbottom');
-    card_bottom.appendChild(trumpet_ux);
-
-    fade_in(trumpet_ux, 1000);
+    document.getElementById('right-menu').appendChild(trumpet_ux);
+    fade_in(trumpet_ux, 100);
   });
 </script>
 

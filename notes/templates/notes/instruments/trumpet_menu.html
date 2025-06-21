@@ -9,15 +9,20 @@
   .draggable:hover {
     transform: scale(1.05);
   }
+
+  /* Add transition to all valve elements for smooth animation */
+  #trumpet-right > * {
+    transition: transform 0.5s ease;
+  }
 </style>
 
 <div>
   <!-- Toggle button with gear icon -->
-  <div class="d-flex align-items-center mb-2">
+  <div class="d-flex align-items-center">
     <button class="btn btn-light btn-sm" type="button" id="valveToggleButton">
-      <i class="text-muted fas text-faded fa-up-down-left-right"></i> <span id="toggleButtonText">Reposition</span>
+      <i class="text-muted fas text-faded fa-up-down-left-right"></i> <span id="toggleButtonText">Move valves</span>
     </button>
-    <button id="reset-button" class="btn btn-light btn-sm ms-2">Reset</button>
+    <button id="reset-button" class="btn btn-light btn-sm ms-2">Reset valves</button>
   </div>
 
 </div>
@@ -85,7 +90,7 @@
         enableValveDragging();
       } else {
         // Disable drag mode and save positions
-        toggleButtonText.textContent = "Enable Drag Mode";
+        toggleButtonText.textContent = "Move valves";
         disableValveDragging();
         saveValvePositionsToCache();
       }
@@ -165,6 +170,10 @@
 
     // End dragging
     function endDrag() {
+      if (draggedValve) {
+        // Save valve positions to cache when dragging ends
+        saveValvePositionsToCache();
+      }
       draggedValve = null;
     }
 
@@ -198,24 +207,30 @@
 
     // Load valve positions from cache
     function loadValvePositionsFromCache() {
-
-      return
       try {
         const cachedPositions = localStorage.getItem(valvePositionsCacheKey);
 
         if (cachedPositions) {
           const positions = JSON.parse(cachedPositions);
 
-          for (let i = 0; i < positions.length; i++) {
-            const position = positions[i];
-            const valve = valves[position.index];
-
-            if (valve) {
-              valve.style.transform = `translate3d(${position.translateX}px, ${position.translateY}px, 0)`;
-            }
+          // First, ensure all valves have no transform to start the animation from the initial position
+          for (let i = 0; i < valves.length; i++) {
+            valves[i].style.transform = '';
           }
 
-          console.log("Valve positions loaded from cache:", positions);
+          // Use setTimeout to ensure the browser has time to render the initial state
+          setTimeout(() => {
+            for (let i = 0; i < positions.length; i++) {
+              const position = positions[i];
+              const valve = valves[position.index];
+
+              if (valve) {
+                valve.style.transform = `translate3d(${position.translateX}px, ${position.translateY}px, 0)`;
+              }
+            }
+
+            console.log("Valve positions loaded from cache with animation:", positions);
+          }, 500); // 500ms delay for a more noticeable animation
         }
       } catch (error) {
         console.error("Error loading valve positions from cache:", error);

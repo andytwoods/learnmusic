@@ -12,7 +12,7 @@
       id="dropdownMenuCog"
       data-bs-toggle="dropdown"
       aria-expanded="false">
-      <i class="fas fa-cog"></i> {{ instrument }}, {{ level }}{% if key != transpose_key %}, transposing to {{ transpose_key }}{% endif %}
+      <i class="fa-solid fa-music"></i> {{ instrument }}, {{ level }}{% if key != transpose_key %}, transposing to {{ transpose_key }}{% endif %}
     </button>
 
     <ul class="dropdown-menu" aria-labelledby="dropdownMenuCog">
@@ -73,11 +73,11 @@
       {% endfor %}
     </ul>
   </div>
+  <div id="right-menu"></div>
 {% endblock cardheader %}
 
 {% block see_results %}
-  <a id="see-results"
-          class="btn btn-link btn-xs text-start p-0 m-0">Stop and see your results
+  <a id="see-results" class="btn btn-link btn-xs text-start p-0 m-0">Stop and see your results
   </a>
   <script>
     document.getElementById('see-results').addEventListener('click', () => {
