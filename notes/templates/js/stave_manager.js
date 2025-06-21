@@ -196,10 +196,18 @@ const stave_manager = (function () {
 
 // --- hook up the zoom buttons once DOM is ready ------------------------------
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("increase-magnification")?.addEventListener("click", () => {
-    stave_manager.increaseMagnification();
-  });
-  document.getElementById("decrease-magnification")?.addEventListener("click", () => {
-    stave_manager.decreaseMagnification();
-  });
+  const increaseButton = document.getElementById("increase-magnification");
+  const decreaseButton = document.getElementById("decrease-magnification");
+
+  if (increaseButton) {
+    increaseButton.addEventListener("click", () => {
+      stave_manager.increaseMagnification();
+    });
+  }
+
+  if (decreaseButton) {
+    decreaseButton.addEventListener("click", () => {
+      stave_manager.decreaseMagnification();
+    });
+  }
 });

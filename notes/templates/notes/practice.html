@@ -55,7 +55,8 @@
     <h2 class="m-0"><i class="fas fa-check"></i></h2>
   </div>
 
-  <div class="card w-100 mw-md-75 mx-auto pb-5 d-flex flex-column bg-transparent" style="min-height: calc(var(--vh, 1vh) * 100);">
+  <div class="card w-100 mw-md-75 mx-auto pb-5 d-flex flex-column bg-transparent"
+       style="min-height: calc(var(--vh, 1vh) * 100);">
     <div class="card-header d-flex justify-content-between">
       {% block cardheader %}
         <div>
@@ -69,10 +70,13 @@
             {% endif %}
           </h5>
         </div>
-      {% endblock %}
+        {% include 'notes/components/practice_dropdown_menu_right.html' %}
+
+      {% endblock cardheader %}
     </div>
     <div class="card-body position-relative d-flex flex-column">
       {% block cardbody %}{% endblock %}
+
       <div id="counter" style="display: none" class="text-secondary position-absolute top-0 start-0 p-2 m-2">
         {% block see_results %}
           {% if learningscenario_id %}
@@ -88,14 +92,6 @@
         <div class="col-9 align-self-center text-center" id="sheet-container">
           <div id="sheet"></div>
           <!-- Stave magnification controls -->
-          <div class="stave-resize-controls mt-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary" id="increase-magnification" title="Zoom out (increase size)">
-              <i class="fas fa-search-minus"></i>
-            </button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" id="decrease-magnification" title="Zoom in (decrease size)">
-              <i class="fas fa-search-plus"></i>
-            </button>
-          </div>
         </div>
         <div id="right-of-sheet-placeholder"></div>
 
@@ -104,8 +100,20 @@
     </div>
     <div id="cardbottom"></div>
     {% block cardbottom %}{% endblock %}
+    <div class="stave-resize-controls position-absolute bottom-0 start-0">
+      <div class="p-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary mb-2" id="increase-magnification"
+                title="Zoom out (increase size)">
+          <i class="fas fa-search-minus"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="decrease-magnification"
+                title="Zoom in (decrease size)">
+          <i class="fas fa-search-plus"></i>
+        </button>
+      </div>
+    </div>
     <div class="position-absolute bottom-0 end-0 p-3">
-{#      {% include 'notes/components/toggle_progress.html' %}#}
+      {#      {% include 'notes/components/toggle_progress.html' %}#}
       {% include 'notes/components/toggle_help.html' %}
     </div>
 
@@ -169,15 +177,6 @@
     document.addEventListener("DOMContentLoaded", function () {
       window.special_condition = 'first_trial';
       trial_manager.next();
-
-      // Connect stave magnification controls
-      document.getElementById('increase-magnification').addEventListener('click', function() {
-        stave_manager.increaseMagnification();
-      });
-
-      document.getElementById('decrease-magnification').addEventListener('click', function() {
-        stave_manager.decreaseMagnification();
-      });
     });
   </script>
 
