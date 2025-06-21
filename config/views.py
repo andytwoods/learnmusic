@@ -2,6 +2,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.conf import settings
 
 from notes.instrument_data import instruments, instrument_infos
 

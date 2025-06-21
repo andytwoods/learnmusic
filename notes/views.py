@@ -44,9 +44,10 @@ def notes_home(request):
     # Get the VAPID public key from settings for push notifications
     from django.conf import settings
 
+    # The VAPID public key is already in URL-safe base64 format in the .env file
+    # Pass it directly to the template without additional encoding
     context = {
         'learningscenarios': learningscenarios,
-        'vapid_public_key': settings.VAPID_PUBLIC_KEY,
     }
     return render(request, 'notes/learning_home.html', context=context)
 

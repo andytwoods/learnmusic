@@ -13,11 +13,24 @@
       border-radius: 50%;
       width: 90px;
       height: 90px;
+            left: 100px;
     }
 
     .active {
       background-color: black !important;
       color: white !important;
+    }
+
+    #trumpet-right {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+    }
+
+    #trumpet-right .valve {
+      position: relative !important;
+      margin: 10px 0;
     }
   </style>
 {% endblock button_css %}
@@ -44,9 +57,9 @@ class="position-absolute bottom-0 start-0 p-3">
 
 <div id='trumpet-right' class="position-absolute fs-6">
   {% block keys %}
-    <button class="valve rounded-pill input-button my-3 p-4 trumpet-b3 position-absolute" data-valve="3">3</button>
-    <button class="valve rounded-pill input-button my-3 p-4 trumpet-b2 position-absolute" data-valve="2">2</button>
-    <button class="valve rounded-pill input-button my-3 p-4 trumpet-b1 position-absolute" data-valve="1">1</button>
+    <button class="valve rounded-pill input-button p-2 trumpet-b3" data-valve="3">3</button>
+    <button class="valve rounded-pill input-button p-2 trumpet-b2" data-valve="2">2</button>
+    <button class="valve rounded-pill input-button p-2 trumpet-b1" data-valve="1">1</button>
   {% endblock keys %}
 </div>
 
@@ -107,7 +120,10 @@ class="position-absolute bottom-0 start-0 p-3">
         document.querySelectorAll('.input-button').forEach((button) => {
 
           button.addEventListener('pointerdown', () => {
-            buttonlogic(button.dataset.valve); // Trigger button logic
+            // Only trigger button logic if drag mode is not enabled
+            if (!window.isDraggingEnabled) {
+              buttonlogic(button.dataset.valve); // Trigger button logic
+            }
           });
 
         });
