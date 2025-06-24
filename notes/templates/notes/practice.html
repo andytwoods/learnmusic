@@ -102,14 +102,16 @@
     {% block cardbottom %}{% endblock %}
     <div class="stave-resize-controls position-absolute bottom-0 start-0">
       <div class="p-2">
-        <button type="button" class="btn btn-sm btn-outline-secondary mb-2" id="decrease-magnification"
-                title="Zoom in (decrease size)">
-          <i class="fas fa-search-plus"></i>
-        </button>
-        <button type="button" class="btn btn-sm btn-outline-secondary" id="increase-magnification"
-                title="Zoom out (increase size)">
-          <i class="fas fa-search-minus"></i>
-        </button>
+        <div class="btn-group">
+          <button type="button" class="btn btn-lg btn-light text-secondary px-4 border-end" id="decrease-magnification"
+                  title="Zoom in (decrease size)">
+            <i class="fas fa-search-plus"></i>
+          </button>
+          <button type="button" class="btn btn-lg btn-light text-secondary px-4" id="increase-magnification"
+                  title="Zoom out (increase size)">
+            <i class="fas fa-search-minus"></i>
+          </button>
+        </div>
       </div>
     </div>
     <div class="position-absolute bottom-0 end-0 p-3">

@@ -106,7 +106,7 @@ const stave_manager = (function () {
 
         containerWidth = div.clientWidth;
 
-        const w = containerWidth * scaleFactor* scaleFactor;
+        const w = containerWidth * scaleFactor * scaleFactor;
         const h = baseHeight * scaleFactor;
         //renderer.resize(w, h);
 
