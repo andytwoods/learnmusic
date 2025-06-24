@@ -169,27 +169,6 @@
       <a href="{% url 'new-learning-scenario' %}?" class="btn btn-primary btn-lg m-1">
         <i class="fas fa-plus"></i> New learning scenario
       </a>
-      <div id="reminder-settings-container">
-        <!-- Daily reminders button - visible by default -->
-        <button id="daily-reminders-btn" class="btn btn-success btn-sm mt-3">
-          <i class="fas fa-bell"></i> Set up daily reminders
-        </button>
-
-        <!-- Reminder settings button - hidden by default -->
-        <button id="reminder-settings-btn" style="display: none;" class="btn btn-success btn-lg mt-3" hx-get="{% url 'reminder-settings-form' %}" hx-target="#reminder-settings-container" hx-swap="innerHTML" hx-no-confirm='true'>
-          <i class="fas fa-bell"></i> Reminder settings
-        </button>
-
-        <!-- Push notifications button - hidden by default -->
-        <button id="enable-notifications-btn" style="display: none;" class="btn btn-info btn-sm mt-3 ms-2">
-          <i class="fas fa-bell"></i> Enable Push Notifications
-        </button>
-
-        <!-- Notification status indicator -->
-        <div id="notification-status" class="mt-2" style="display: none;">
-          <span class="badge bg-success">Push notifications enabled</span>
-        </div>
-      </div>
     </div>
   </div>
 

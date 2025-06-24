@@ -32,10 +32,11 @@ class LearningScenarioForm(forms.ModelForm):
         self.helper.layout = Layout(
             Field('instrument_name'),
             Field('label'),
+            Field('level'),
             Div(
                 Field('clef'),
-                Field('level'),
                 Field('key'),
+                Field('transpose_key'),
                 css_id='advanced-collapse',  # This div controls showing/hiding advanced fields
                 css_class='collapse'  # Hidden by default via Bootstrap's `.collapse`
             ),
