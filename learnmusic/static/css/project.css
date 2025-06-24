@@ -14,11 +14,16 @@
 
 #sheet {
   width: 100%; /* Container takes full width */
+  max-width: none;
+
   height: 250px; /* Define the height for the stave */
 
   display: flex;
   justify-content: center; /* Horizontally center the stave */
   align-items: center; /* Vertically center the stave */
+
+
+  overflow-x: visible;
 }
 
 /* Ensure the SVG dynamically adjusts */
@@ -110,6 +115,6 @@ svg {
 }
 
 .driver-popover {
-    width: clamp(280px, 90vw, 700px);
-    max-width: none;        /* remove the hard 400 px max in driver.css */
+  width: clamp(280px, 90vw, 700px);
+  max-width: none; /* remove the hard 400 px max in driver.css */
 }
