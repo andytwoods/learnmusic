@@ -1,6 +1,6 @@
 # ruff: noqa: ERA001, E501
 """Base settings to build other settings files upon."""
-
+import os
 from pathlib import Path
 
 import environ
@@ -91,6 +91,8 @@ THIRD_PARTY_APPS = [
     'widget_tweaks',
     "django_htmx",
     'axes',
+    'pwa',
+    'webpush',
 ]
 
 LOCAL_APPS = [
@@ -286,7 +288,7 @@ REDIS_SSL = REDIS_URL.startswith("rediss://")
 ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", True)
 
 # --- NEW, replaces ACCOUNT_AUTHENTICATION_METHOD ---------------------------
-ACCOUNT_LOGIN_METHODS = {'email',}          # users enter an email to log in
+ACCOUNT_LOGIN_METHODS = {'email', }  # users enter an email to log in
 
 # --- NEW, replaces EMAIL/USERNAME/PASSWORD flags ---------------------------
 # Required fields have a *
@@ -297,20 +299,20 @@ ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1', ]
 # ACCOUNT_SIGNUP_FIELDS = ['email*']
 
 
-ACCOUNT_LOGIN_ATTEMPT_LIMIT   = 5
+ACCOUNT_LOGIN_ATTEMPT_LIMIT = 5
 ACCOUNT_LOGIN_ATTEMPT_TIMEOUT = 600
 
-ACCOUNT_PASSWORD_REQUIRED        = False   # still valid
+ACCOUNT_PASSWORD_REQUIRED = False  # still valid
 ACCOUNT_PASSWORD_INPUT_RENDER_VALUE = False
-ACCOUNT_LOGIN_BY_CODE_ENABLED    = True    # magic-code / passkey workflow
+ACCOUNT_LOGIN_BY_CODE_ENABLED = True  # magic-code / passkey workflow
 
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None   # you keep a username-less user model
-ACCOUNT_EMAIL_VERIFICATION       = "mandatory"
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None  # you keep a username-less user model
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 
-ACCOUNT_ADAPTER        = "learnmusic.users.adapters.AccountAdapter"
-ACCOUNT_FORMS          = {"signup": "learnmusic.users.forms.UserSignupForm"}
-SOCIALACCOUNT_ADAPTER  = "learnmusic.users.adapters.SocialAccountAdapter"
-SOCIALACCOUNT_FORMS    = {"signup": "learnmusic.users.forms.UserSocialSignupForm"}
+ACCOUNT_ADAPTER = "learnmusic.users.adapters.AccountAdapter"
+ACCOUNT_FORMS = {"signup": "learnmusic.users.forms.UserSignupForm"}
+SOCIALACCOUNT_ADAPTER = "learnmusic.users.adapters.SocialAccountAdapter"
+SOCIALACCOUNT_FORMS = {"signup": "learnmusic.users.forms.UserSocialSignupForm"}
 
 # SOCIALACCOUNT_PROVIDERS = {
 #     "google": {"APP": {"client_id": "947800578588-drpgh5eeq3fd88n460u69ad7s161sfld.apps.googleusercontent.com",
@@ -321,12 +323,10 @@ SOCIALACCOUNT_FORMS    = {"signup": "learnmusic.users.forms.UserSocialSignupForm
 #     "apple":  {"APP": {"client_id": "...", "secret": "..."}},
 # }
 
-MFA_SUPPORTED_TYPES       = ["totp", "webauthn", "recovery_codes"]
+MFA_SUPPORTED_TYPES = ["totp", "webauthn", "recovery_codes"]
 MFA_PASSKEY_LOGIN_ENABLED = False
 
 ADMIN_EMAIL = 'contact@tootology.com'
-
-
 
 # Huey Task Queue
 # ------------------------------------------------------------------------------
@@ -342,3 +342,58 @@ HUEY = {
         'worker_type': 'thread',
     },
 }
+
+PWA_APP_NAME = 'Tootology'
+PWA_APP_DESCRIPTION = ("A practice tool for musicians at any stage to improve their note recognition and playing "
+                       "skills—quickly and effectively.")
+# PWA_APP_THEME_COLOR = '#0A0302'
+# PWA_APP_BACKGROUND_COLOR = '#ffffff'
+PWA_APP_DISPLAY = 'standalone'
+PWA_APP_SCOPE = '/'
+PWA_APP_ORIENTATION = 'any'
+PWA_APP_START_URL = '/'
+PWA_APP_STATUS_BAR_COLOR = 'default'
+PWA_APP_ICONS = [
+    {
+        'src': '/static/favicon/android-chrome-192x192.png',
+        'sizes': '192x192'
+    }
+]
+PWA_APP_ICONS_APPLE = [
+    {
+        'src': '/static/favicon/apple-touch-icon.png',
+        'sizes': '160x160'
+    }
+]
+PWA_APP_SPLASH_SCREEN = [
+    {
+        'src': '/static/favicon/android-chrome-512x512.png',
+        'media': '(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)'
+    }
+]
+PWA_APP_DIR = 'ltr'
+PWA_APP_LANG = 'en-UK'
+PWA_APP_SHORTCUTS = [
+    {
+        'name': 'Shortcut',
+        'url': '/target',
+        'description': 'Shortcut to a page in my application'
+    }
+]
+PWA_APP_SCREENSHOTS = [
+    {
+        'src': '/static/favicon/android-chrome-512x512.png',
+        'sizes': '512x512',
+        "type": "image/png"
+    }
+]
+
+WEBPUSH_SETTINGS = {
+    "VAPID_PUBLIC_KEY": env.str('VAPID_PUBLIC_KEY'),
+    "VAPID_PRIVATE_KEY": env.str('VAPID_PRIVATE_KEY'),
+    "VAPID_ADMIN_EMAIL": ADMIN_EMAIL,
+}
+
+PWA_SERVICE_WORKER_PATH = os.path.join(
+    BASE_DIR, "learnmusic", "static", "service-worker.js"   # <<<< here
+)

@@ -1,3 +1,4 @@
+{% load webpush_notifications %}
 {% load i18n static %}
 <!-- Modern Navbar with enhanced styling -->
 <header class="shadow-sm">
@@ -33,6 +34,17 @@
                 <span>Learning Hub</span>
               </a>
             </li>
+            {% if request.user.is_staff %}
+            <li class="nav-item mx-md-2">
+              <a
+                class="btn btn-danger text-white fw-medium d-flex align-items-center"
+                href="{% url 'send-push-notification' %}">
+                <i class="fas fa-bell me-2"></i>
+                <span>Send Push Notification</span>
+              </a>
+            </li>
+            {% endif %}
+            {% webpush_button with_class="btn btn-sm btn-outline-secondary"%}
           {% endif %}
         </ul>
 

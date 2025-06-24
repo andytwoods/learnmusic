@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
 {% load static %}
 {% load crispy_forms_tags %}
 
@@ -12,7 +11,7 @@
   {{ instruments_info|json_script:"instruments-data" }}
 
 
-  <div class="row justify-content-center align-items-center mb-5">
+  <div class="row justify-content-center align-items-center">
     <div class="col-md-8">
       <h2>Your Learning Scenario</h2>
       <p>
@@ -21,12 +20,13 @@
         <a href="{% url 'edit-learning-scenario-notes' pk=learningscenario_pk %}">edit</a>
         these notes.{% endif %}
       </p>
-            <div class="mb-3">
-          <button type="button" class="btn btn-secondary" data-bs-toggle="collapse" data-bs-target="#advanced-collapse" aria-expanded="false" aria-controls="advanced-collapse">
-            Advanced Options
-          </button>
-        </div>
-        {% crispy form %}
+
+
+      <form method="post">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
 
     </div>
   </div>
@@ -41,23 +41,7 @@
       const instrumentSelect = document.getElementById('id_instrument_name');
       const clefSelect = document.getElementById('id_clef');
       const keySelect = document.getElementById('id_key');
-      const levelSelect = document.getElementById('id_level');
-      // Advanced options toggle button
-      const advancedButton = document.querySelector('[data-bs-target="#advanced-collapse"]');
-      const advancedCollapse = document.getElementById('advanced-collapse');
 
-      // Function to handle level changes
-      const handleLevelChange = () => {
-        // If level is Beginner, we don't need to do anything special
-        // The transpose_key field is already in the advanced section
-        // which will be hidden/shown with the Advanced Options button
-      };
-
-      // Add event listener for level changes
-      levelSelect.addEventListener('change', handleLevelChange);
-
-      // Call on page load to set initial state
-      handleLevelChange();
 
       const updateFields = () => {
         let selectedInstrumentText = instrumentSelect.options[instrumentSelect.selectedIndex].text;

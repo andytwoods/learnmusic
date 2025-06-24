@@ -68,6 +68,24 @@ self.addEventListener("fetch", event => {
 		return;
 	}
 
+ /* JavaScript files - ensure correct MIME type */
+	if (request.url.endsWith('.js') || request.url.includes('cookieconsent')) {
+		event.respondWith(
+			fetch(request)
+				.then(resp => {
+					if (resp && resp.status === 200) {
+						// Clone the response before using it
+						const respToCache = resp.clone();
+						caches.open(DYNAMIC_CACHE)
+							.then(cache => cache.put(request, respToCache));
+					}
+					return resp;
+				})
+				.catch(() => caches.match(request))
+		);
+		return;
+	}
+
 	/* other static files – stale-while-revalidate */
 	event.respondWith(
 		caches.match(request).then(cached => {

@@ -33,6 +33,9 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
     path("", include("notes.urls")),
+    path('', include('pwa.urls')),
+    path(r'^webpush/', include('webpush.urls')),
+    path("offline/", TemplateView.as_view(template_name='offline.html')),
 
     path('test-rollbar/', views.test_rollbar, name='test-rollbar'),
     # Media files

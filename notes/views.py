@@ -4,6 +4,7 @@ from statistics import median  # Python 3.4+ has a built-in median function
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
@@ -11,9 +12,11 @@ from django.urls import reverse
 from django.utils.timezone import now
 from django_htmx.http import HttpResponseClientRefresh
 from zoneinfo import available_timezones, ZoneInfo
+from webpush import send_user_notification
+from webpush.models import PushInformation
 
 from notes import tools
-from notes.forms import LearningScenarioForm
+from notes.forms import LearningScenarioForm, PushNotificationForm
 from notes.instrument_data import instrument_infos, instruments
 from notes.models import LearningScenario, NoteRecordPackage, NoteRecord, LevelChoices, InstrumentKeys, ClefChoices
 from notes.tools import generate_notes, compile_notes_per_skilllevel, convert_note_slash_to_db
@@ -581,3 +584,52 @@ def progress_data_view(request, learningscenario_id):
     }
 
     return JsonResponse(data, safe=True)
+
+
+@staff_member_required
+def send_push_notification(request):
+    """
+    Admin view for sending push notifications to all users.
+    Only accessible by staff members.
+    """
+    # Get all push information objects (subscriptions)
+    subscriptions = PushInformation.objects.all()
+
+    if request.method == 'POST':
+        form = PushNotificationForm(request.POST)
+        if form.is_valid():
+            title = form.cleaned_data['title']
+            message = form.cleaned_data['message']
+
+            # Prepare the payload
+            payload = {
+                'head': title,
+                'body': message,
+                'icon': '/static/favicon/android-chrome-192x192.png',
+                'url': '/notes/learning/',
+            }
+
+            # Send notification to each subscription
+            sent_count = 0
+            for subscription in subscriptions:
+                try:
+                    send_user_notification(subscription.user, payload, ttl=1000)
+                    sent_count += 1
+                except Exception as e:
+                    # Log the error but continue with other subscriptions
+                    print(f"Error sending notification to {subscription.user}: {e}")
+
+            messages.success(
+                request,
+                f"Push notification sent successfully to {sent_count} subscriptions."
+            )
+            return redirect('send-push-notification')
+    else:
+        form = PushNotificationForm()
+
+    context = {
+        'form': form,
+        'subscription_count': subscriptions.count(),
+    }
+
+    return render(request, 'notes/send_push_notification.html', context)

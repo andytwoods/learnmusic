@@ -5,6 +5,8 @@ from django.urls import path
 from notes import views
 
 urlpatterns = [
+    # Admin-only view for sending push notifications
+    path("send-push-notification/", views.send_push_notification, name="send-push-notification"),
 
     # Reminder settings HTMX endpoints
     path("reminder-settings-button/", views.reminder_settings_button, name="reminder-settings-button"),
