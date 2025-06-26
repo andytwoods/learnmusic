@@ -1,6 +1,6 @@
 # ruff: noqa: ERA001, E501
 """Base settings to build other settings files upon."""
-import os
+
 from pathlib import Path
 
 import environ
@@ -343,11 +343,12 @@ HUEY = {
     },
 }
 
+
 PWA_APP_NAME = 'Tootology'
 PWA_APP_DESCRIPTION = ("A practice tool for musicians at any stage to improve their note recognition and playing "
                        "skills—quickly and effectively.")
-# PWA_APP_THEME_COLOR = '#0A0302'
-# PWA_APP_BACKGROUND_COLOR = '#ffffff'
+#PWA_APP_THEME_COLOR = '#0A0302'
+#PWA_APP_BACKGROUND_COLOR = '#ffffff'
 PWA_APP_DISPLAY = 'standalone'
 PWA_APP_SCOPE = '/'
 PWA_APP_ORIENTATION = 'any'
@@ -382,18 +383,14 @@ PWA_APP_SHORTCUTS = [
 ]
 PWA_APP_SCREENSHOTS = [
     {
-        'src': '/static/favicon/android-chrome-512x512.png',
-        'sizes': '512x512',
-        "type": "image/png"
+      'src': '/static/favicon/android-chrome-512x512.png',
+      'sizes': '512x512',
+      "type": "image/png"
     }
 ]
 
 WEBPUSH_SETTINGS = {
-    "VAPID_PUBLIC_KEY": env.str('VAPID_PUBLIC_KEY'),
-    "VAPID_PRIVATE_KEY": env.str('VAPID_PRIVATE_KEY'),
+    "VAPID_PUBLIC_KEY": env.str('VAPID_PRIVATE_KEY'),
+    "VAPID_PRIVATE_KEY": env.str('VAPID_PUBLIC_KEY'),
     "VAPID_ADMIN_EMAIL": ADMIN_EMAIL,
 }
-
-PWA_SERVICE_WORKER_PATH = os.path.join(
-    BASE_DIR, "learnmusic", "static", "service-worker.js"   # <<<< here
-)
