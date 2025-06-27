@@ -65,14 +65,14 @@ def edit_learningscenario(request, pk: int):
     model = LearningScenario.objects.get(id=pk)
     form = None
     if request.POST:
-        form = LearningScenarioForm(request.POST, instance=model)
+        form = LearningScenarioForm(request.POST, instance=model, request=request)
         if form.is_valid():
             ls: LearningScenario = form.save(commit=False)
             ls.save()
             return redirect(reverse('notes-home'))
 
     if not form:
-        form = LearningScenarioForm(instance=model)
+        form = LearningScenarioForm(instance=model, request=request)
 
     context = {'form': form,
                'learningscenario_pk': model.pk,

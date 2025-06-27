@@ -64,6 +64,12 @@ class LevelChoices(models.TextChoices):
 
 
 class LearningScenario(TimeStampedModel):
+    class Reminder(models.TextChoices):
+        ALL = 'AL', 'All notifications'
+        EMAIL = 'EM', 'Email'
+        PUSH_NOTIFICATION = 'PN', 'Push notification'
+        NONE = 'NO', 'No reminder'
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     label = models.CharField(max_length=64, null=True, blank=True, help_text='If you have lots of learning scenarios, it might help to give them memorable names')
     instrument_name = models.CharField(max_length=64, null=True, blank=True)
@@ -73,6 +79,10 @@ class LearningScenario(TimeStampedModel):
     key = models.CharField(max_length=2, choices=InstrumentKeys.choices, default=NoteChoices.C)
     transpose_key = models.CharField(max_length=2, choices=transposing_choices,
                                      default=BlankTransposingKey.BLANK , help_text='This is an advanced option. Leave as None if unsure')
+    reminder = models.DateTimeField(null=True, blank=True)
+    reminder_sent = models.DateTimeField(null=True, blank=True)
+    reminder_type = models.CharField(max_length=2, choices=Reminder.choices, default=Reminder.NONE, null=True,
+                                     blank=True, verbose_name="Daily reminder")
 
     ux = models.JSONField(default=dict, blank=True)
 

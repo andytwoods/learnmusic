@@ -21,11 +21,6 @@
         <a href="{% url 'edit-learning-scenario-notes' pk=learningscenario_pk %}">edit</a>
         these notes.{% endif %}
       </p>
-            <div class="mb-3">
-          <button type="button" class="btn btn-secondary" data-bs-toggle="collapse" data-bs-target="#advanced-collapse" aria-expanded="false" aria-controls="advanced-collapse">
-            Advanced Options
-          </button>
-        </div>
         {% crispy form %}
 
     </div>
@@ -42,7 +37,10 @@
       const clefSelect = document.getElementById('id_clef');
       const keySelect = document.getElementById('id_key');
       const levelSelect = document.getElementById('id_level');
+      const reminderTypeSelect = document.getElementById('id_reminder_type');
+      const reminderField = document.getElementById('div_id_reminder');
       // Advanced options toggle button
+      // The advanced button is now part of the crispy form
       const advancedButton = document.querySelector('[data-bs-target="#advanced-collapse"]');
       const advancedCollapse = document.getElementById('advanced-collapse');
 
@@ -53,11 +51,29 @@
         // which will be hidden/shown with the Advanced Options button
       };
 
+      // Function to handle reminder type changes
+      const handleReminderTypeChange = () => {
+        // Show the reminder field only if reminder_type is not 'NO' (No reminder)
+        if (reminderTypeSelect && reminderField) {
+          if (reminderTypeSelect.value === 'NO') {
+            reminderField.style.display = 'none';
+          } else {
+            reminderField.style.display = 'block';
+          }
+        }
+      };
+
       // Add event listener for level changes
       levelSelect.addEventListener('change', handleLevelChange);
 
+      // Add event listener for reminder type changes
+      if (reminderTypeSelect) {
+        reminderTypeSelect.addEventListener('change', handleReminderTypeChange);
+      }
+
       // Call on page load to set initial state
       handleLevelChange();
+      handleReminderTypeChange();
 
       const updateFields = () => {
         let selectedInstrumentText = instrumentSelect.options[instrumentSelect.selectedIndex].text;
