@@ -4,9 +4,14 @@ Tasks for sending web push notifications.
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from django.conf import settings
+from django.contrib.sites.models import Site
+from django.urls import reverse
 from django.utils import timezone
 from huey import crontab
 from huey.contrib.djhuey import db_periodic_task
+from pushover_complete import PushoverAPI
+
 # Removed webpush import
 from learnmusic.users.models import User
 from notes.models import NoteRecord, LearningScenario
@@ -34,7 +39,7 @@ def send_reminders():
     learning_scenarios_with_reminders = LearningScenario.objects.filter(
         reminder__isnull=False,
         reminder_type__in=['AL', 'EM', 'PN']  # All notifications, Email, Push notification
-    )
+    ).prefetch_related('user',)
 
     # Get the current date (in UTC)
     today = timezone.now().date()
@@ -44,6 +49,8 @@ def send_reminders():
     now_utc = timezone.now()
     current_hour = now_utc.hour
 
+    p = PushoverAPI(settings.PUSHOVER_APP_TOKEN)
+    domain = Site.objects.get_current().domain
     # For each learning scenario, check if it's time to send a reminder
     for scenario in learning_scenarios_with_reminders:
         user = scenario.user
@@ -75,22 +82,15 @@ def send_reminders():
             continue
 
         # If we get here, the user hasn't received a reminder today and hasn't practiced today
-        # Prepare the notification payload
-        payload = {
-            "head": "Time to Practice!",
-            "body": "Don't forget to practice your musical skills today!",
-            "icon": "/static/favicon/android-chrome-192x192.png",
-            "url": "/practice/",
-            "data": {
-                "url": "/practice/"
-            }
-        }
 
-        # Send the notification (webpush removed)
-        # Update the reminder_sent field
+
+        practice_url = f"https://{domain}{reverse('practice', args=[scenario.id])}"
+        p.send_message(user.pushover_key, message="This link will take you straight to your practice session", title="Reminder to practice", url=practice_url)
+
         scenario.reminder_sent = timezone.now()
         scenario.save()
         reminders_sent += 1
-        print(f"Would have sent reminder for scenario {scenario.id} to {user.email} (webpush removed)")
+
+
 
     print(f"Reminder task completed. Processed {learning_scenarios_with_reminders.count()} learning scenarios, sent {reminders_sent} reminders.")
