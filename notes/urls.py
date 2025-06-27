@@ -32,4 +32,6 @@ urlpatterns = [
     path("learningscenario-graph-try/<str:instrument>/<str:level>/",
          views.learningscenario_graph_try, name='learningscenario_graph_try'),
 
+    path("pushover/callback/", views.pushover_callback, name="pushover_callback"),
+
 ]

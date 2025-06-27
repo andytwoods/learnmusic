@@ -1,0 +1,25 @@
+{% if request.user and request.user.pushover_key %}
+  <div class="alert alert-success mb-3">
+    <i class="fas fa-check-circle"></i> You are set up to receive Pushover notifications already.
+    <a href="{{ pushover_url }}?success={{ request.scheme }}s://{{ request.get_host }}/pushover/callback/"
+       target="_blank" class="text-danger text-decoration-none">
+      Unsubscribe.
+    </a>
+  </div>
+{% else %}
+  <div class="mb-3">
+
+    <i class="fas fa-bell"></i> To receive alerts on your mobile, you need to install the free Pushover app for
+    <a target="_blank" href="https://play.google.com/store/apps/details?id=net.superblock.pushover&hl=en-US">
+      <i class="fab fa-android"></i>
+      Google play store</a>
+    or
+    <a target="_blank" href="https://apps.apple.com/gb/app/pushover-notifications/id506088175">
+      <i class="fab fa-apple"></i>
+      Apple App store</a>
+  and then
+      <a href="{{ pushover_url }}?success={{ request.scheme }}s://{{ request.get_host }}/pushover/callback/"
+         target="_blank" class="">subscribe</a> to Pushover Notifications
+
+  </div>
+{% endif %}

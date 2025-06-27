@@ -1,21 +1,34 @@
-from django import forms
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Div, Field, Submit, HTML
-from django.forms import DateTimeInput
-from django.utils import timezone
-from datetime import datetime
 from zoneinfo import ZoneInfo
+
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import HTML, LayoutObject
+from crispy_forms.layout import Layout, Div, Field, Submit, Template
+from django import forms
+from django.conf import settings
+from django.forms import DateTimeInput
+from django.template.loader import render_to_string
+from django.utils import timezone
 
 from .instruments import instrument_infos
 from .models import LearningScenario
 
 
-class LearningScenarioForm(forms.ModelForm):
+class CustomTemplate(LayoutObject):
+    def __init__(self, template_name, context=None):
+        self.template_name = template_name
+        self.context = context or {}
 
+    def render(self, form, form_style, context=None, template_pack=None):
+        if context:
+            self.context.update(self.context)
+
+        return render_to_string(self.template_name, self.context)
+
+
+class LearningScenarioForm(forms.ModelForm):
     class Meta:
         model = LearningScenario
         fields = ['instrument_name', 'label', 'level', 'clef', 'key', 'transpose_key', 'reminder', 'reminder_type']
-
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
@@ -29,10 +42,9 @@ class LearningScenarioForm(forms.ModelForm):
             label="Instrument Name"
         )
 
-
         # Convert reminder from UTC to user's timezone if it exists
-        if self.instance and self.instance.reminder and self.request and hasattr(self.request.user, 'profile'):
-            user_timezone = self.request.user.profile.timezone
+        if self.instance and self.instance.reminder and self.request:
+            user_timezone = self.request.user.timezone
             if timezone.is_aware(self.instance.reminder):
                 # Convert from UTC to user's timezone
                 local_reminder = self.instance.reminder.astimezone(ZoneInfo(user_timezone))
@@ -41,12 +53,12 @@ class LearningScenarioForm(forms.ModelForm):
         self.fields['reminder'] = forms.DateTimeField(
             widget=DateTimeInput(
                 attrs={
-                    "type": "datetime-local",     # HTML5 widget
-                    "class": "form-control",      # bootstrap styling, optional
+                    "type": "datetime-local",  # HTML5 widget
+                    "class": "form-control",  # bootstrap styling, optional
                 }
             ),
-            input_formats=["%Y-%m-%dT%H:%M"],      # matches datetime-local
-            required=False,                       # or True if the field is mandatory
+            input_formats=["%Y-%m-%dT%H:%M"],  # matches datetime-local
+            required=False,  # or True if the field is mandatory
             label="Daily reminder time",
             help_text="Set in your local timezone"
         )
@@ -61,10 +73,17 @@ class LearningScenarioForm(forms.ModelForm):
             Field('label'),
             Field('level'),
             Field('reminder_type'),
-            Field('reminder'),
-            HTML('<div class="mb-3"><button type="button" class="btn btn-secondary" data-bs-toggle="collapse" '
-                 'data-bs-target="#advanced-collapse" aria-expanded="false" aria-controls="advanced-collapse">'
-                 'Advanced Options</button></div>'),
+
+            Div(
+                Field('reminder'),
+                CustomTemplate('crispy/pushover.html',
+                               context={'request': self.request,
+                                        'pushover_url': settings.PUSHOVER_SUBSCRIPTION_URL}),
+                HTML('<div class="mb-3"><button type="button" class="btn btn-secondary" data-bs-toggle="collapse" '
+                     'data-bs-target="#advanced-collapse" aria-expanded="false" aria-controls="advanced-collapse">'
+                     'Advanced Options</button></div>'),
+                css_id='reminder_fields'
+            ),
             Div(
                 Field('clef'),
                 Field('key'),

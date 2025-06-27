@@ -2,6 +2,7 @@ import json
 from datetime import timedelta, datetime
 from statistics import median  # Python 3.4+ has a built-in median function
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -11,6 +12,8 @@ from django.urls import reverse
 from django.utils.timezone import now
 from django_htmx.http import HttpResponseClientRefresh
 from zoneinfo import available_timezones, ZoneInfo
+
+from pushover_complete import PushoverAPI
 
 from notes import tools
 from notes.forms import LearningScenarioForm
@@ -581,3 +584,22 @@ def progress_data_view(request, learningscenario_id):
     }
 
     return JsonResponse(data, safe=True)
+
+
+@login_required
+def pushover_callback(request):
+    user_key = request.GET.get("pushover_user_key")
+    if user_key:
+        request.user.pushover_key = user_key
+        request.user.save()
+
+        p = PushoverAPI(settings.PUSHOVER_APP_TOKEN)
+        p.send_message(user_key, message="Thanks for subscribing!", title="Subscription successful")
+
+    if request.GET.get('pushover_unsubscribed_user_key', None):
+        request.user.pushover_key = ''
+        request.user.save()
+        messages.success(request, 'You have been unsubscribed from push notifications.')
+
+
+    return redirect(reverse('notes-home'))

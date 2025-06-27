@@ -342,3 +342,6 @@ HUEY = {
         'worker_type': 'thread',
     },
 }
+
+PUSHOVER_APP_TOKEN = env.str("PUSHOVER_APP_TOKEN")
+PUSHOVER_SUBSCRIPTION_URL = 'https://pushover.net/subscribe/Tootology-kirqmdy91454sf1'

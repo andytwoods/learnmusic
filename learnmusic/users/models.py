@@ -3,6 +3,7 @@ from typing import ClassVar
 from datetime import timedelta
 
 from django.contrib.auth.models import AbstractUser
+from django.db import models
 from django.db.models import CharField, BooleanField, EmailField, GenericIPAddressField, DateTimeField, Model, OneToOneField, CASCADE, TimeField, TextField, ForeignKey
 from django.urls import reverse
 from django.utils import timezone
@@ -39,6 +40,9 @@ class User(AbstractUser):
     last_name = None  # type: ignore[assignment]
     email = EmailField(_("email address"), unique=True)
     username = None  # type: ignore[assignment]
+    pushover_key = models.CharField(max_length=255, blank=True)
+    timezone = CharField(max_length=50, default="UTC", help_text="User's timezone for reminders")
+
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -48,25 +52,7 @@ class User(AbstractUser):
     def get_absolute_url(self) -> str:
         return reverse("users:detail", kwargs={"pk": self.id})
 
-    @property
-    def profile(self):
-        """
-        Returns the user's profile. Creates it if it doesn't exist.
-        """
-        profile, created = UserProfile.objects.get_or_create(user=self)
-        return profile
 
 
-class UserProfile(Model):
-    """
-    User profile model for storing additional user information.
-    """
-    user = OneToOneField(User, on_delete=CASCADE, related_name="user_profile")
-    reminder_time = CharField(max_length=5, default="18:00", help_text="Time for daily practice reminders (HH:MM) in UTC")
-    timezone = CharField(max_length=50, default="UTC", help_text="User's timezone for reminders")
-    reminder_sent = DateTimeField(null=True, blank=True, help_text="Last time a reminder was sent")
-
-    def __str__(self):
-        return f"{self.user.email}'s Profile"
 
 

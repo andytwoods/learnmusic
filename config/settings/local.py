@@ -4,6 +4,8 @@ from .base import INSTALLED_APPS
 from .base import MIDDLEWARE
 from .base import env
 
+ALLOWED_HOSTS = ['andybigcomp.prototypingcostar.uk',]
+CSRF_TRUSTED_ORIGINS=['https://andybigcomp.prototypingcostar.uk',]
 # GENERAL
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#debug
