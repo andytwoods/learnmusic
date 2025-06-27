@@ -50,7 +50,7 @@ def send_reminders():
     current_hour = now_utc.hour
 
     p = PushoverAPI(settings.PUSHOVER_APP_TOKEN)
-    domain = settings.domain
+
     # For each learning scenario, check if it's time to send a reminder
     for scenario in learning_scenarios_with_reminders:
         user = scenario.user
@@ -84,7 +84,7 @@ def send_reminders():
         # If we get here, the user hasn't received a reminder today and hasn't practiced today
 
 
-        practice_url = f"https://{domain}{reverse('practice', args=[scenario.id])}"
+        practice_url = f"https://{settings.DOMAIN}/{reverse('practice', args=[scenario.id])}"
         p.send_message(user.pushover_key, message="This link will take you straight to your practice session", title="Reminder to practice", url=practice_url)
 
         scenario.reminder_sent = timezone.now()
