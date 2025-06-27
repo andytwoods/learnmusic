@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.core.mail import send_mail
 from django.urls import reverse
 from django.utils import timezone
 from huey import crontab
@@ -85,7 +86,30 @@ def send_reminders():
 
 
         practice_url = f"https://{settings.DOMAIN}{reverse('practice', args=[scenario.id])}"
-        p.send_message(user.pushover_key, message="This link will take you straight to your practice session", title="Reminder to practice", url=practice_url)
+
+        if scenario.reminder_type in ['PN', 'Al']:
+            p.send_message(user.pushover_key, message="This link will take you straight to your practice session", title="Reminder to practice", url=practice_url)
+        if scenario.reminder_type in ['EM', 'Al']:
+            # Send email instead of Pushover notification
+            subject = f"{settings.EMAIL_SUBJECT_PREFIX}Reminder to practice"
+            message = f"This link will take you straight to your practice session: {practice_url}"
+            html_message = f"""
+            <html>
+                <body>
+                    <h2>Reminder to practice</h2>
+                    <p>It's time for your daily practice session!</p>
+                    <p><a href="{practice_url}">Click here to start practicing</a></p>
+                </body>
+            </html>
+            """
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                html_message=html_message,
+                fail_silently=False,
+            )
 
         scenario.reminder_sent = timezone.now()
         scenario.save()
