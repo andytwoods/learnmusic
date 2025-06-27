@@ -5,6 +5,8 @@ from pathlib import Path
 
 import environ
 
+domain = 'tootology.com'
+
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 # learnmusic/
 APPS_DIR = BASE_DIR / "learnmusic"

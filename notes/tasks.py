@@ -50,7 +50,7 @@ def send_reminders():
     current_hour = now_utc.hour
 
     p = PushoverAPI(settings.PUSHOVER_APP_TOKEN)
-    domain = Site.objects.get_current().domain
+    domain = settings.domain
     # For each learning scenario, check if it's time to send a reminder
     for scenario in learning_scenarios_with_reminders:
         user = scenario.user
