@@ -28,6 +28,8 @@ urlpatterns = [
     ),
     # Django Admin, use {% url 'admin:index' %}
     path(settings.ADMIN_URL, admin.site.urls),
+    # Huey Monitor (secured with staff_member_required)
+    path("huey-monitor/", include("config.huey_monitor_views")),
     # User management
     path("users/", include("learnmusic.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),

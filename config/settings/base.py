@@ -330,7 +330,7 @@ ADMIN_EMAIL = 'contact@tootology.com'
 
 # Huey Task Queue
 # ------------------------------------------------------------------------------
-INSTALLED_APPS += ["huey.contrib.djhuey"]
+INSTALLED_APPS += ["huey.contrib.djhuey", "huey_monitor"]
 
 # Default configuration uses SQLite for local development
 # This will be overridden in production.py to use Redis
