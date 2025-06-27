@@ -91,6 +91,7 @@ THIRD_PARTY_APPS = [
     'widget_tweaks',
     "django_htmx",
     'axes',
+    'bx_django_utils',
 ]
 
 LOCAL_APPS = [

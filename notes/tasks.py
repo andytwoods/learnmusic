@@ -9,7 +9,7 @@ from huey import crontab
 from huey.contrib.djhuey import db_periodic_task
 # Removed webpush import
 from learnmusic.users.models import User
-from notes.models import NoteRecord
+from notes.models import NoteRecord, LearningScenario
 
 
 # Schedule the send_reminders task to run once a minute
@@ -30,11 +30,10 @@ def send_reminders():
     for display purposes in the UI.
     """
 
-    # Get all users who have reminders enabled
-    users_with_reminders = User.objects.filter(
-        user_profile__reminder_time__isnull=False
-    ).exclude(
-        user_profile__reminder_time="DISABLED"
+    # Get all learning scenarios with reminders enabled
+    learning_scenarios_with_reminders = LearningScenario.objects.filter(
+        reminder__isnull=False,
+        reminder_type__in=['AL', 'EM', 'PN']  # All notifications, Email, Push notification
     )
 
     # Get the current date (in UTC)
@@ -43,31 +42,31 @@ def send_reminders():
 
     # Get the current time in UTC
     now_utc = timezone.now()
-    current_utc_time = now_utc.strftime("%H:%M")
+    current_hour = now_utc.hour
 
-    # For each user, check if it's time to send a reminder
-    for user in users_with_reminders:
-        profile = user.profile
+    # For each learning scenario, check if it's time to send a reminder
+    for scenario in learning_scenarios_with_reminders:
+        user = scenario.user
 
-        # Get the user's reminder time (already in UTC)
-        reminder_time = profile.reminder_time
+        # Get the reminder time (already in UTC)
+        reminder_datetime = scenario.reminder
 
         # Check if current UTC time matches the reminder time (with a small buffer)
         # We're using huey to run this function once a minute, but we still want to
         # check if it's the right time based on the UTC reminder time
-        if abs(int(current_utc_time.split(":")[0]) - int(reminder_time.split(":")[0])) > 1:
-            # Not within an hour of the reminder time, skip this user
+        if abs(current_hour - reminder_datetime.hour) > 1:
+            # Not within an hour of the reminder time, skip this scenario
             continue
 
         # Check if a reminder has already been sent today
-        if profile.reminder_sent and profile.reminder_sent.date() == today:
-            print(f"Reminder already sent to {user.email} today")
+        if scenario.reminder_sent and scenario.reminder_sent.date() == today:
+            print(f"Reminder already sent for scenario {scenario.id} to {user.email} today")
             continue
 
         # Check if the user has already practiced today
         # Get all NoteRecord entries for this user from today
         today_records = NoteRecord.objects.filter(
-            learningscenario__user=user,
+            learningscenario=scenario,
             created__date=today
         )
 
@@ -89,9 +88,9 @@ def send_reminders():
 
         # Send the notification (webpush removed)
         # Update the reminder_sent field
-        profile.reminder_sent = timezone.now()
-        profile.save()
+        scenario.reminder_sent = timezone.now()
+        scenario.save()
         reminders_sent += 1
-        print(f"Would have sent reminder to {user.email} (webpush removed)")
+        print(f"Would have sent reminder for scenario {scenario.id} to {user.email} (webpush removed)")
 
-    print(f"Reminder task completed. Processed {users_with_reminders.count()} users, sent {reminders_sent} reminders.")
+    print(f"Reminder task completed. Processed {learning_scenarios_with_reminders.count()} learning scenarios, sent {reminders_sent} reminders.")
