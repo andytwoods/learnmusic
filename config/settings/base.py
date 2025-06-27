@@ -344,4 +344,4 @@ HUEY = {
 }
 
 PUSHOVER_APP_TOKEN = env.str("PUSHOVER_APP_TOKEN")
-PUSHOVER_SUBSCRIPTION_URL = 'https://pushover.net/subscribe/Tootology-kirqmdy91454sf1'
+PUSHOVER_SUBSCRIPTION_URL = env.str("PUSHOVER_SUBSCRIPTION_URL", 'https://pushover.net/subscribe/Tootology-kirqmdy91454sf1')
