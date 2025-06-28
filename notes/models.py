@@ -80,7 +80,6 @@ class LearningScenario(TimeStampedModel):
     transpose_key = models.CharField(max_length=2, choices=transposing_choices,
                                      default=BlankTransposingKey.BLANK , help_text='This is an advanced option. Leave as None if unsure')
     reminder = models.DateTimeField(null=True, blank=True)
-    reminder_sent = models.DateTimeField(null=True, blank=True)
     reminder_type = models.CharField(max_length=2, choices=Reminder.choices, default=Reminder.NONE, null=True,
                                      blank=True, verbose_name="Daily reminder")
 

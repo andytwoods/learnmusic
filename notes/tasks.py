@@ -36,8 +36,11 @@ def send_reminders():
     """
     Send practice reminders to users based on their reminder settings.
     Only sends reminders if:
-    1. The user hasn't already received a reminder today
+    1. The reminder is at least 24 hours old (ensuring reminders are only sent once a day)
     2. The user hasn't practiced today (no NoteRecord entries for today)
+
+    After sending a reminder, the reminder time is updated to 24 hours later,
+    which ensures that the next reminder won't be sent until at least 24 hours have passed.
 
     Note: Reminder times are stored in UTC in the database, and the comparison
     is done directly with the current UTC time. The user's timezone is only used
@@ -45,13 +48,15 @@ def send_reminders():
     """
 
     # Get all learning scenarios with reminders enabled
-    # Only get scenarios where reminder is not null and is over 24 hours old
+    # Only get scenarios where reminder is not null and is at least 24 hours old
     now_utc = timezone.now()
     # Calculate the time 24 hours ago
     time_24_hours_ago = now_utc - timedelta(hours=24)
     learning_scenarios_with_reminders = LearningScenario.objects.filter(
         reminder__isnull=False,
-        reminder__lt=time_24_hours_ago,
+        # reminder is less than or equal to 24 hours ago (i.e., at least 24 hours old)
+        # This ensures reminders are only sent once a day
+        reminder__lte=time_24_hours_ago,
         reminder_type__in=['AL', 'EM', 'PN']  # All notifications, Email, Push notification
     ).prefetch_related('user',)
 
@@ -68,11 +73,6 @@ def send_reminders():
     # For each learning scenario, check if it's time to send a reminder
     for scenario in learning_scenarios_with_reminders:
         user = scenario.user
-
-        # Check if a reminder has already been sent today
-        if scenario.reminder_sent and scenario.reminder_sent.date() == today:
-            print(f"Reminder already sent for scenario {scenario.id} to {user.email} today")
-            continue
 
         # Check if the user has already practiced today
         # Get all NoteRecord entries for this user from today
@@ -114,7 +114,7 @@ def send_reminders():
                 fail_silently=False,
             )
 
-        scenario.reminder_sent = timezone.now()
+        scenario.reminder += timedelta(hours=24)
         scenario.save()
         reminders_sent += 1
 
@@ -129,45 +129,47 @@ def purge_old_huey_monitor_records():
     Purge records from huey_monitor that are over 7 days old.
     This helps keep the database size manageable.
     """
+    # Calculate the cutoff date (7 days ago)
+    cutoff_date = timezone.now() - timedelta(days=7)
+
+    # Delete old TaskModel records
+    deleted_tasks = 0
     try:
-        # Calculate the cutoff date (7 days ago)
-        cutoff_date = timezone.now() - timedelta(days=7)
-
-        # Delete old TaskModel records
-        # Assuming TaskModel has a created_at or timestamp field
-        # Try common field names for timestamps
-        deleted_tasks = 0
+        # First try with created_at field
+        deleted_tasks = TaskModel.objects.filter(created_at__lt=cutoff_date).delete()[0]
+    except Exception as e:
+        logger.error(f"Failed to delete TaskModel records with created_at field: {e}")
         try:
-            # Try with created_at field
-            deleted_tasks = TaskModel.objects.filter(created_at__lt=cutoff_date).delete()[0]
+            # Try with timestamp field
+            deleted_tasks = TaskModel.objects.filter(timestamp__lt=cutoff_date).delete()[0]
         except Exception as e:
+            logger.error(f"Failed to delete TaskModel records with timestamp field: {e}")
             try:
-                # Try with timestamp field
-                deleted_tasks = TaskModel.objects.filter(timestamp__lt=cutoff_date).delete()[0]
-            except Exception as e:
                 # Try with created field
-                try:
-                    deleted_tasks = TaskModel.objects.filter(created__lt=cutoff_date).delete()[0]
-                except Exception as e:
-                    logger.error(f"Failed to delete old TaskModel records: {e}")
+                deleted_tasks = TaskModel.objects.filter(created__lt=cutoff_date).delete()[0]
+            except Exception as e:
+                logger.error(f"Failed to delete TaskModel records with created field: {e}")
 
-        # Delete old SignalInfoModel records
-        # Assuming SignalInfoModel has a created_at or timestamp field
-        deleted_signals = 0
+    # Delete old SignalInfoModel records
+    deleted_signals = 0
+    try:
+        # First try with created_at field
+        deleted_signals = SignalInfoModel.objects.filter(created_at__lt=cutoff_date).delete()[0]
+    except Exception as e:
+        logger.error(f"Failed to delete SignalInfoModel records with created_at field: {e}")
         try:
-            # Try with created_at field
-            deleted_signals = SignalInfoModel.objects.filter(created_at__lt=cutoff_date).delete()[0]
+            # Try with timestamp field
+            deleted_signals = SignalInfoModel.objects.filter(timestamp__lt=cutoff_date).delete()[0]
         except Exception as e:
+            logger.error(f"Failed to delete SignalInfoModel records with timestamp field: {e}")
             try:
-                # Try with timestamp field
-                deleted_signals = SignalInfoModel.objects.filter(timestamp__lt=cutoff_date).delete()[0]
-            except Exception as e:
                 # Try with created field
-                try:
-                    deleted_signals = SignalInfoModel.objects.filter(created__lt=cutoff_date).delete()[0]
-                except Exception as e:
-                    logger.error(f"Failed to delete old SignalInfoModel records: {e}")
+                deleted_signals = SignalInfoModel.objects.filter(created__lt=cutoff_date).delete()[0]
+            except Exception as e:
+                logger.error(f"Failed to delete SignalInfoModel records with created field: {e}")
 
+    # Log the results
+    try:
         logger.info(f"Purged {deleted_tasks} task records and {deleted_signals} signal records from huey_monitor that were over 7 days old.")
     except Exception as e:
-        logger.error(f"Error purging old huey_monitor records: {e}")
+        logger.error(f"Error logging purge results: {e}")

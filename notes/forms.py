@@ -111,9 +111,6 @@ class LearningScenarioForm(forms.ModelForm):
                 utc_reminder = aware_reminder.astimezone(timezone.utc)
                 instance.reminder = utc_reminder
 
-        # If reminder has changed, set reminder_sent to reminder - 24 hours
-        if instance.pk and instance.reminder and instance.reminder != LearningScenario.objects.get(pk=instance.pk).reminder:
-            instance.reminder_sent = instance.reminder - timedelta(hours=24)
 
         if commit:
             instance.save()
