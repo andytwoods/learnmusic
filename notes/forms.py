@@ -1,3 +1,4 @@
+from datetime import timedelta
 from zoneinfo import ZoneInfo
 
 from crispy_forms.helper import FormHelper
@@ -98,9 +99,10 @@ class LearningScenarioForm(forms.ModelForm):
         instance = super().save(commit=False)
 
         # Convert reminder from user's timezone to UTC if it exists
-        if self.cleaned_data.get('reminder') and self.request and hasattr(self.request.user, 'profile'):
+        if self.cleaned_data.get('reminder') and self.request:
             reminder = self.cleaned_data.get('reminder')
-            user_timezone = self.request.user.profile.timezone
+
+            user_timezone = self.request.user.timezone
 
             # If the reminder is naive (no timezone info), make it aware using user's timezone
             if timezone.is_naive(reminder):
@@ -108,6 +110,10 @@ class LearningScenarioForm(forms.ModelForm):
                 # Convert to UTC for storage
                 utc_reminder = aware_reminder.astimezone(timezone.utc)
                 instance.reminder = utc_reminder
+
+        # If reminder has changed, set reminder_sent to reminder - 24 hours
+        if instance.pk and instance.reminder and instance.reminder != LearningScenario.objects.get(pk=instance.pk).reminder:
+            instance.reminder_sent = instance.reminder - timedelta(hours=24)
 
         if commit:
             instance.save()

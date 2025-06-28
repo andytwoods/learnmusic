@@ -1,8 +1,9 @@
 """
-Tasks for sending web push notifications.
+Tasks for sending web push notifications and maintenance tasks.
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+import logging
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -17,9 +18,16 @@ from pushover_complete import PushoverAPI
 from learnmusic.users.models import User
 from notes.models import NoteRecord, LearningScenario
 
+# Import huey_monitor models
+from huey_monitor.models import TaskModel, SignalInfoModel
+
+logger = logging.getLogger(__name__)
+
+
+
 
 # Schedule the send_reminders task to run once a minute
-@db_periodic_task(crontab(minute='*'))
+@db_periodic_task(crontab(minute='*/2'))
 def scheduled_send_reminders():
     send_reminders()
 
@@ -37,8 +45,13 @@ def send_reminders():
     """
 
     # Get all learning scenarios with reminders enabled
+    # Only get scenarios where reminder is not null and is over 24 hours old
+    now_utc = timezone.now()
+    # Calculate the time 24 hours ago
+    time_24_hours_ago = now_utc - timedelta(hours=24)
     learning_scenarios_with_reminders = LearningScenario.objects.filter(
         reminder__isnull=False,
+        reminder__lt=time_24_hours_ago,
         reminder_type__in=['AL', 'EM', 'PN']  # All notifications, Email, Push notification
     ).prefetch_related('user',)
 
@@ -55,16 +68,6 @@ def send_reminders():
     # For each learning scenario, check if it's time to send a reminder
     for scenario in learning_scenarios_with_reminders:
         user = scenario.user
-
-        # Get the reminder time (already in UTC)
-        reminder_datetime = scenario.reminder
-
-        # Check if current UTC time matches the reminder time (with a small buffer)
-        # We're using huey to run this function once a minute, but we still want to
-        # check if it's the right time based on the UTC reminder time
-        if abs(current_hour - reminder_datetime.hour) > 1:
-            # Not within an hour of the reminder time, skip this scenario
-            continue
 
         # Check if a reminder has already been sent today
         if scenario.reminder_sent and scenario.reminder_sent.date() == today:
@@ -87,9 +90,9 @@ def send_reminders():
 
         practice_url = f"https://{settings.DOMAIN}{reverse('practice', args=[scenario.id])}"
 
-        if scenario.reminder_type in ['PN', 'Al']:
+        if scenario.reminder_type in ['PN', 'AL']:
             p.send_message(user.pushover_key, message="This link will take you straight to your practice session", title="Reminder to practice", url=practice_url)
-        if scenario.reminder_type in ['EM', 'Al']:
+        if scenario.reminder_type in ['EM', 'AL']:
             # Send email instead of Pushover notification
             subject = f"{settings.EMAIL_SUBJECT_PREFIX}Reminder to practice"
             message = f"This link will take you straight to your practice session: {practice_url}"
@@ -118,3 +121,53 @@ def send_reminders():
 
 
     print(f"Reminder task completed. Processed {learning_scenarios_with_reminders.count()} learning scenarios, sent {reminders_sent} reminders.")
+
+
+@db_periodic_task(crontab(hour='0', minute='0'))  # Run once a day at midnight
+def purge_old_huey_monitor_records():
+    """
+    Purge records from huey_monitor that are over 7 days old.
+    This helps keep the database size manageable.
+    """
+    try:
+        # Calculate the cutoff date (7 days ago)
+        cutoff_date = timezone.now() - timedelta(days=7)
+
+        # Delete old TaskModel records
+        # Assuming TaskModel has a created_at or timestamp field
+        # Try common field names for timestamps
+        deleted_tasks = 0
+        try:
+            # Try with created_at field
+            deleted_tasks = TaskModel.objects.filter(created_at__lt=cutoff_date).delete()[0]
+        except Exception as e:
+            try:
+                # Try with timestamp field
+                deleted_tasks = TaskModel.objects.filter(timestamp__lt=cutoff_date).delete()[0]
+            except Exception as e:
+                # Try with created field
+                try:
+                    deleted_tasks = TaskModel.objects.filter(created__lt=cutoff_date).delete()[0]
+                except Exception as e:
+                    logger.error(f"Failed to delete old TaskModel records: {e}")
+
+        # Delete old SignalInfoModel records
+        # Assuming SignalInfoModel has a created_at or timestamp field
+        deleted_signals = 0
+        try:
+            # Try with created_at field
+            deleted_signals = SignalInfoModel.objects.filter(created_at__lt=cutoff_date).delete()[0]
+        except Exception as e:
+            try:
+                # Try with timestamp field
+                deleted_signals = SignalInfoModel.objects.filter(timestamp__lt=cutoff_date).delete()[0]
+            except Exception as e:
+                # Try with created field
+                try:
+                    deleted_signals = SignalInfoModel.objects.filter(created__lt=cutoff_date).delete()[0]
+                except Exception as e:
+                    logger.error(f"Failed to delete old SignalInfoModel records: {e}")
+
+        logger.info(f"Purged {deleted_tasks} task records and {deleted_signals} signal records from huey_monitor that were over 7 days old.")
+    except Exception as e:
+        logger.error(f"Error purging old huey_monitor records: {e}")
