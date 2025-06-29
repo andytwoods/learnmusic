@@ -77,12 +77,17 @@ def send_reminders():
                 # Send email instead of Pushover notification
                 subject = f"{settings.EMAIL_SUBJECT_PREFIX}Reminder to practice"
                 message = f"This link will take you straight to your practice session: {practice_url}"
+                reminders_url = f"https://{settings.DOMAIN}{reverse('reminders')}"
                 html_message = f"""
                 <html>
                     <body>
                         <h2>Reminder to practice</h2>
                         <p>It's time for your daily practice session!</p>
                         <p><a href="{practice_url}">Click here to start practicing</a></p>
+                        <hr>
+                        <p style="font-size: 12px; color: #666;">
+                            <a href="{reminders_url}">Unsubscribe from reminders</a>
+                        </p>
                     </body>
                 </html>
                 """
@@ -99,5 +104,3 @@ def send_reminders():
 
 
     logger.info(f"Reminder task completed. Processed {learning_scenarios_with_reminders.count()} learning scenarios, sent {reminders_sent} reminders.")
-
-

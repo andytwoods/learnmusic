@@ -13,6 +13,7 @@ urlpatterns = [
     path('progress-data/<int:learningscenario_id>/', views.progress_data_view, name='progress_data'),
     path("progress/<int:learningscenario_id>/", views.progress, name='see-progress'),
     path("practice/", views.notes_home, name="notes-home"),
+    path("reminders/", views.reminders, name="reminders"),
     path("new-learning-scenario/", views.new_learningscenario, name='new-learning-scenario'),
     path("edit-learning-scenario/<int:pk>/", views.edit_learningscenario, name='edit-learning-scenario'),
     path("edit-learning-scenario-notes/<int:pk>/", views.edit_learningscenario_notes,

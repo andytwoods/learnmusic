@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Subscriptions{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1 class="mb-4">Your Reminders</h1>
+
+  {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if active_subscriptions %}
+    <div class="row mb-5">
+      {% for subscription in active_subscriptions %}
+        <div class="col-md-6 mb-4">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title mb-0">
+                {% if subscription.label %}
+                  {{ subscription.label }}
+                {% else %}
+                  {{ subscription.instrument_name }} ({{ subscription.level }})
+                {% endif %}
+              </h5>
+            </div>
+            <div class="card-body">
+              <p><strong>Instrument:</strong> {{ subscription.instrument_name }}</p>
+              <p><strong>Level:</strong> {{ subscription.level }}</p>
+              <p><strong>Notification Type:</strong> {{ subscription.get_reminder_type_display }}</p>
+
+              <div class="mt-3">
+                <form method="post" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="scenario_id" value="{{ subscription.id }}">
+
+                  <div class="row g-2">
+                    <div class="col-auto">
+                      {% if subscription.reminder_type == 'AL' or subscription.reminder_type == 'PN' %}
+                        <button type="submit" name="action" value="unsubscribe_push" class="btn btn-warning">
+                          <i class="fas fa-bell-slash"></i> Unsubscribe from Push Notifications
+                        </button>
+                      {% endif %}
+                    </div>
+
+                    <div class="col-auto">
+                      {% if subscription.reminder_type == 'AL' or subscription.reminder_type == 'EM' %}
+                        <button type="submit" name="action" value="unsubscribe_email" class="btn btn-warning">
+                          <i class="fas fa-envelope-slash"></i> Unsubscribe from Email Notifications
+                        </button>
+                      {% endif %}
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info">
+      <p>You don't have any active subscriptions.</p>
+      <p>To subscribe to notifications for a learning scenario, go to the <a href="{% url 'notes-home' %}">Learning Home</a> page and edit a learning scenario.</p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

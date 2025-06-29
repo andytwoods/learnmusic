@@ -603,3 +603,54 @@ def pushover_callback(request):
 
 
     return redirect(reverse('notes-home'))
+
+
+@login_required
+def reminders(request):
+    """
+    View to display and manage user's active subscriptions.
+    Shows all LearningScenarios where reminder_type is not NONE.
+    Allows unsubscribing from PUSH and EMAIL notifications.
+    """
+    if request.method == 'POST':
+        # Handle unsubscribe actions
+        scenario_id = request.POST.get('scenario_id')
+        action = request.POST.get('action')
+
+        if scenario_id and action:
+            try:
+                scenario = LearningScenario.objects.get(id=scenario_id, user=request.user)
+
+                # Update reminder_type based on the action
+                if action == 'unsubscribe_push':
+                    if scenario.reminder_type == LearningScenario.Reminder.ALL:
+                        scenario.reminder_type = LearningScenario.Reminder.EMAIL
+                    elif scenario.reminder_type == LearningScenario.Reminder.PUSH_NOTIFICATION:
+                        scenario.reminder_type = LearningScenario.Reminder.NONE
+
+                elif action == 'unsubscribe_email':
+                    if scenario.reminder_type == LearningScenario.Reminder.ALL:
+                        scenario.reminder_type = LearningScenario.Reminder.PUSH_NOTIFICATION
+                    elif scenario.reminder_type == LearningScenario.Reminder.EMAIL:
+                        scenario.reminder_type = LearningScenario.Reminder.NONE
+
+                scenario.save()
+                messages.success(request, "Subscription updated successfully.")
+            except LearningScenario.DoesNotExist:
+                messages.error(request, "Learning scenario not found.")
+
+        # Redirect to the same page to refresh the content
+        return redirect('subscriptions')
+
+    # Get all active subscriptions (reminder_type is not NONE)
+    active_subscriptions = LearningScenario.objects.filter(
+        user=request.user
+    ).exclude(
+        reminder_type=LearningScenario.Reminder.NONE
+    ).order_by('-created')
+
+    context = {
+        'active_subscriptions': active_subscriptions,
+    }
+
+    return render(request, 'notes/reminders.html', context)
