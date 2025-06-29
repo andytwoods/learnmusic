@@ -94,6 +94,7 @@ THIRD_PARTY_APPS = [
     "django_htmx",
     'axes',
     'bx_django_utils',
+    "huey.contrib.djhuey"
 ]
 
 LOCAL_APPS = [
@@ -289,7 +290,7 @@ REDIS_SSL = REDIS_URL.startswith("rediss://")
 ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", True)
 
 # --- NEW, replaces ACCOUNT_AUTHENTICATION_METHOD ---------------------------
-ACCOUNT_LOGIN_METHODS = {'email',}          # users enter an email to log in
+ACCOUNT_LOGIN_METHODS = {'email', }  # users enter an email to log in
 
 # --- NEW, replaces EMAIL/USERNAME/PASSWORD flags ---------------------------
 # Required fields have a *
@@ -300,20 +301,20 @@ ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1', ]
 # ACCOUNT_SIGNUP_FIELDS = ['email*']
 
 
-ACCOUNT_LOGIN_ATTEMPT_LIMIT   = 5
+ACCOUNT_LOGIN_ATTEMPT_LIMIT = 5
 ACCOUNT_LOGIN_ATTEMPT_TIMEOUT = 600
 
-ACCOUNT_PASSWORD_REQUIRED        = False   # still valid
+ACCOUNT_PASSWORD_REQUIRED = False  # still valid
 ACCOUNT_PASSWORD_INPUT_RENDER_VALUE = False
-ACCOUNT_LOGIN_BY_CODE_ENABLED    = True    # magic-code / passkey workflow
+ACCOUNT_LOGIN_BY_CODE_ENABLED = True  # magic-code / passkey workflow
 
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None   # you keep a username-less user model
-ACCOUNT_EMAIL_VERIFICATION       = "mandatory"
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None  # you keep a username-less user model
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 
-ACCOUNT_ADAPTER        = "learnmusic.users.adapters.AccountAdapter"
-ACCOUNT_FORMS          = {"signup": "learnmusic.users.forms.UserSignupForm"}
-SOCIALACCOUNT_ADAPTER  = "learnmusic.users.adapters.SocialAccountAdapter"
-SOCIALACCOUNT_FORMS    = {"signup": "learnmusic.users.forms.UserSocialSignupForm"}
+ACCOUNT_ADAPTER = "learnmusic.users.adapters.AccountAdapter"
+ACCOUNT_FORMS = {"signup": "learnmusic.users.forms.UserSignupForm"}
+SOCIALACCOUNT_ADAPTER = "learnmusic.users.adapters.SocialAccountAdapter"
+SOCIALACCOUNT_FORMS = {"signup": "learnmusic.users.forms.UserSocialSignupForm"}
 
 # SOCIALACCOUNT_PROVIDERS = {
 #     "google": {"APP": {"client_id": "947800578588-drpgh5eeq3fd88n460u69ad7s161sfld.apps.googleusercontent.com",
@@ -324,16 +325,13 @@ SOCIALACCOUNT_FORMS    = {"signup": "learnmusic.users.forms.UserSocialSignupForm
 #     "apple":  {"APP": {"client_id": "...", "secret": "..."}},
 # }
 
-MFA_SUPPORTED_TYPES       = ["totp", "webauthn", "recovery_codes"]
+MFA_SUPPORTED_TYPES = ["totp", "webauthn", "recovery_codes"]
 MFA_PASSKEY_LOGIN_ENABLED = False
 
 ADMIN_EMAIL = 'contact@tootology.com'
 
-
-
 # Huey Task Queue
 # ------------------------------------------------------------------------------
-INSTALLED_APPS += ["huey.contrib.djhuey", "huey_monitor"]
 
 # Default configuration uses SQLite for local development
 # This will be overridden in production.py to use Redis
@@ -347,4 +345,5 @@ HUEY = {
 }
 
 PUSHOVER_APP_TOKEN = env.str("PUSHOVER_APP_TOKEN", "SET IN .ENV")
-PUSHOVER_SUBSCRIPTION_URL = env.str("PUSHOVER_SUBSCRIPTION_URL", 'https://pushover.net/subscribe/Tootology-kirqmdy91454sf1')
+PUSHOVER_SUBSCRIPTION_URL = env.str("PUSHOVER_SUBSCRIPTION_URL",
+                                    'https://pushover.net/subscribe/Tootology-kirqmdy91454sf1')

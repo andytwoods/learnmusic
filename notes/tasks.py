@@ -18,8 +18,6 @@ from pushover_complete import PushoverAPI
 from learnmusic.users.models import User
 from notes.models import NoteRecord, LearningScenario
 
-# Import huey_monitor models
-from huey_monitor.models import TaskModel, SignalInfoModel
 
 logger = logging.getLogger(__name__)
 
@@ -121,55 +119,3 @@ def send_reminders():
 
 
     print(f"Reminder task completed. Processed {learning_scenarios_with_reminders.count()} learning scenarios, sent {reminders_sent} reminders.")
-
-
-@db_periodic_task(crontab(hour='0', minute='0'))  # Run once a day at midnight
-def purge_old_huey_monitor_records():
-    """
-    Purge records from huey_monitor that are over 7 days old.
-    This helps keep the database size manageable.
-    """
-    # Calculate the cutoff date (7 days ago)
-    cutoff_date = timezone.now() - timedelta(days=7)
-
-    # Delete old TaskModel records
-    deleted_tasks = 0
-    try:
-        # First try with created_at field
-        deleted_tasks = TaskModel.objects.filter(created_at__lt=cutoff_date).delete()[0]
-    except Exception as e:
-        logger.error(f"Failed to delete TaskModel records with created_at field: {e}")
-        try:
-            # Try with timestamp field
-            deleted_tasks = TaskModel.objects.filter(timestamp__lt=cutoff_date).delete()[0]
-        except Exception as e:
-            logger.error(f"Failed to delete TaskModel records with timestamp field: {e}")
-            try:
-                # Try with created field
-                deleted_tasks = TaskModel.objects.filter(created__lt=cutoff_date).delete()[0]
-            except Exception as e:
-                logger.error(f"Failed to delete TaskModel records with created field: {e}")
-
-    # Delete old SignalInfoModel records
-    deleted_signals = 0
-    try:
-        # First try with created_at field
-        deleted_signals = SignalInfoModel.objects.filter(created_at__lt=cutoff_date).delete()[0]
-    except Exception as e:
-        logger.error(f"Failed to delete SignalInfoModel records with created_at field: {e}")
-        try:
-            # Try with timestamp field
-            deleted_signals = SignalInfoModel.objects.filter(timestamp__lt=cutoff_date).delete()[0]
-        except Exception as e:
-            logger.error(f"Failed to delete SignalInfoModel records with timestamp field: {e}")
-            try:
-                # Try with created field
-                deleted_signals = SignalInfoModel.objects.filter(created__lt=cutoff_date).delete()[0]
-            except Exception as e:
-                logger.error(f"Failed to delete SignalInfoModel records with created field: {e}")
-
-    # Log the results
-    try:
-        logger.info(f"Purged {deleted_tasks} task records and {deleted_signals} signal records from huey_monitor that were over 7 days old.")
-    except Exception as e:
-        logger.error(f"Error logging purge results: {e}")
