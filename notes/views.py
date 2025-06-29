@@ -611,13 +611,35 @@ def reminders(request):
     View to display and manage user's active subscriptions.
     Shows all LearningScenarios where reminder_type is not NONE.
     Allows unsubscribing from PUSH and EMAIL notifications.
+    Also provides an option to unsubscribe from all notifications at once.
     """
     if request.method == 'POST':
         # Handle unsubscribe actions
         scenario_id = request.POST.get('scenario_id')
         action = request.POST.get('action')
 
-        if scenario_id and action:
+        # Handle unsubscribe all action
+        if action == 'unsubscribe_all':
+            # Get all active subscriptions for the user
+            active_subscriptions = LearningScenario.objects.filter(
+                user=request.user
+            ).exclude(
+                reminder_type=LearningScenario.Reminder.NONE
+            )
+
+            # Update all to NONE
+            count = active_subscriptions.count()
+            active_subscriptions.update(reminder_type=LearningScenario.Reminder.NONE)
+
+            if count > 0:
+                messages.success(request, f"Successfully unsubscribed from all {count} notifications.")
+            else:
+                messages.info(request, "No active subscriptions to unsubscribe from.")
+
+            return redirect('reminders')
+
+        # Handle individual unsubscribe actions
+        elif scenario_id and action:
             try:
                 scenario = LearningScenario.objects.get(id=scenario_id, user=request.user)
 
@@ -640,7 +662,7 @@ def reminders(request):
                 messages.error(request, "Learning scenario not found.")
 
         # Redirect to the same page to refresh the content
-        return redirect('subscriptions')
+        return redirect('reminders')
 
     # Get all active subscriptions (reminder_type is not NONE)
     active_subscriptions = LearningScenario.objects.filter(

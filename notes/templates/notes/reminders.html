@@ -17,6 +17,15 @@
   {% endif %}
 
   {% if active_subscriptions %}
+    <div class="mb-4">
+      <form method="post" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" name="action" value="unsubscribe_all" class="btn btn-danger">
+          <i class="fas fa-bell-slash"></i> Unsubscribe from all notifications
+        </button>
+      </form>
+    </div>
+
     <div class="row mb-5">
       {% for subscription in active_subscriptions %}
         <div class="col-md-6 mb-4">
