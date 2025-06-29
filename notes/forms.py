@@ -61,7 +61,8 @@ class LearningScenarioForm(forms.ModelForm):
             input_formats=["%Y-%m-%dT%H:%M"],  # matches datetime-local
             required=False,  # or True if the field is mandatory
             label="Daily reminder time",
-            help_text="Set in your local timezone"
+            help_text="Set in your local timezone. Specify the next time you want to be reminded. "
+                      "Thereafter, you will be reminded at the same time every 24 hours."
         )
 
         # Crispy Forms for layout
