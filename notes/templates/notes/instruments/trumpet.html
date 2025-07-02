@@ -13,7 +13,6 @@
       border-radius: 50%;
       width: 90px;
       height: 90px;
-            left: 100px;
     }
 
     .active {
@@ -25,19 +24,35 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-
+      right: 10px;
+      top: 10px;
     }
 
     #trumpet-right .valve {
       position: relative !important;
       margin: 10px 0;
     }
+
+    /* Add transition to all elements for smooth animation */
+    #trumpet-right > * {
+      transition: transform 0.5s ease;
+    }
   </style>
 {% endblock button_css %}
 
 <div id='trumpet-ux' style="display: none">
-  {% include 'notes/instruments/trumpet_menu.html' %}
+  <div>
+    <!-- Toggle button with gear icon -->
+    <div class="d-flex align-items-center py-1 px-2">
+      <button class="btn btn-light btn-sm" type="button" id="elDragToggleButton">
+        <i class="text-muted fas text-faded fa-up-down-left-right"></i> <span id="toggleButtonText">Move elements</span>
+      </button>
+      <button id="reset-button" class="btn btn-light btn-sm ms-2">Reset positions</button>
+    </div>
+
+  </div>
 </div>
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const trumpet_ux = document.getElementById('trumpet-ux');
@@ -48,15 +63,15 @@
 
 <div class="row w-100 justify-content-center text-center mt-auto">
   <div class="col-12 w-100 text-center">
-    <button class="btn btn-secondary input-button btn-lg w-50" id="answer" data-valve="answer">Buzz</button>
+    <button class="draggable btn btn-secondary input-button btn-lg w-50" id="answer" data-valve="answer">Buzz</button>
   </div>
 </div>
 
 <div id='trumpet-right' class="position-absolute fs-6">
   {% block keys %}
-    <button class="valve rounded-pill input-button p-2 trumpet-b3" data-valve="3">3</button>
-    <button class="valve rounded-pill input-button p-2 trumpet-b2" data-valve="2">2</button>
-    <button class="valve rounded-pill input-button p-2 trumpet-b1" data-valve="1">1</button>
+    <button class="valve rounded-pill input-button p-2 trumpet-b3 draggable" id='valve3' data-valve="3">3</button>
+    <button class="valve rounded-pill input-button p-2 trumpet-b2 draggable" id='valve2' data-valve="2">2</button>
+    <button class="valve rounded-pill input-button p-2 trumpet-b1 draggable" id='valve1' data-valve="1">1</button>
   {% endblock keys %}
 </div>
 
@@ -202,7 +217,6 @@
     )
   ;
 </script>
-
 
 
 <script>

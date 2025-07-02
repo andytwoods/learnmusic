@@ -71,6 +71,7 @@ const stave_manager = (function () {
     // mutable bindings.
     // --------------------------------------------------------------------------------
     let renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
+
     let context = renderer.getContext();
 
     // NB: we do *not* call context.scale(); we resize the surface instead.

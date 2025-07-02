@@ -118,3 +118,14 @@ svg {
   width: clamp(280px, 90vw, 700px);
   max-width: none; /* remove the hard 400 px max in driver.css */
 }
+
+.dragging {
+  cursor: move;
+  transition: transform 0.1s ease;
+  border: 2px dashed #007bff !important;
+  box-shadow: 0 0 10px rgba(0, 123, 255, 0.5) !important;
+}
+
+.dragging:hover {
+  transform: scale(1.05);
+}

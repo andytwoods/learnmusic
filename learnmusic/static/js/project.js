@@ -109,3 +109,217 @@ document.addEventListener("htmx:confirm", function (e) {
         }
     })
 })
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    // Initialize the global flag for instrument_manager
+    window.isDraggingEnabled = false;
+
+
+    const elDragToggle_reset = document.getElementById('reset-button');
+
+    const elDragToggleButton = document.getElementById('elDragToggleButton');
+    const toggleButtonText = document.getElementById('toggleButtonText');
+
+    // --- Constants ---
+    const elPositionsCacheKey = "elPositionsCache";
+
+
+    function get_draggables() {
+        return Array.from(document.querySelectorAll('.draggable'));
+    }
+
+
+    // --- Reset Function ---
+    function reset_els() {
+        // Reset el positions to their original positions as specified in the HTML
+        for (const draggable of get_draggables()) {
+            // Remove any transform styles to restore original position
+            draggable.style.transform = '';
+            // Clear any other positioning styles that might have been added
+            draggable.style.top = '';
+            draggable.style.right = '';
+            draggable.style.bottom = '';
+            draggable.style.left = '';
+        }
+
+
+        // Clear cache
+        localStorage.removeItem(elPositionsCacheKey);
+
+        console.log("El positions reset to original HTML positions, cache cleared");
+    }
+
+    // --- Drag Functionality ---
+    let isDragMode = false;
+    let draggedEL = null;
+    let startX, startY, startTop, startRight;
+
+    // Function to enable/disable drag mode
+    function toggleDragMode() {
+        isDragMode = !isDragMode;
+
+        // Set global flag for instrument_manager to check
+        window.isDraggingEnabled = isDragMode;
+
+        if (isDragMode) {
+            // Enable drag mode
+            toggleButtonText.textContent = "Save Positions";
+            enableElDragging();
+        } else {
+            // Disable drag mode and save positions
+            toggleButtonText.textContent = "Move elements";
+            disableELDragging();
+            saveElPositionsToCache();
+        }
+    }
+
+    // Enable dragging on all elements
+    function enableElDragging() {
+        for (const draggable of get_draggables()) {
+            draggable.classList.add("dragging");
+            draggable.addEventListener("mousedown", startDrag);
+            draggable.addEventListener("touchstart", startDrag, {passive: false});
+        }
+        document.addEventListener("mousemove", drag);
+        document.addEventListener("touchmove", drag, {passive: false});
+        document.addEventListener("mouseup", endDrag);
+        document.addEventListener("touchend", endDrag);
+    }
+
+    // Disable dragging on all elements
+    function disableELDragging() {
+        for (const draggable of get_draggables()) {
+            draggable.classList.remove("dragging");
+            draggable.removeEventListener("mousedown", startDrag);
+            draggable.removeEventListener("touchstart", startDrag);
+        }
+        document.removeEventListener("mousemove", drag);
+        document.removeEventListener("touchmove", drag);
+        document.removeEventListener("mouseup", endDrag);
+        document.removeEventListener("touchend", endDrag);
+    }
+
+    // Start dragging an element
+    function startDrag(e) {
+        e.preventDefault();
+
+        // Get the element
+        draggedEL = e.currentTarget;
+
+        // Get the starting position
+        const touch = e.type === 'touchstart' ? e.touches[0] : e;
+        startX = touch.clientX;
+        startY = touch.clientY;
+
+        // Get the current position of the element
+        const computedStyle = window.getComputedStyle(draggedEL);
+        const transform = computedStyle.transform;
+
+        // Extract the translate elements from the transform matrix
+        if (transform && transform !== 'none') {
+            const matrix = new DOMMatrix(transform);
+            startRight = matrix.m41; // translateX value
+            startTop = matrix.m42;   // translateY value
+        } else {
+            startRight = 0;
+            startTop = 0;
+        }
+    }
+
+    // Drag the element
+    function drag(e) {
+        if (!draggedEL) return;
+
+        e.preventDefault();
+
+        // Get the current position
+        const touch = e.type === 'touchmove' ? e.touches[0] : e;
+        const deltaX = touch.clientX - startX;
+        const deltaY = touch.clientY - startY;
+
+        // Update the element position
+        const newRight = startRight + deltaX;
+        const newTop = startTop + deltaY;
+
+        // Apply the new position
+        draggedEL.style.transform = `translate3d(${newRight}px, ${newTop}px, 0)`;
+    }
+
+    // End dragging
+    function endDrag() {
+        if (draggedEL) {
+            // Save element positions to cache when dragging ends
+            saveElPositionsToCache();
+        }
+        draggedEL = null;
+    }
+
+    // Save element positions to cache
+    function saveElPositionsToCache() {
+        const positions = [];
+
+        for (const draggable of get_draggables()) {
+            const computedStyle = window.getComputedStyle(draggable);
+            const transform = computedStyle.transform;
+
+            let translateX = 0;
+            let translateY = 0;
+
+            if (transform && transform !== 'none') {
+                const matrix = new DOMMatrix(transform);
+                translateX = matrix.m41;
+                translateY = matrix.m42;
+            }
+
+            positions.push({
+                key: draggable.id,
+                translateX: translateX,
+                translateY: translateY
+            });
+        }
+
+        localStorage.setItem(elPositionsCacheKey, JSON.stringify(positions));
+        console.log("El positions saved to cache:", positions);
+    }
+
+    // Load element positions from cache
+    function loadelPositionsFromCache() {
+        try {
+            const cachedPositions = localStorage.getItem(elPositionsCacheKey);
+
+            if (cachedPositions) {
+                const positions = JSON.parse(cachedPositions);
+
+                // First, ensure all elements have no transform to start the animation from the initial position
+                for (const draggable of get_draggables()) {
+                    draggable.style.transform = '';
+                }
+
+                // Use setTimeout to ensure the browser has time to render the initial state
+                setTimeout(() => {
+                    for (let i = 0; i < positions.length; i++) {
+                        const position = positions[i];
+                        const el = document.getElementById(position['key']);
+
+                        if (el) {
+                            el.style.transform = `translate3d(${position.translateX}px, ${position.translateY}px, 0)`;
+                        }
+                    }
+
+                    console.log("El positions loaded from cache with animation:", positions);
+                }, 10); // Small delay to ensure the animation works
+            }
+        } catch (error) {
+            console.error("Error loading el positions from cache:", error);
+        }
+    }
+
+    // --- Event Listeners ---
+    elDragToggleButton.addEventListener('click', toggleDragMode);
+    elDragToggle_reset.addEventListener('click', reset_els);
+
+    // Load element positions from cache
+    loadelPositionsFromCache();
+});
+
