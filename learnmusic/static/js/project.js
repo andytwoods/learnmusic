@@ -323,3 +323,70 @@ document.addEventListener("DOMContentLoaded", function () {
     loadelPositionsFromCache();
 });
 
+
+const cache = (() => {
+    const CKEY = 'tootology-consent';
+    let consent = false;
+
+    setInterval(function(){console.log(consent,22)}, 1000)
+
+    const ok = () => consent;
+    const canStore = () => typeof window !== 'undefined' && 'localStorage' in window;
+
+    function readConsent() {
+        if (!canStore()) return false;
+        consent = localStorage.getItem(CKEY) === 'true';
+        return consent;
+    }
+
+    function writeConsent(value) {
+        if (!canStore()) return false;
+        localStorage.setItem(CKEY, value ? 'true' : 'false');
+        consent = value;
+        return true;
+    }
+
+    function save(key, data) {
+        if (!ok()) return false;
+        try {
+            localStorage.setItem(key, JSON.stringify(data));
+            return true;
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
+    }
+
+    function get(key) {
+        if (!ok()) return null;
+        try {
+            const raw = localStorage.getItem(key);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            console.error(e);
+            return null;
+        }
+    }
+
+    function remove(key) {
+        if (!ok()) return false;
+        try {
+            localStorage.removeItem(key);
+            return true;
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
+    }
+
+    return {
+        checkPermission: readConsent,
+        permissionGiven: () => writeConsent(true),
+        permissionRemoved: () => {
+            localStorage.removeItem(CKEY);
+            consent = false;
+            return true;
+        },
+        save, get, remove,
+    };
+})();

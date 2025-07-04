@@ -14,15 +14,19 @@
     }
 
     // Wait a short time to ensure the script is loaded
-    setTimeout(function() {
+    setTimeout(function () {
       if (typeof CookieConsent !== 'undefined') {
         CookieConsent.run({
+          onFirstConsent: ({cookie}) => {
+            cache.permissionGiven();
+          },
+
           // Avoid automatic cookie scanning which can trigger Brave's shields
           autoDetect: false,
 
           // Set a custom cookie name to avoid being detected as tracking
           cookie: {
-            name: 'tootology_preferences',
+            name: 'tootology-consent',
             expiresAfterDays: 182, // 6 months
             sameSite: 'Lax'
           },

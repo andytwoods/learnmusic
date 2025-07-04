@@ -5,7 +5,8 @@
       <!-- About -->
       <div class="col-12 col-md-5 mb-3 mb-md-0">
         <h6 class="fw-bold mb-2 border-start border-primary border-3 ps-2 ps-md-3">About Us</h6>
-        <p class="small mb-2 opacity-75">We create tools to help musicians practise effectively and grow to their full potential.</p>
+        <p class="small mb-2 opacity-75">We create tools to help musicians practise effectively and grow to their full
+          potential.</p>
 
       </div>
 
@@ -13,8 +14,15 @@
       <div class="col-6 col-md-3">
         <h6 class="fw-bold mb-2 border-start border-primary border-3 ps-2 ps-md-3">Quick Links</h6>
         <ul class="list-unstyled mb-0">
-          <li><a href="{% url 'home' %}" class="small text-white text-decoration-none"><i class="fas fa-home me-2"></i>Home</a></li>
-          <li class="mt-1"><a href="{% url 'account_login' %}" class="small text-white text-decoration-none"><i class="fas fa-sign-in-alt me-2"></i>Sign In</a></li>
+          <li><a href="{% url 'home' %}" class="small text-white text-decoration-none"><i class="fas fa-home me-2"></i>Home</a>
+          </li>
+          <li class="mt-1"><a href="{% url 'account_login' %}" class="small text-white text-decoration-none"><i
+            class="fas fa-sign-in-alt me-2"></i>Sign In</a></li>
+          <li class="mt-1">
+            <a href="#" onclick="CookieConsent.show(); return false;" class="small text-white text-decoration-none">
+              <i class="fas fa-cookie me-2"></i>Cookie consent
+            </a>
+          </li>
         </ul>
       </div>
 
@@ -22,8 +30,10 @@
       <div class="col-6 col-md-4">
         <h6 class="fw-bold mb-2 border-start border-primary border-3 ps-2 ps-md-3">Legal</h6>
         <ul class="list-unstyled mb-0">
-          <li><a href="{% url 'privacy-policy' %}" class="small text-white text-decoration-none"><i class="fas fa-shield-alt me-2"></i>Privacy Policy</a></li>
-          <li class="mt-1"><a href="{% url 'terms-conditions' %}" class="small text-white text-decoration-none"><i class="fas fa-file-contract me-2"></i>Terms & Conditions</a></li>
+          <li><a href="{% url 'privacy-policy' %}" class="small text-white text-decoration-none"><i
+            class="fas fa-shield-alt me-2"></i>Privacy Policy</a></li>
+          <li class="mt-1"><a href="{% url 'terms-conditions' %}" class="small text-white text-decoration-none"><i
+            class="fas fa-file-contract me-2"></i>Terms & Conditions</a></li>
         </ul>
         <h6 class="text-white small mt-3 mb-1">Contact Us</h6>
         <p class="small opacity-75 mb-0"><i class="fas fa-envelope me-2"></i>contact@tootology.com</p>
