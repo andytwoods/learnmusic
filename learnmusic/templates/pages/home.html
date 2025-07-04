@@ -39,15 +39,84 @@
     </div>
   </section>
 
-  <section class="pt-5">
-    <div class="container text-center">
-      <h2 class="mb-4">Have a go now!</h2>
+  <section class="py-5">
+    <div class="overlay"></div>
+    <div class="container position-relative">
+      <h2 class="text-center mb-4">How It Works</h2>
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-3">
+          <div class="card h-100 shadow-sm border-0 bg-light">
+            <div class="card-body text-center">
+              <div class="d-flex align-items-center justify-content-center mb-3">
+                <i class="fas fa-calendar-check fa-2x text-primary me-3"></i>
+                <h5 class="card-title mb-0">Daily exercises</h5>
+              </div>
+              <p class="card-text">This app helps you improve your sight reading with short daily exercises designed for
+                real progress over time.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+          <div class="card h-100 shadow-sm border-0 bg-light">
+            <div class="card-body text-center">
+              <div class="d-flex align-items-center justify-content-center mb-3">
+                <i class="fas fa-chart-line fa-2x text-success me-3"></i>
+                <h5 class="card-title mb-0">Progressive Learning</h5>
+              </div>
+              <p class="card-text">You'll start with common notes, then gradually move into new key signatures,
+                accidentals, and more complex patterns.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+          <div class="card h-100 shadow-sm border-0 bg-light">
+            <div class="card-body text-center">
+              <div class="d-flex align-items-center justify-content-center mb-3">
+                <i class="fas fa-trophy fa-2x text-warning me-3"></i>
+                <h5 class="card-title mb-0">Advanced Challenges</h5>
+              </div>
+              <p class="card-text">Prefer a challenge? You can also practise transposing and other advanced skills to
+                take your musicianship to the next level.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+          <div class="card h-100 shadow-sm border-0 bg-light">
+            <div class="card-body text-center">
+              <div class="d-flex align-items-center justify-content-center mb-3">
+                <i class="fas fa-dumbbell fa-2x text-info me-3"></i>
+                <h5 class="card-title mb-0">Muscle memory</h5>
+              </div>
+              <p class="card-text">For most impact, move elements on screen to match how you play your
+                instrument.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-5 bg-light">
+    <div class="container">
+      <div class="text-center mb-4">
+        <h2 class="mb-3">Have a go now!</h2>
+        <p class="lead mb-5">Try out our interactive note practice tool with this demo for trumpet players</p>
+      </div>
+
+
+      <div id="iframe-container" class="overflow-hidden">
+        <!-- The iframe will be added here dynamically -->
+      </div>
+
+
       {{ instruments|json_script:"instruments-data" }}
       <script>
         document.addEventListener("DOMContentLoaded", function () {
           const url_start = "{{ request.scheme }}://{{ request.get_host }}/{{ practice_url }}/";
           loadIframe(url_start + 'Trumpet/treble/Bb/Beginner/')
-
         });
 
         function loadIframe(src) {
@@ -79,11 +148,6 @@
       </script>
     </div>
   </section>
-  <div class="m-1">
-    <div id="iframe-container">
-      <!-- The iframe will be added here dynamically -->
-    </div>
-  </div>
 
   <!-- Features Section -->
   <section id="features" class="py-5">
@@ -106,7 +170,9 @@
             <div class="card-body text-center">
               <h5 class="card-title"><i class="bi bi-music-note"></i> Free as in beer</h5>
               <p class="card-text">
-                Made with <i class="fas fa-heart text-danger"></i> for and by         <img src="{% static 'images/trumpet_colour.svg' %}" alt="Trumpet" class="me-2" width="32" height="32">musicians. Unless costs mount, will remain free</p>
+                Made with <i class="fas fa-heart text-danger"></i> for and by <img
+                src="{% static 'images/trumpet_colour.svg' %}" alt="Trumpet" class="me-2" width="32" height="32">musicians.
+                Unless costs mount, will remain free</p>
             </div>
           </div>
         </div>

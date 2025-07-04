@@ -117,10 +117,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     const elDragToggle_reset = document.getElementById('reset-button');
-
     const elDragToggleButton = document.getElementById('elDragToggleButton');
     const toggleButtonText = document.getElementById('toggleButtonText');
 
+    if(!elDragToggleButton) return;
     // --- Constants ---
     const elPositionsCacheKey = "elPositionsCache";
 
