@@ -129,30 +129,42 @@ const stave_manager = (function () {
     }
 
     // public: draw a (black) note ---------------------------------------------
-    api.updateNote = function (noteStr) {
-        api.currentNote = noteStr; // remember for future redraws
+api.updateNote = function (noteStr) {
+  api.currentNote = noteStr;
+  freshRenderer();
 
-        freshRenderer(); // start from a clean surface so old notes vanish
+  const transposed = transpose(noteStr);
+  const stemDir = calcStemDirection(transposed);
 
-        const transposed = transpose(noteStr);
-        const stemDir = calcStemDirection(transposed);
+  // 1. build the note with centre-alignment
+  const note = new VF.StaveNote({
+    keys: [transposed],
+    duration: "q",
+    clef: my_clef,
+    stem_direction: stemDir,
+    align_center: true,          // keep this
+  });
 
-        const note = new VF.StaveNote({
-            keys: [transposed],
-            duration: "q",
-            clef: my_clef,
-            stem_direction: stemDir,
-            align_center: true,
-        });
+  // 2. optional accidental
+  let accidentalWidth = 0;
+  if (/[#b]/.test(transposed)) {
+    const acc = new VF.Accidental(transposed.includes("#") ? "#" : "b");
+    note.addModifier(acc, 0);
+    accidentalWidth = acc.getWidth();   // glyph width is known immediately
+  }
 
-        if (/[#b]/.test(transposed)) {
-            note.addModifier(new VF.Accidental(transposed.includes("#") ? "#" : "b"), 0);
-        }
+  // 3. format & centre the tickable as usual
+  const voice = new VF.Voice({num_beats: 1, beat_value: 4}).addTickables([note]);
+  new VF.Formatter().joinVoices([voice]).format([voice], staveWidth / 2);
 
-        const voice = new VF.Voice({num_beats: 1, beat_value: 4}).addTickables([note]);
-        new VF.Formatter().joinVoices([voice]).format([voice], staveWidth / 2);
-        voice.draw(context, stave);
-    };
+  // 4. Nudge the whole tickable left so the HEAD, not the group, is centred
+  if (accidentalWidth) {
+    note.setXShift(7);  // negative = move left :contentReference[oaicite:0]{index=0}
+  }
+
+  voice.draw(context, stave);
+};
+
 
     // public: draw a red feedback note ----------------------------------------
     api.feedbackNote = function (noteStr) {
