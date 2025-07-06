@@ -4,7 +4,6 @@ const countdown_manager = (function () {
     let remainingTime;
 
     const counterSpan = document.getElementById("counter-value");
-    const card = document.getElementById("time-up");
 
     api.start = function (durationInSeconds) {
         if (remainingTime !== undefined) return;
@@ -19,8 +18,6 @@ const countdown_manager = (function () {
 
             if (remainingTime <= 0) {
                 clearInterval(intervalId);
-                card.style.display = 'block';
-                counterSpan.style.display = 'none';
             }
         }, 1000);
 
