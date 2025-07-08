@@ -19,8 +19,10 @@ const countdown_manager = (function () {
 
             if (remainingTime <= 0) {
                 clearInterval(intervalId);
-                card.style.display = 'block';
-                counterSpan.style.display = 'none';
+                if(card) {
+                    card.style.display = 'block';
+                    counterSpan.style.display = 'none';
+                }
             }
         }, 1000);
 
