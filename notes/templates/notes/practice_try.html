@@ -6,16 +6,24 @@
 {% endblock %}
 
 {% block timeup %}
-  <div class='card z-3 shadow  text-bg-primary' id="time-up" style="display: none;">
+  <div class='card z-3 shadow text-bg-primary' id="time-up" style="display: none;">
     <div class='card-body'>
       <button type='button' class='btn-close position-absolute top-0 end-0 m-2' aria-label='Close'
               onclick='document.getElementById("time-up").remove()'></button>
       <p><strong>Time’s up!</strong></p>
       <p>To continue practicing, close this popup.</p>
-      <p>Want to save your progress without signing up? Click here to save to cache and take you to a page you
-        can bookmark. There you can practice whenever you want.</p>
-      <p>To save your progress through this app, and get access to a whole host of features such as progress
-        reports, reminders, etc, click here to sign up. Unless costs mount, this app will remain free.</p>
+
+      <p>
+        <button class="btn btn-dark btn-sm">Save to cache</button>
+        Want to save your progress without signing up?
+        Pick this option to save to cache and go to a page you
+        can bookmark. There you can practice whenever you want.
+      </p>
+      <p>
+        <button class="btn btn-dark btn-sm">Save with app</button>
+        Select this option to save your progress through this app, and get access to a whole host of features such as
+        progress reports, reminders, etc. This requires signing up. Unless costs mount, this app will remain free.
+      </p>
       <p>
         {% include 'phrase.html' %}.
       </p>
