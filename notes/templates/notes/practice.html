@@ -78,7 +78,7 @@
       {% block cardbody %}{% endblock %}
 
       <div id="counter" style="display: none;"
-           class="text-secondary position-absolute top-0 start-0 p-2 m-2">
+           class="text-secondary position-absolute top-0 start-0 p-2 m-2 z-1">
         {% block see_results %}
           {% if learningscenario_id %}
             <a href="{% url 'learningscenario_graph' learningscenario_id=learningscenario_id %}"
