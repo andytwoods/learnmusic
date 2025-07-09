@@ -74,9 +74,9 @@ const learning_manager = (function () {
 
     function areNotesEqual(note1, note2) {
         if (!note1 || !note2) return false;
-        return (note1.note   === note2.note &&
-                note1.octave === note2.octave &&
-                note1.alter  === note2.alter);
+        return (note1.note === note2.note &&
+            note1.octave === note2.octave &&
+            note1.alter === note2.alter);
     }
 
     // Helper to pick up to maxCount new notes from allPossibleNotes
@@ -89,13 +89,39 @@ const learning_manager = (function () {
         return missing.slice(0, maxCount);
     }
 
+    function lightlyShuffleNotes(notes) {
+        if (!notes || notes.length < 2) return notes;
+
+        const result = [...notes];
+        let justMoved = new Set(); // Keep track of recently moved notes
+
+        for (let i = 0; i < result.length - 1; i++) {
+            // Skip if current note was just moved in previous iteration
+            if (justMoved.has(i)) {
+                continue;
+            }
+
+            // 50% chance to swap
+            if (Math.random() < 0.5) {
+                // Perform the swap
+                [result[i], result[i + 1]] = [result[i + 1], result[i]];
+                // Mark both positions as just moved
+                justMoved.add(i);
+                justMoved.add(i + 1);
+            }
+        }
+
+        return result;
+    }
+
     /*
      * Return the first note from priorityNotes that is not in the recentNotesLog.
      * The “priorityNotes” are first sorted by partial mastery (lowest first).
      */
     function processNotes(priorityNotes, recentNotesLog) {
         const orderedNotes = orderNotesByMastery(priorityNotes);
-        for (let note of orderedNotes) {
+        const lightlyShuffled = lightlyShuffleNotes(orderedNotes);
+        for (let note of lightlyShuffled) {
             if (!recentNotesLog.some(r => areNotesEqual(r, note))) {
                 return note;
             }
@@ -159,10 +185,12 @@ const learning_manager = (function () {
 
             // Otherwise do normal flow (partial mastery picking logic)
             if (window.special_condition === 'first_trial') {
-                return window.progress_data[0];
+                const maxLength = Math.min(5, window.progress_data.length);
+                const randomIndex = Math.floor(Math.random() * maxLength);
+                return window.progress_data[randomIndex];
             }
 
-            const masteredNotes    = window.progress_data.filter(isMastered);
+            const masteredNotes = window.progress_data.filter(isMastered);
             const nonMasteredNotes = window.progress_data.filter(n => !isMastered(n));
 
             let nextNote = null;
