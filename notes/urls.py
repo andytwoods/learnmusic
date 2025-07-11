@@ -1,10 +1,13 @@
 # ruff: noqa
 from django.contrib.auth.decorators import login_required
 from django.urls import path
+from django.views.generic import TemplateView
 
 from notes import views
 
 urlpatterns = [
+    # Test JS URL
+    path('test-js/', TemplateView.as_view(template_name='notes/test_js.html'), name='test-js'),
 
     # Reminder settings HTMX endpoints
     path("reminder-settings-button/", views.reminder_settings_button, name="reminder-settings-button"),

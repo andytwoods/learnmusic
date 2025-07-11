@@ -30,3 +30,5 @@ const countdown_manager = (function () {
 
     return api;
 }());
+
+if (typeof module !== 'undefined') module.exports = countdown_manager;

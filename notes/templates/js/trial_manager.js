@@ -114,3 +114,5 @@ const trial_manager = (function () {
 
     return api;
 }());
+
+if (typeof module !== 'undefined') module.exports = stave_manager;

@@ -39,3 +39,36 @@ To run the tests, check your test coverage, and generate an HTML coverage report
 
     $ python manage.py test
 
+### JavaScript Testing
+
+The project includes comprehensive tests for JavaScript files, particularly for `learning_manager.js`.
+
+#### Manual Testing in Browser
+
+A dedicated test page has been set up to test JavaScript functionality in the browser:
+
+1. Start the Django development server:
+   ```
+   python manage.py runserver
+   ```
+
+2. Navigate to the test page:
+   ```
+   http://localhost:8000/notes/test-js/
+   ```
+
+#### Automated Testing with Jest
+
+Jest tests have been set up for thorough testing of JavaScript functions:
+
+1. Install Node.js dependencies:
+   ```
+   npm install
+   ```
+
+2. Run the tests:
+   ```
+   npm test
+   ```
+
+For more details about JavaScript testing, see the [JavaScript tests README](learnmusic/static/js/tests/README.md).

@@ -33,3 +33,6 @@ const session_manager = (function () {
 
     return api;
 }());
+
+
+if (typeof module !== 'undefined') module.exports = session_manager;

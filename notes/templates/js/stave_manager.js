@@ -219,3 +219,4 @@ document.addEventListener("DOMContentLoaded", () => {
     zoomOutBtn.addEventListener("click", stave_manager.decreaseMagnification);
 });
 
+if (typeof module !== 'undefined') module.exports = stave_manager;

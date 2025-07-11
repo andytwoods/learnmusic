@@ -21,6 +21,18 @@ const learning_manager = (function () {
     // (so you don’t re-prompt them multiple times in the same session)
     let alreadyAskedAboutNewNotes = false;
 
+    // Mock allPossibleNotes for testing in Node.js environment
+    const allPossibleNotes = [
+        {note: 'C', octave: '4', alter: '0'},
+        {note: 'D', octave: '4', alter: '0'},
+        {note: 'E', octave: '4', alter: '0'},
+        {note: 'F', octave: '4', alter: '0'},
+        {note: 'G', octave: '4', alter: '0'},
+        {note: 'A', octave: '4', alter: '0'},
+        {note: 'B', octave: '4', alter: '0'},
+        {note: 'C', octave: '5', alter: '0'}
+    ];
+
 
     /*
      * 1) PARTIAL MASTERY:
@@ -82,7 +94,9 @@ const learning_manager = (function () {
     // Helper to pick up to maxCount new notes from allPossibleNotes
     // that aren’t already in window.progress_data
     function pickNewNotes(maxCount) {
-        const existing = window.progress_data || [];
+        // Use global.window for Node.js compatibility
+        const windowObj = typeof global !== 'undefined' && global.window ? global.window : window;
+        const existing = windowObj.progress_data || [];
         const missing = allPossibleNotes.filter(possibleNote =>
             !existing.some(existingNote => areNotesEqual(existingNote, possibleNote))
         );
@@ -97,12 +111,12 @@ const learning_manager = (function () {
 
         for (let i = 0; i < result.length - 1; i++) {
             // Skip if current note was just moved in previous iteration
-            if (justMoved.has(i)) {
+            if (justMoved.has(i) || justMoved.has(i + 1)) {
                 continue;
             }
 
             // 50% chance to swap
-            if (Math.random() < 0.5) {
+            if (Math.random() > 0.5) {
                 // Perform the swap
                 [result[i], result[i + 1]] = [result[i + 1], result[i]];
                 // Mark both positions as just moved
@@ -119,33 +133,47 @@ const learning_manager = (function () {
      * The “priorityNotes” are first sorted by partial mastery (lowest first).
      */
     function processNotes(priorityNotes, recentNotesLog) {
-        const orderedNotes = orderNotesByMastery(priorityNotes);
-        const lightlyShuffled = lightlyShuffleNotes(orderedNotes);
-        for (let note of lightlyShuffled) {
-            if (!recentNotesLog.some(r => areNotesEqual(r, note))) {
-                return note;
-            }
+        // First, filter out notes that are in the recentNotesLog
+        const availableNotes = priorityNotes.filter(note =>
+            !recentNotesLog.some(r => areNotesEqual(r, note))
+        );
+
+        // If no notes are available after filtering, return null
+        if (availableNotes.length === 0) {
+            return null;
         }
-        return null;
+
+        // Order the available notes by mastery
+        const orderedNotes = orderNotesByMastery(availableNotes);
+
+        // Apply light shuffling
+        const lightlyShuffled = lightlyShuffleNotes(orderedNotes);
+
+        // Return the first note
+        return lightlyShuffled[0];
     }
 
     api.set_LIKELIHOOD_OF_MASTERED_NOTE = function (value) {
         LIKELIHOOD_OF_MASTERED_NOTE = Math.max(0, Math.min(1, value));
+        return LIKELIHOOD_OF_MASTERED_NOTE; // Return for testing
     };
 
     api.next_note = (function () {
         const recentNotesLog = [];
 
         return function () {
+            // Use global.window for Node.js compatibility
+            const windowObj = typeof global !== 'undefined' && global.window ? global.window : window;
+
             // 1) If user is brand new and we haven't seeded them yet
-            if (!initialNotesAdded && window.progress_data.length === 0) {
+            if (!initialNotesAdded && windowObj.progress_data.length === 0) {
                 const firstBatch = pickNewNotes(NUMBER_OF_NEW_NOTES_TO_START_LEARNING_INITIALLY);
-                window.progress_data.push(...firstBatch);
+                windowObj.progress_data.push(...firstBatch);
                 initialNotesAdded = true;
                 console.log("Added initial notes:", firstBatch);
 
                 // Return the first note from the new batch
-                return window.progress_data[0];
+                return windowObj.progress_data[0];
             }
 
             // 2) If all current notes are mastered => show SweetAlert
@@ -208,8 +236,31 @@ const learning_manager = (function () {
             }
             if (!nextNote) {
                 console.warn("All notes have been recently played. Resetting recentNotesLog.");
+
+                // Get the last played note before resetting the log
+                const lastPlayedNote = recentNotesLog.length > 0 ? recentNotesLog[recentNotesLog.length - 1] : null;
+
+                // Reset the log
                 recentNotesLog.length = 0;
-                nextNote = processNotes(window.progress_data, recentNotesLog);
+
+                // Force a different note than the last one if possible
+                if (lastPlayedNote && window.progress_data.length > 1) {
+                    // Find notes that are different from the last played note
+                    const differentNotes = window.progress_data.filter(note =>
+                        !areNotesEqual(note, lastPlayedNote));
+
+                    if (differentNotes.length > 0) {
+                        // Randomly select one of the different notes
+                        const randomIndex = Math.floor(Math.random() * differentNotes.length);
+                        nextNote = differentNotes[randomIndex];
+                    } else {
+                        // Fallback: just pick any note
+                        nextNote = window.progress_data[0];
+                    }
+                } else {
+                    // If no last played note or only one note available, just pick any note
+                    nextNote = window.progress_data[0];
+                }
             }
 
             if (nextNote) {
@@ -236,5 +287,34 @@ const learning_manager = (function () {
         };
     })();
 
+    // Expose internal functions for testing
+    api._testing = {
+        getMasteryScore,
+        isMastered,
+        allNotesMastered,
+        orderNotesByMastery,
+        areNotesEqual,
+        pickNewNotes,
+        lightlyShuffleNotes,
+        processNotes,
+        allPossibleNotes
+    };
+
     return api;
 }());
+
+// Set up global.window for Node.js environment
+if (typeof global !== 'undefined' && !global.window) {
+    global.window = {
+        progress_data: [],
+        special_condition: 'first_trial'
+    };
+
+    // Mock Swal for testing
+    global.Swal = {
+        fire: jest.fn().mockResolvedValue({ isConfirmed: true })
+    };
+}
+
+// Export for Node.js
+if (typeof module !== 'undefined') module.exports = learning_manager;

@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block javascript %}
+  {{ block.super }}
+  <!-- Include any dependencies your JS file needs -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>JavaScript Test Page for learning_manager.js</h1>
+  <div id="test-results" class="mt-4"></div>
+
+  <script>
+    // Mock any global variables or functions your JS file expects
+    window.progress_data = [
+      {note: 'C', octave: '4', alter: '0', correct: [true, false, true]},
+      {note: 'D', octave: '4', alter: '0', correct: [false, false]}
+    ];
+
+    window.special_condition = 'first_trial';
+
+    // Include your JS file
+    {% include 'js/learning_manager.js' %}
+
+    // Write test code
+    document.addEventListener('DOMContentLoaded', function() {
+      const resultsDiv = document.getElementById('test-results');
+
+      // Test the API functions
+      try {
+        // Test getMasteryScore
+        const testGetMasteryScore = function() {
+          const note1 = {note: 'C', octave: '4', alter: '0', correct: [true, false, true]};
+          const note2 = {note: 'D', octave: '4', alter: '0', correct: [false, false]};
+          const note3 = {note: 'E', octave: '4', alter: '0', correct: [true, true, true]};
+          const note4 = {note: 'F', octave: '4', alter: '0'}; // No correct array
+
+          resultsDiv.innerHTML += `<h3>Test getMasteryScore</h3>`;
+          resultsDiv.innerHTML += `<p>Note with [true, false, true]: ${getMasteryScore(note1)} (expected: 2)</p>`;
+          resultsDiv.innerHTML += `<p>Note with [false, false]: ${getMasteryScore(note2)} (expected: 0)</p>`;
+          resultsDiv.innerHTML += `<p>Note with [true, true, true]: ${getMasteryScore(note3)} (expected: 3)</p>`;
+          resultsDiv.innerHTML += `<p>Note with no correct array: ${getMasteryScore(note4)} (expected: 0)</p>`;
+        };
+
+        // Test isMastered
+        const testIsMastered = function() {
+          const note1 = {note: 'C', octave: '4', alter: '0', correct: [true, false, true]};
+          const note2 = {note: 'D', octave: '4', alter: '0', correct: [false, false]};
+          const note3 = {note: 'E', octave: '4', alter: '0', correct: [true, true, true]};
+
+          resultsDiv.innerHTML += `<h3>Test isMastered</h3>`;
+          resultsDiv.innerHTML += `<p>Note with [true, false, true]: ${isMastered(note1)} (expected: true)</p>`;
+          resultsDiv.innerHTML += `<p>Note with [false, false]: ${isMastered(note2)} (expected: false)</p>`;
+          resultsDiv.innerHTML += `<p>Note with [true, true, true]: ${isMastered(note3)} (expected: true)</p>`;
+        };
+
+        // Test allNotesMastered
+        const testAllNotesMastered = function() {
+          const data1 = [
+            {note: 'C', octave: '4', alter: '0', correct: [true, false, true]},
+            {note: 'D', octave: '4', alter: '0', correct: [true, true, false]}
+          ];
+          const data2 = [
+            {note: 'C', octave: '4', alter: '0', correct: [true, false, true]},
+            {note: 'D', octave: '4', alter: '0', correct: [false, false]}
+          ];
+          const data3 = [
+            {note: 'C', octave: '4', alter: '0', correct: [true, true, true]},
+            {note: 'D', octave: '4', alter: '0', correct: [true, true, true]}
+          ];
+
+          resultsDiv.innerHTML += `<h3>Test allNotesMastered</h3>`;
+          resultsDiv.innerHTML += `<p>Data with all notes having at least 1 correct: ${allNotesMastered(data1)} (expected: true)</p>`;
+          resultsDiv.innerHTML += `<p>Data with one note having 0 correct: ${allNotesMastered(data2)} (expected: false)</p>`;
+          resultsDiv.innerHTML += `<p>Data with all notes having all correct: ${allNotesMastered(data3)} (expected: true)</p>`;
+        };
+
+        // Test areNotesEqual
+        const testAreNotesEqual = function() {
+          const note1 = {note: 'C', octave: '4', alter: '0'};
+          const note2 = {note: 'C', octave: '4', alter: '0'};
+          const note3 = {note: 'D', octave: '4', alter: '0'};
+          const note4 = {note: 'C', octave: '5', alter: '0'};
+          const note5 = {note: 'C', octave: '4', alter: '1'};
+
+          resultsDiv.innerHTML += `<h3>Test areNotesEqual</h3>`;
+          resultsDiv.innerHTML += `<p>Same notes: ${areNotesEqual(note1, note2)} (expected: true)</p>`;
+          resultsDiv.innerHTML += `<p>Different notes: ${areNotesEqual(note1, note3)} (expected: false)</p>`;
+          resultsDiv.innerHTML += `<p>Different octaves: ${areNotesEqual(note1, note4)} (expected: false)</p>`;
+          resultsDiv.innerHTML += `<p>Different alters: ${areNotesEqual(note1, note5)} (expected: false)</p>`;
+        };
+
+        // Test next_note
+        const testNextNote = function() {
+          resultsDiv.innerHTML += `<h3>Test next_note</h3>`;
+          const note = learning_manager.next_note();
+          resultsDiv.innerHTML += `<p>next_note() returned: ${JSON.stringify(note)}</p>`;
+
+          // Test with different special_condition
+          window.special_condition = 'not_first_trial';
+          const note2 = learning_manager.next_note();
+          resultsDiv.innerHTML += `<p>next_note() with special_condition='not_first_trial' returned: ${JSON.stringify(note2)}</p>`;
+        };
+
+        // Test set_LIKELIHOOD_OF_MASTERED_NOTE
+        const testSetLikelihood = function() {
+          resultsDiv.innerHTML += `<h3>Test set_LIKELIHOOD_OF_MASTERED_NOTE</h3>`;
+          learning_manager.set_LIKELIHOOD_OF_MASTERED_NOTE(0.5);
+          resultsDiv.innerHTML += `<p>Set LIKELIHOOD_OF_MASTERED_NOTE to 0.5</p>`;
+
+          // Test with values outside range
+          learning_manager.set_LIKELIHOOD_OF_MASTERED_NOTE(1.5);
+          resultsDiv.innerHTML += `<p>Set LIKELIHOOD_OF_MASTERED_NOTE to 1.5 (should clamp to 1.0)</p>`;
+
+          learning_manager.set_LIKELIHOOD_OF_MASTERED_NOTE(-0.5);
+          resultsDiv.innerHTML += `<p>Set LIKELIHOOD_OF_MASTERED_NOTE to -0.5 (should clamp to 0.0)</p>`;
+        };
+
+        // Run all tests
+        testGetMasteryScore();
+        testIsMastered();
+        testAllNotesMastered();
+        testAreNotesEqual();
+        testNextNote();
+        testSetLikelihood();
+
+        resultsDiv.innerHTML += '<p class="text-success">All tests completed!</p>';
+      } catch (error) {
+        resultsDiv.innerHTML += `<p class="text-danger">Error: ${error.message}</p>`;
+        console.error(error);
+      }
+    });
+  </script>
+</div>
+{% endblock %}
