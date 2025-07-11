@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const elDragToggleButton = document.getElementById('elDragToggleButton');
     const toggleButtonText = document.getElementById('toggleButtonText');
 
-    if(!elDragToggleButton) return;
+    if (!elDragToggleButton) return;
     // --- Constants ---
     const elPositionsCacheKey = "elPositionsCache";
 
@@ -132,6 +132,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // --- Reset Function ---
     function reset_els() {
+        // Add transition for smooth reset animation
+        for (const draggable of get_draggables()) {
+            draggable.style.transition = 'transform 0.5s ease';
+        }
+
         // Reset el positions to their original positions as specified in the HTML
         for (const draggable of get_draggables()) {
             // Remove any transform styles to restore original position
@@ -143,6 +148,12 @@ document.addEventListener("DOMContentLoaded", function () {
             draggable.style.left = '';
         }
 
+        // Remove transition after animation completes
+        setTimeout(() => {
+            for (const draggable of get_draggables()) {
+                draggable.style.transition = '';
+            }
+        }, 500); // Match the transition duration
 
         // Clear cache
         localStorage.removeItem(elPositionsCacheKey);
@@ -176,10 +187,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Enable dragging on all elements
     function enableElDragging() {
-        for (const draggable of get_draggables()) {
-            draggable.classList.add("dragging");
-            draggable.addEventListener("mousedown", startDrag);
-            draggable.addEventListener("touchstart", startDrag, {passive: false});
+        for (const el of get_draggables()) {
+            el.dataset.prevTransition = el.style.transition || '';
+            el.style.transition = 'none';             // instant updates
+            el.classList.add('dragging');
+            el.addEventListener('mousedown', startDrag);
+            el.addEventListener('touchstart', startDrag, {passive: false});
         }
         document.addEventListener("mousemove", drag);
         document.addEventListener("touchmove", drag, {passive: false});
@@ -227,31 +240,33 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Drag the element
+    let rafId = null;
+
     function drag(e) {
         if (!draggedEL) return;
-
         e.preventDefault();
 
-        // Get the current position
         const touch = e.type === 'touchmove' ? e.touches[0] : e;
         const deltaX = touch.clientX - startX;
         const deltaY = touch.clientY - startY;
 
-        // Update the element position
-        const newRight = startRight + deltaX;
-        const newTop = startTop + deltaY;
-
-        // Apply the new position
-        draggedEL.style.transform = `translate3d(${newRight}px, ${newTop}px, 0)`;
+        // schedule a visual update for the next frame
+        if (!rafId) {
+            rafId = requestAnimationFrame(() => {
+                rafId = null;
+                if (draggedEL) {
+                    draggedEL.style.transform =
+                        `translate3d(${startRight + deltaX}px, ${startTop + deltaY}px, 0)`;
+                }
+            });
+        }
     }
 
     // End dragging
     function endDrag() {
-        if (draggedEL) {
-            // Save element positions to cache when dragging ends
-            saveElPositionsToCache();
-        }
+        if (draggedEL) saveElPositionsToCache();
+        // restore original transition
+
         draggedEL = null;
     }
 
@@ -290,10 +305,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (cachedPositions) {
                 const positions = JSON.parse(cachedPositions);
-
+                const move_dur = 500;
                 // First, ensure all elements have no transform to start the animation from the initial position
                 for (const draggable of get_draggables()) {
                     draggable.style.transform = '';
+                    // Add transition property before movement
+                    draggable.style.transition = 'transform ' + move_dur.toString() / 1000+'s ease';
                 }
 
                 // Use setTimeout to ensure the browser has time to render the initial state
@@ -308,6 +325,13 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
 
                     console.log("El positions loaded from cache with animation:", positions);
+
+                    // Remove transition after animation completes
+                    setTimeout(() => {
+                        for (const draggable of get_draggables()) {
+                            draggable.style.transition = '';
+                        }
+                    }, move_dur); // Match the transition duration
                 }, 10); // Small delay to ensure the animation works
             }
         } catch (error) {
@@ -322,4 +346,3 @@ document.addEventListener("DOMContentLoaded", function () {
     // Load element positions from cache
     loadelPositionsFromCache();
 });
-
