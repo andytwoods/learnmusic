@@ -185,7 +185,7 @@
 
           let error_message;
           if (!correct) {
-            error_message = correct_keys.join(", ");
+            error_message = generate_correct_keys_text(correct_keys);
             if (error_message.length === 0) error_message = window.nothing_selected
             const basic_note = document.current_note.split('/')[0];
             error_message = "Correct answer for " + basic_note + ": " + error_message + '\n' + window.error_message + ': '
@@ -194,6 +194,13 @@
             } else error_message += window.nothing_selected;
           }
           trial_manager.answer(correct, error_message);
+        }
+
+        function generate_correct_keys_text(correct_keys) {
+          return correct_keys.map(key => {
+            if(key==="") return "all up!";
+            return key;
+          }).join(", ");
         }
 
         function getCorrectKeysPressed() {
