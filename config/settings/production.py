@@ -12,18 +12,27 @@ INSTALLED_APPS += ["anymail"]
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ['learnmusic.applikuapp.com', DOMAIN, 'www.tootology.com',]
+ALLOWED_HOSTS = ['learnmusic.applikuapp.com', DOMAIN, 'www.tootology.com', ]
 
 # DATABASES
 # ------------------------------------------------------------------------------
 
-DATABASES = {"default": env.db(),}
+DATABASES = {"default": env.db(), }
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
-DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)
+DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=0)
+DATABASES["default"]["OPTIONS"] = {"pool":
+    {
+        "min_size": 4,  # Keeps connections warm
+        "max_size": 16,  # Handles traffic spikes
+        "timeout": 10,  # Fails fast under extreme load
+        "max_lifetime": 1800,  # 30 minutes maximum connection age
+        "max_idle": 300,  # Close idle connections after 5 minutes
+    }
+}
 
 # CACHES
 # ------------------------------------------------------------------------------
-#CACHES = {
+# CACHES = {
 #    "default": {
 #        "BACKEND": "django_redis.cache.RedisCache",
 #        "LOCATION": REDIS_URL,
@@ -34,7 +43,7 @@ DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)
 #            "IGNORE_EXCEPTIONS": True,
 #        },
 #    },
-#}
+# }
 
 # SECURITY
 # ------------------------------------------------------------------------------
@@ -111,7 +120,6 @@ ANYMAIL = {
     "MAILERSEND_API_TOKEN": env('EMAIL_API_KEY'),
 }
 
-
 # LOGGING
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#logging
@@ -172,7 +180,7 @@ if REDIS_SSL and REDIS_URL.startswith("redis://"):
 
 HUEY = {
     "name": "learnmusic",
-    "url": REDIS_URL,          # let redis-py parse host/port/DB/SSL for us
+    "url": REDIS_URL,  # let redis-py parse host/port/DB/SSL for us
     "immediate": False,
     "consumer": {
         "workers": 2,
