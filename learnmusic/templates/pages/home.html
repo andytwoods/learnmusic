@@ -19,6 +19,42 @@
     #instrumentLevelButton:not(:disabled) {
       opacity: 1; /* Fully visible when enabled */
     }
+
+     .tab-content {
+      position: relative;
+      overflow: hidden;
+      height: 200px;
+    }
+    .tab-pane {
+      position: absolute;
+      width: 100%;
+      top: 0;
+      left: 0;
+      transition: transform 0.5s ease, opacity 0.5s ease;
+      opacity: 0;
+      transform: translateX(100%);
+      z-index: 0;
+    }
+    .tab-pane.slide-in-left {
+      transform: translateX(0);
+      opacity: 1;
+      z-index: 1;
+    }
+    .tab-pane.slide-out-left {
+      transform: translateX(-100%);
+      opacity: 0;
+      z-index: 0;
+    }
+    .tab-pane.slide-in-right {
+      transform: translateX(0);
+      opacity: 1;
+      z-index: 1;
+    }
+    .tab-pane.slide-out-right {
+      transform: translateX(100%);
+      opacity: 0;
+      z-index: 0;
+    }
   </style>
 {% endblock css %}
 
@@ -41,32 +77,31 @@
       </div>
       <div>Unless costs mount, will remain free
 
-         <a class="text-white"
-               href="https://github.com/andytwoods/learnmusic"
-               target="_blank"
-               data-bs-toggle="tooltip"
-               data-bs-placement="bottom"
-               title="MIT with Commons Clause License">
-              <i class="fab fa-github me-2"></i>MIT-CC
-            </a>
+        <a class="text-white"
+           href="https://github.com/andytwoods/learnmusic"
+           target="_blank"
+           data-bs-toggle="tooltip"
+           data-bs-placement="bottom"
+           title="MIT with Commons Clause License">
+          <i class="fab fa-github me-2"></i>MIT-CC
+        </a>
       </div>
     </div>
 
 
-<div class="container my-4">
-  <div class="alert alert-warning d-flex align-items-center p-4" role="alert" style="text-shadow: none;">
-    <div class="flex-shrink-0 me-3">
-      <i class="fas fa-tools fa-3x" style="text-shadow: none;"></i>
+    <div class="container my-4">
+      <div class="alert alert-warning d-flex align-items-center p-4" role="alert" style="text-shadow: none;">
+        <div class="flex-shrink-0 me-3">
+          <i class="fas fa-tools fa-3x" style="text-shadow: none;"></i>
+        </div>
+        <div style="text-shadow: none;">
+          <h4 class="alert-heading mb-1" style="text-shadow: none;">Signup Currently Disabled</h4>
+          <p class="mb-0">
+            The app is not quite MVP (Minimum Viable Product) yet, but you can try out the demo below!
+          </p>
+        </div>
+      </div>
     </div>
-    <div style="text-shadow: none;">
-      <h4 class="alert-heading mb-1" style="text-shadow: none;">Signup Currently Disabled</h4>
-      <p class="mb-0">
-        The app is not quite MVP (Minimum Viable Product) yet, but you can try out the demo below!
-      </p>
-    </div>
-  </div>
-</div>
-
 
 
   </section>
@@ -146,7 +181,9 @@
               interface
             </li>
             <li>
-              <i class="fas fa-chevron-right fa-xs me-2"></i>Do in a <a href="{{ request.scheme }}://{{ request.get_host }}/{{ practice_url }}/Trumpet/treble/Bb/Beginner/" target="_blank">separate browser tab?</a>
+              <i class="fas fa-chevron-right fa-xs me-2"></i>Do in a <a
+              href="{{ request.scheme }}://{{ request.get_host }}/{{ practice_url }}/Trumpet/treble/Bb/Beginner/"
+              target="_blank">separate browser tab?</a>
             </li>
           </ul>
         </small>
@@ -196,38 +233,115 @@
     </div>
   </section>
 
+
+  <div class="container py-4">
+  <ul class="nav nav-tabs mb-3" id="carouselTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" data-index="0" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab">Slide 1</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" data-index="1" data-bs-toggle="tab" data-bs-target="#tab2" type="button" role="tab">Slide 2</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" data-index="2" data-bs-toggle="tab" data-bs-target="#tab3" type="button" role="tab">Slide 3</button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="carouselTabsContent">
+    <div class="tab-pane slide-in-left active" id="tab1" role="tabpanel">
+      <div class="p-4 bg-light border">This is the content for Slide 1</div>
+    </div>
+    <div class="tab-pane" id="tab2" role="tabpanel">
+      <div class="p-4 bg-light border">This is the content for Slide 2</div>
+    </div>
+    <div class="tab-pane" id="tab3" role="tabpanel">
+      <div class="p-4 bg-light border">This is the content for Slide 3</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const tabButtons = document.querySelectorAll('#carouselTabs button');
+    let currentIndex = 0;
+
+    // Initialize Bootstrap tabs
+    const tabList = document.querySelector('#carouselTabs');
+    const tabs = new bootstrap.Tab(tabList);
+
+    // Handle tab show event (before the tab is shown)
+    tabList.addEventListener('show.bs.tab', function(event) {
+      const newTab = event.target;
+      const newIndex = parseInt(newTab.getAttribute('data-index'));
+      const tabPanes = document.querySelectorAll('.tab-pane');
+
+      // Determine direction (left or right)
+      const direction = newIndex > currentIndex ? 'right' : 'left';
+
+      // Remove all animation classes first
+      tabPanes.forEach(pane => {
+        pane.classList.remove('slide-in-left', 'slide-out-left', 'slide-in-right', 'slide-out-right');
+      });
+
+      // Add appropriate animation classes
+      if (direction === 'right') {
+        // Current pane slides out to left
+        tabPanes[currentIndex].classList.add('slide-out-left');
+        // New pane slides in from right
+        tabPanes[newIndex].classList.add('slide-in-right');
+      } else {
+        // Current pane slides out to right
+        tabPanes[currentIndex].classList.add('slide-out-right');
+        // New pane slides in from left
+        tabPanes[newIndex].classList.add('slide-in-left');
+      }
+
+      // Update current index
+      currentIndex = newIndex;
+    });
+  });
+</script>
+
   <!-- Features Section -->
   <section id="features" class="py-5">
     <div class="container">
       <div class="text-center mb-4">
-        <h2>Why <a href="{% url 'account_signup' %}">sign-up</a>?</h2>
+        <h2><a href="{% url 'account_signup' %}">Sign-up</a> for advanced features</h2>
       </div>
       <div class="row g-2">
 
 
-        <div class="col-md-4">
+        <div class="col-md-3">
           <div class="card h-100 shadow-sm border-0 bg-light">
             <div class="card-body text-center">
-              <h5 class="card-title"><i class="bi bi-music-note"></i> Learn new notes</h5>
-              <p class="card-text">Exercises to help you learn new notes, transpositions and improve fluency</p>
+              <h5 class="card-title"><i class="fas fa-chart-bar"></i> Compare</h5>
+              <p class="card-text">Where do you stand compared to others?</p>
             </div>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <div class="card h-100 shadow-sm border-0 bg-light">
             <div class="card-body text-center">
-              <h5 class="card-title"><i class="bi bi-music-note"></i> Free as in beer</h5>
+              <h5 class="card-title"><i class="fas fa-chart-line"></i> Track</h5>
+              <p class="card-text">Detailed insights and analytics on where to focus</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card h-100 shadow-sm border-0 bg-light">
+            <div class="card-body text-center">
+              <h5 class="card-title"><i class="fas fa-cloud-upload-alt"></i> Backup</h5>
               <p class="card-text">
-                {% include 'phrase.html' with fullstop=True %}
-                Unless costs mount, will remain free</p>
+                Data stored in securely and not in your browser's cache
             </div>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <div class="card h-100 shadow-sm border-0 bg-light">
             <div class="card-body text-center">
-              <h5 class="card-title"><i class="bi bi-bar-chart"></i> Track Your Progress</h5>
-              <p class="card-text">Get detailed insights and analytics on where to focus</p>
+              <h5 class="card-title"><i class="fas fa-flask"></i> Science</h5>
+              <p class="card-text">
+                Your anonymous data can be used to benefit all
             </div>
           </div>
         </div>
