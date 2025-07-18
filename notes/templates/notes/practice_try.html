@@ -17,7 +17,7 @@
         <button class="btn btn-dark btn-sm">Save to cache</button>
         Want to save your progress without signing up?
         Pick this option to save to cache and go to a page you
-        can bookmark. There you can practice whenever you want.
+        can bookmark. There you can practice whenever you want, and this message wont pop up.
       </p>
       <p>
         <button class="btn btn-dark btn-sm">Save with app</button>
@@ -25,7 +25,7 @@
         progress reports, reminders, etc. This requires signing up. Unless costs mount, this app will remain free.
       </p>
       <p>
-        {% include 'phrase.html' %}.
+        {% include 'phrase.html' with fullstop=True %}
       </p>
     </div>
   </div>
