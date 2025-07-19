@@ -149,6 +149,12 @@ def practice(request, learningscenario_id: int, sound: bool = False):
 
 def practice_try(request, instrument: str, clef: str, key: str, level: str, sound: bool = False):
     # Ensure instrument is properly capitalized
+
+    if 'sharp' in key:
+        key = key.replace('sharp', '#')
+    elif 'flat' in key:
+        key = key.replace('flat', 'b')
+
     capitalized_instrument = instrument.capitalize() if instrument else instrument
 
     serialised_notes = tools.generate_serialised_notes(capitalized_instrument, level)

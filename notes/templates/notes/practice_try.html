@@ -173,17 +173,20 @@
           document.getElementById('musicSettingsForm').addEventListener('submit', function (e) {
             e.preventDefault();
 
-            const formData   = new FormData(this);
+            const formData = new FormData(this);
             const instrument = formData.get('instrument') || '{{ instrument }}';
-            const level      = formData.get('level')      || '{{ level }}';
-            const clef       = formData.get('clef')       || '{{ clef }}';
-            const key        = formData.get('key')        || '{{ key }}';
+            const level = formData.get('level') || '{{ level }}';
+            const clef = formData.get('clef') || '{{ clef }}';
+            let key = formData.get('key') || '{{ key }}';
+
+            key = key.replace('#', 'sharp');
+            key = key.replace('b', 'flat');
 
             const url = "{% url 'practice-try' instrument='INSTRUMENT' clef='CLEF' key='KEY' level='LEVEL' %}"
-                        .replace('INSTRUMENT', instrument)
-                        .replace('CLEF', clef)
-                        .replace('KEY', key)
-                        .replace('LEVEL', level);
+              .replace('INSTRUMENT', instrument)
+              .replace('CLEF', clef)
+              .replace('KEY', key)
+              .replace('LEVEL', level);
 
             window.location.href = url;
           });
@@ -207,13 +210,15 @@
         },
         body: JSON.stringify(window.progress_data)
       })
-      .then(res => res.redirected ? window.location.href = res.url : res.text())
-      .then(html => {
-        if (html) {
-          document.open(); document.write(html); document.close();
-        }
-      })
-      .catch(err => console.error('Error:', err));
+        .then(res => res.redirected ? window.location.href = res.url : res.text())
+        .then(html => {
+          if (html) {
+            document.open();
+            document.write(html);
+            document.close();
+          }
+        })
+        .catch(err => console.error('Error:', err));
     });
   </script>
 {% endblock see_results %}
