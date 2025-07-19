@@ -3,37 +3,6 @@
 
 {% block css %}
   {{ block.super }}
-  <style>
-    .dropdown-submenu {
-      position: relative;
-    }
-
-    .dropdown-submenu .dropdown-menu {
-      display: none;
-      position: absolute;
-      top: 0;
-      left: 100%;
-      margin-top: -1px;
-      margin-left: -1px;
-    }
-
-    .dropdown-submenu:hover > .dropdown-menu {
-      display: block;
-    }
-
-    @media (max-width: 768px) {
-      .dropdown-submenu .dropdown-menu {
-        position: static;
-        left: 0;
-        top: 100%;
-        margin: 0;
-      }
-
-      .dropdown-submenu:hover > .dropdown-menu {
-        display: block;
-      }
-    }
-  </style>
 {% endblock css %}
 
 {% block bodyclass %}
@@ -41,138 +10,186 @@
 {% endblock %}
 
 {% block timeup %}
-  <div class='card z-3 shadow text-bg-primary' id="time-up" style="display: none;">
-    <div class='card-body'>
-      <button type='button' class='btn-close position-absolute top-0 end-0 m-2' aria-label='Close'
-              onclick='document.getElementById("time-up").remove()'></button>
+  <div class="card z-3 shadow text-bg-primary" id="time-up" style="display: none;">
+    <div class="card-body">
+      <button type="button" class="btn-close position-absolute top-0 end-0 m-2"
+              aria-label="Close"
+              onclick="document.getElementById('time-up').remove()"></button>
       <p><strong>Time’s up!</strong></p>
-      <p>To continue practicing, close this popup.</p>
+      <p>To continue practising, close this popup.</p>
 
-      <p>
+      <p class="mb-2">
         <button class="btn btn-dark btn-sm">Save to cache</button>
         Want to save your progress without signing up?
         Pick this option to save to cache and go to a page you
-        can bookmark. There you can practice whenever you want, and this message wont pop up.
+        can bookmark. There you can practise whenever you want, and this message won’t pop up.
       </p>
-      <p>
+      <p class="mb-2">
         <button class="btn btn-dark btn-sm">Save with app</button>
-        Select this option to save your progress through this app, and get access to a whole host of features such as
+        Select this option to save your progress through this app and get access to a whole host of features such as
         progress reports, reminders, etc. This requires signing up. Unless costs mount, this app will remain free.
       </p>
-      <p>
-        {% include 'phrase.html' with fullstop=True %}
-      </p>
+      <p>{% include 'phrase.html' with fullstop=True %}</p>
     </div>
   </div>
 {% endblock timeup %}
 
 {% block cardheader %}
+  <!-- Button to trigger modal -->
+  <button class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#settingsModal">
+    <i class="fa-solid fa-music"></i> {{ instrument }},
+    {{ level }}{% if key != transpose_key %}, transposing to {{ transpose_key }}{% endif %}
+  </button>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      document.querySelectorAll('.dropdown-submenu .dropdown-toggle').forEach(function (element) {
-        element.addEventListener('click', function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          let submenu = this.nextElementSibling;
-          let isOpen = submenu.classList.contains('show');
+  <!-- Settings Modal -->
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="settingsModalLabel">Music settings</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
 
-          // Close all other submenus
-          document.querySelectorAll('.dropdown-submenu .dropdown-menu').forEach(function (menu) {
-            menu.classList.remove('show');
+        <form id="musicSettingsForm">
+          <div class="modal-body">
+
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="instrument-tab" data-bs-toggle="tab"
+                        data-bs-target="#instrument" type="button" role="tab"
+                        aria-controls="instrument" aria-selected="true">
+                  Instrument
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="level-tab" data-bs-toggle="tab"
+                        data-bs-target="#level" type="button" role="tab"
+                        aria-controls="level" aria-selected="false">
+                  Level
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="clef-tab" data-bs-toggle="tab"
+                        data-bs-target="#clef" type="button" role="tab"
+                        aria-controls="clef" aria-selected="false">
+                  Clef
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="key-tab" data-bs-toggle="tab"
+                        data-bs-target="#key" type="button" role="tab"
+                        aria-controls="key" aria-selected="false">
+                  Transpose
+                </button>
+              </li>
+            </ul>
+
+            <!-- Tab panes -->
+            <div class="tab-content p-3" id="settingsTabContent">
+
+              <!-- Instrument -->
+              <div class="tab-pane fade show active" id="instrument" role="tabpanel" aria-labelledby="instrument-tab">
+                <div class="d-flex flex-wrap gap-3 bg-white">
+                  {% for my_instrument in instruments %}
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="instrument"
+                             id="instrument-{{ forloop.counter }}"
+                             value="{{ my_instrument }}"
+                             {% if my_instrument == instrument %}checked{% endif %}>
+                      <label class="form-check-label text-dark"
+                             for="instrument-{{ forloop.counter }}">
+                        {{ my_instrument }}
+                      </label>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <!-- Level -->
+              <div class="tab-pane fade" id="level" role="tabpanel" aria-labelledby="level-tab">
+                <div class="d-flex flex-wrap gap-3 bg-white">
+                  {% for my_level in levels %}
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="level"
+                             id="level-{{ forloop.counter }}"
+                             value="{{ my_level }}"
+                             {% if my_level == level %}checked{% endif %}>
+                      <label class="form-check-label text-dark"
+                             for="level-{{ forloop.counter }}">
+                        {{ my_level }}
+                      </label>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <!-- Clef -->
+              <div class="tab-pane fade" id="clef" role="tabpanel" aria-labelledby="clef-tab">
+                <div class="d-flex flex-wrap gap-3 bg-white">
+                  {% for my_clef in clefs %}
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="clef"
+                             id="clef-{{ forloop.counter }}"
+                             value="{{ my_clef }}"
+                             {% if my_clef == clef %}checked{% endif %}>
+                      <label class="form-check-label text-dark"
+                             for="clef-{{ forloop.counter }}">
+                        {{ my_clef }}
+                      </label>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <!-- Key -->
+              <div class="tab-pane fade" id="key" role="tabpanel" aria-labelledby="key-tab">
+                <div class="d-flex flex-wrap gap-3 bg-white">
+                  {% for my_key in keys %}
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="key"
+                             id="key-{{ forloop.counter }}"
+                             value="{{ my_key }}"
+                             {% if my_key == transpose_key %}checked{% endif %}>
+                      <label class="form-check-label text-dark"
+                             for="key-{{ forloop.counter }}">
+                        Key: {{ my_key }}
+                      </label>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Apply settings</button>
+          </div>
+        </form>
+
+        <script>
+          document.getElementById('musicSettingsForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData   = new FormData(this);
+            const instrument = formData.get('instrument') || '{{ instrument }}';
+            const level      = formData.get('level')      || '{{ level }}';
+            const clef       = formData.get('clef')       || '{{ clef }}';
+            const key        = formData.get('key')        || '{{ key }}';
+
+            const url = "{% url 'practice-try' instrument='INSTRUMENT' clef='CLEF' key='KEY' level='LEVEL' %}"
+                        .replace('INSTRUMENT', instrument)
+                        .replace('CLEF', clef)
+                        .replace('KEY', key)
+                        .replace('LEVEL', level);
+
+            window.location.href = url;
           });
-
-          if (!isOpen) {
-            submenu.classList.add('show');
-          }
-        });
-      });
-
-      // Optional: close submenus when clicking elsewhere
-      document.addEventListener('click', function () {
-        document.querySelectorAll('.dropdown-submenu .dropdown-menu').forEach(function (menu) {
-          menu.classList.remove('show');
-        });
-      });
-    });
-  </script>
-
-  <div class="dropdown">
-    <button class="btn btn-light btn-xs p-0 dropdown-toggle" type="button" id="dropdownMenuCog"
-            data-bs-toggle="dropdown" aria-expanded="false">
-      <i class="fa-solid fa-music"></i> {{ instrument }},
-      {{ level }}{% if key != transpose_key %}, transposing to {{ transpose_key }}{% endif %}
-    </button>
-    <ul class="dropdown-menu" aria-labelledby="dropdownMenuCog" data-bs-auto-close="outside">
-
-      <!-- Instrument Section -->
-      <li class="dropdown-submenu">
-        <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown">
-          Instrument
-        </a>
-        <ul class="dropdown-menu" role="menu" aria-label="Submenu for Instrument">
-          {% for my_instrument in instruments %}
-            <li>
-              <a class="dropdown-item {% if my_instrument == instrument %}active{% endif %}"
-                 href="{% url 'practice-try' instrument=my_instrument clef=clef key=key level=level %}">
-                {{ my_instrument }}
-              </a>
-            </li>
-          {% endfor %}
-        </ul>
-      </li>
-
-      <!-- Level Section -->
-      <li class="dropdown-submenu">
-        <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown">
-          Level
-        </a>
-        <ul class="dropdown-menu" role="menu" aria-label="Submenu for Level">
-          {% for my_level in levels %}
-            <li>
-              <a class="dropdown-item {% if my_level == level %}active{% endif %}"
-                 href="{% url 'practice-try' instrument=instrument clef=clef key=key level=my_level %}">
-                {{ my_level }}
-              </a>
-            </li>
-          {% endfor %}
-        </ul>
-      </li>
-
-      <!-- Clef Section -->
-      <li class="dropdown-submenu">
-        <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown">
-          Clef
-        </a>
-        <ul class="dropdown-menu" role="menu" aria-label="Submenu for Clef">
-          {% for my_clef in clefs %}
-            <li>
-              <a class="dropdown-item {% if my_clef == clef %}active{% endif %}"
-                 href="{% url 'practice-try' instrument=instrument clef=my_clef key=key level=level %}">
-                {{ my_clef }}
-              </a>
-            </li>
-          {% endfor %}
-        </ul>
-      </li>
-
-      <!-- Key Section -->
-      <li class="dropdown-submenu">
-        <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown">
-          Transpose to
-        </a>
-        <ul class="dropdown-menu" role="menu" aria-label="Submenu for Transpose Key">
-          {% for my_key in keys %}
-            <li>
-              <a class="dropdown-item {% if my_key == transpose_key %}active{% endif %}"
-                 href="{% url 'practice-try' instrument=instrument clef=clef key=my_key level=level %}">
-                Key: {{ my_key }}
-              </a>
-            </li>
-          {% endfor %}
-        </ul>
-      </li>
-    </ul>
+        </script>
+      </div>
+    </div>
   </div>
 
   {% include 'notes/components/practice_dropdown_menu_right.html' %}
@@ -190,23 +207,13 @@
         },
         body: JSON.stringify(window.progress_data)
       })
-        .then(response => {
-          if (response.redirected) {
-            window.location.href = response.url;
-          } else {
-            return response.text();
-          }
-        })
-        .then(data => {
-          if (data) {
-            document.open();
-            document.write(data);
-            document.close();
-          }
-        })
-        .catch(error => {
-          console.error("Error:", error);
-        });
+      .then(res => res.redirected ? window.location.href = res.url : res.text())
+      .then(html => {
+        if (html) {
+          document.open(); document.write(html); document.close();
+        }
+      })
+      .catch(err => console.error('Error:', err));
     });
   </script>
 {% endblock see_results %}
