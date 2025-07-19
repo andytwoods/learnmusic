@@ -1,6 +1,26 @@
 {% extends 'notes/practice.html' %}
 {% load static %}
 
+{% block css %}
+
+  {{ block.super }}
+  <style>>
+  .dropdown-submenu {
+    position: relative;
+  }
+
+  .dropdown-submenu .dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-top: -1px;
+  }
+
+  .dropdown-submenu:hover > .dropdown-menu {
+    display: block;
+  }
+  </style>
+{% endblock css %}
+
 {% block bodyclass %}
   bg-light
 {% endblock %}
@@ -33,73 +53,101 @@
 
 {% block cardheader %}
 
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.dropdown-submenu .dropdown-toggle').forEach(function (element) {
+        element.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          let submenu = this.nextElementSibling;
+          let isOpen = submenu.classList.contains('show');
+
+          // Close all other submenus
+          document.querySelectorAll('.dropdown-submenu .dropdown-menu').forEach(function (menu) {
+            menu.classList.remove('show');
+          });
+
+          if (!isOpen) {
+            submenu.classList.add('show');
+          }
+        });
+      });
+    });
+  </script>
   <div class="dropdown">
-    <button
-      class="btn btn-light btn-xs p-0 dropdown-toggle"
-      type="button"
-      id="dropdownMenuCog"
-      data-bs-toggle="dropdown"
-      aria-expanded="false">
+    <button class="btn btn-light btn-xs p-0 dropdown-toggle" type="button" id="dropdownMenuCog"
+            data-bs-toggle="dropdown" aria-expanded="false">
       <i class="fa-solid fa-music"></i> {{ instrument }},
       {{ level }}{% if key != transpose_key %}, transposing to {{ transpose_key }}{% endif %}
     </button>
-
     <ul class="dropdown-menu" aria-labelledby="dropdownMenuCog">
       <!-- Instrument Section -->
-      <li><h6 class="dropdown-header">Instrument</h6></li>
-      {% for my_instrument in instruments %}
-        <li>
-          <a class="dropdown-item {% if my_instrument == instrument %}active{% endif %}"
-             href="{% url 'practice-try' instrument=my_instrument clef=clef key=key level=level %}">
-            {{ my_instrument }}
-          </a>
-        </li>
-      {% endfor %}
-
-      <li>
-        <hr class="dropdown-divider">
-      </li> <!-- Divider -->
+      <li class="dropdown-submenu">
+        <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown">
+          Instrument
+        </a>
+        <ul class="dropdown-menu dropdown-menu-start">
+          {% for my_instrument in instruments %}
+            <li>
+              <a class="dropdown-item {% if my_instrument == instrument %}active{% endif %}"
+                 href="{% url 'practice-try' instrument=my_instrument clef=clef key=key level=level %}">
+                {{ my_instrument }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </li>
 
       <!-- Level Section -->
-      <li><h6 class="dropdown-header">Level</h6></li>
-      {% for my_level in levels %}
-        <li>
-          <a class="dropdown-item {% if my_level == level %}active{% endif %}"
-             href="{% url 'practice-try' instrument=instrument clef=clef key=key level=my_level %}">
-            {{ my_level }}
-          </a>
-        </li>
-      {% endfor %}
-
-      <li>
-        <hr class="dropdown-divider">
-      </li> <!-- Divider -->
+      <li class="dropdown-submenu">
+        <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown">
+          Level
+        </a>
+        <ul class="dropdown-menu dropdown-menu-start">
+          {% for my_level in levels %}
+            <li>
+              <a class="dropdown-item {% if my_level == level %}active{% endif %}"
+                 href="{% url 'practice-try' instrument=instrument clef=clef key=key level=my_level %}">
+                {{ my_level }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </li>
 
       <!-- Clef Section -->
-      <li><h6 class="dropdown-header">Clef</h6></li>
-      {% for my_clef in clefs %}
-        <li>
-          <a class="dropdown-item {% if my_clef == clef %}active{% endif %}"
-             href="{% url 'practice-try' instrument=instrument clef=my_clef key=key level=level %}">
-            {{ my_clef }}
-          </a>
-        </li>
-      {% endfor %}
-
-      <li>
-        <hr class="dropdown-divider">
-      </li> <!-- Divider -->
+      <li class="dropdown-submenu">
+        <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown">
+          Clef
+        </a>
+        <ul class="dropdown-menu dropdown-menu-start">
+          {% for my_clef in clefs %}
+            <li>
+              <a class="dropdown-item {% if my_clef == clef %}active{% endif %}"
+                 href="{% url 'practice-try' instrument=instrument clef=my_clef key=key level=level %}">
+                {{ my_clef }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </li>
 
       <!-- Key Section -->
-      <li><h6 class="dropdown-header">Transpose to</h6></li>
-      {% for my_key in keys %}
-        <li>
-          <a class="dropdown-item {% if my_key == transpose_key %}active{% endif %}"
-             href="{% url 'practice-try' instrument=instrument clef=clef key=my_key level=level %}">
-            Key: {{ my_key }}
-          </a>
-        </li>
-      {% endfor %}
+      <li class="dropdown-submenu">
+        <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown">
+          Transpose to
+        </a>
+        <ul class="dropdown-menu dropdown-menu-start">
+          {% for my_key in keys %}
+            <li>
+              <a class="dropdown-item {% if my_key == transpose_key %}active{% endif %}"
+                 href="{% url 'practice-try' instrument=instrument clef=clef key=my_key level=level %}">
+                Key: {{ my_key }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </li>
     </ul>
   </div>
   {% include 'notes/components/practice_dropdown_menu_right.html' %}
