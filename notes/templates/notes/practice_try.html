@@ -2,26 +2,37 @@
 {% load static %}
 
 {% block css %}
-
   {{ block.super }}
   <style>
-.dropdown-submenu {
-    position: relative;
-}
+    .dropdown-submenu {
+      position: relative;
+    }
 
-.dropdown-submenu .dropdown-menu {
-    position: absolute;
-    top: 0;
-    left: 100%;  /* This makes it appear to the right */
-    margin-top: -1px;
-    margin-left: -1px;
-}
+    .dropdown-submenu .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 100%;
+      margin-top: -1px;
+      margin-left: -1px;
+    }
 
-/* Optional: Show submenu on hover */
-.dropdown-submenu:hover > .dropdown-menu {
-    display: block;
-}
+    .dropdown-submenu:hover > .dropdown-menu {
+      display: block;
+    }
 
+    @media (max-width: 768px) {
+      .dropdown-submenu .dropdown-menu {
+        position: static;
+        left: 0;
+        top: 100%;
+        margin: 0;
+      }
+
+      .dropdown-submenu:hover > .dropdown-menu {
+        display: block;
+      }
+    }
   </style>
 {% endblock css %}
 
@@ -58,39 +69,48 @@
 {% block cardheader %}
 
   <script>
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.dropdown-submenu .dropdown-toggle').forEach(function(element) {
-        element.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            let submenu = this.nextElementSibling;
-            let isOpen = submenu.classList.contains('show');
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.dropdown-submenu .dropdown-toggle').forEach(function (element) {
+        element.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          let submenu = this.nextElementSibling;
+          let isOpen = submenu.classList.contains('show');
 
-            // Close all other submenus
-            document.querySelectorAll('.dropdown-submenu .dropdown-menu').forEach(function(menu) {
-                menu.classList.remove('show');
-            });
+          // Close all other submenus
+          document.querySelectorAll('.dropdown-submenu .dropdown-menu').forEach(function (menu) {
+            menu.classList.remove('show');
+          });
 
-            if (!isOpen) {
-                submenu.classList.add('show');
-            }
+          if (!isOpen) {
+            submenu.classList.add('show');
+          }
         });
+      });
+
+      // Optional: close submenus when clicking elsewhere
+      document.addEventListener('click', function () {
+        document.querySelectorAll('.dropdown-submenu .dropdown-menu').forEach(function (menu) {
+          menu.classList.remove('show');
+        });
+      });
     });
-});
   </script>
+
   <div class="dropdown">
     <button class="btn btn-light btn-xs p-0 dropdown-toggle" type="button" id="dropdownMenuCog"
             data-bs-toggle="dropdown" aria-expanded="false">
       <i class="fa-solid fa-music"></i> {{ instrument }},
       {{ level }}{% if key != transpose_key %}, transposing to {{ transpose_key }}{% endif %}
     </button>
-    <ul class="dropdown-menu" aria-labelledby="dropdownMenuCog">
+    <ul class="dropdown-menu" aria-labelledby="dropdownMenuCog" data-bs-auto-close="outside">
+
       <!-- Instrument Section -->
       <li class="dropdown-submenu">
         <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown">
           Instrument
         </a>
-        <ul class="dropdown-menu dropdown-menu-start">
+        <ul class="dropdown-menu" role="menu" aria-label="Submenu for Instrument">
           {% for my_instrument in instruments %}
             <li>
               <a class="dropdown-item {% if my_instrument == instrument %}active{% endif %}"
@@ -107,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown">
           Level
         </a>
-        <ul class="dropdown-menu dropdown-menu-start">
+        <ul class="dropdown-menu" role="menu" aria-label="Submenu for Level">
           {% for my_level in levels %}
             <li>
               <a class="dropdown-item {% if my_level == level %}active{% endif %}"
@@ -124,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown">
           Clef
         </a>
-        <ul class="dropdown-menu dropdown-menu-start">
+        <ul class="dropdown-menu" role="menu" aria-label="Submenu for Clef">
           {% for my_clef in clefs %}
             <li>
               <a class="dropdown-item {% if my_clef == clef %}active{% endif %}"
@@ -141,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <a class="dropdown-item dropdown-toggle" href="#" data-bs-toggle="dropdown">
           Transpose to
         </a>
-        <ul class="dropdown-menu dropdown-menu-start">
+        <ul class="dropdown-menu" role="menu" aria-label="Submenu for Transpose Key">
           {% for my_key in keys %}
             <li>
               <a class="dropdown-item {% if my_key == transpose_key %}active{% endif %}"
@@ -154,29 +174,27 @@ document.addEventListener('DOMContentLoaded', function() {
       </li>
     </ul>
   </div>
+
   {% include 'notes/components/practice_dropdown_menu_right.html' %}
 {% endblock cardheader %}
 
 {% block see_results %}
-  <a id="see-results" class="btn btn-link btn-xs text-start p-0 m-0">Stop and see your results
-  </a>
+  <a id="see-results" class="btn btn-link btn-xs text-start p-0 m-0">Stop and see your results</a>
   <script>
     document.getElementById('see-results').addEventListener('click', () => {
-
       fetch("{% url 'learningscenario_graph_try' instrument level %}", {
-        method: 'POST', // HTTP method
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRFToken': "{{ csrf_token }}"
         },
-        body: JSON.stringify(window.progress_data) // Convert the list to JSON format
+        body: JSON.stringify(window.progress_data)
       })
         .then(response => {
           if (response.redirected) {
-            // If the backend sends a redirect, navigate to the returned location
             window.location.href = response.url;
           } else {
-            return response.text(); // Get the response as text (full HTML in this case)
+            return response.text();
           }
         })
         .then(data => {
@@ -189,13 +207,9 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
           console.error("Error:", error);
         });
-    })
+    });
   </script>
-
 {% endblock see_results %}
-
-
-
 
 {% block navbar %}{% endblock navbar %}
 {% block messages %}{% endblock messages %}
