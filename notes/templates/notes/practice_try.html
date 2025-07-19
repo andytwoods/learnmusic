@@ -4,20 +4,24 @@
 {% block css %}
 
   {{ block.super }}
-  <style>>
-  .dropdown-submenu {
+  <style>
+.dropdown-submenu {
     position: relative;
-  }
+}
 
-  .dropdown-submenu .dropdown-menu {
+.dropdown-submenu .dropdown-menu {
+    position: absolute;
     top: 0;
-    left: 100%;
+    left: 100%;  /* This makes it appear to the right */
     margin-top: -1px;
-  }
+    margin-left: -1px;
+}
 
-  .dropdown-submenu:hover > .dropdown-menu {
+/* Optional: Show submenu on hover */
+.dropdown-submenu:hover > .dropdown-menu {
     display: block;
-  }
+}
+
   </style>
 {% endblock css %}
 
@@ -54,25 +58,25 @@
 {% block cardheader %}
 
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      document.querySelectorAll('.dropdown-submenu .dropdown-toggle').forEach(function (element) {
-        element.addEventListener('click', function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          let submenu = this.nextElementSibling;
-          let isOpen = submenu.classList.contains('show');
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.dropdown-submenu .dropdown-toggle').forEach(function(element) {
+        element.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            let submenu = this.nextElementSibling;
+            let isOpen = submenu.classList.contains('show');
 
-          // Close all other submenus
-          document.querySelectorAll('.dropdown-submenu .dropdown-menu').forEach(function (menu) {
-            menu.classList.remove('show');
-          });
+            // Close all other submenus
+            document.querySelectorAll('.dropdown-submenu .dropdown-menu').forEach(function(menu) {
+                menu.classList.remove('show');
+            });
 
-          if (!isOpen) {
-            submenu.classList.add('show');
-          }
+            if (!isOpen) {
+                submenu.classList.add('show');
+            }
         });
-      });
     });
+});
   </script>
   <div class="dropdown">
     <button class="btn btn-light btn-xs p-0 dropdown-toggle" type="button" id="dropdownMenuCog"
