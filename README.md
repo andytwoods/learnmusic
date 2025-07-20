@@ -6,6 +6,7 @@
 [![Django](https://img.shields.io/badge/Django-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![HTMX](https://img.shields.io/badge/HTMX-3366CC?logo=htmx&logoColor=white)](https://htmx.org/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+    
 [![CI](https://github.com/andytwoods/learnmusic/actions/workflows/ci.yml/badge.svg)](https://github.com/andytwoods/learnmusic/actions/workflows/ci.yml)
 [![License: MIT with Commons Clause](https://img.shields.io/badge/License-MIT%20with%20Commons%20Clause-blue.svg)](https://github.com/andythomaswoods/learnmusic/blob/main/LICENSE)
 
