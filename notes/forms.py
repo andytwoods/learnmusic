@@ -29,7 +29,8 @@ class CustomTemplate(LayoutObject):
 class LearningScenarioForm(forms.ModelForm):
     class Meta:
         model = LearningScenario
-        fields = ['instrument_name', 'label', 'level', 'clef', 'key', 'transpose_key', 'reminder', 'reminder_type']
+        fields = ['instrument_name', 'label', 'level', 'clef', 'key', 'transpose_key', 'octave_shift', 'reminder',
+                  'reminder_type']
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
@@ -74,24 +75,39 @@ class LearningScenarioForm(forms.ModelForm):
             Field('instrument_name'),
             Field('label'),
             Field('level'),
-            Field('reminder_type'),
-
+            HTML('<div class="mb-3"><button type="button" class="btn btn-secondary" data-bs-toggle="collapse" '
+                 'data-bs-target="#advanced-collapse" aria-expanded="false" aria-controls="advanced-collapse">'
+                 'Advanced Options</button></div>'),
             Div(
-                Field('reminder'),
-                CustomTemplate('crispy/pushover.html',
-                               context={'request': self.request,
-                                        'pushover_url': settings.PUSHOVER_SUBSCRIPTION_URL}),
-                HTML('<div class="mb-3"><button type="button" class="btn btn-secondary" data-bs-toggle="collapse" '
-                     'data-bs-target="#advanced-collapse" aria-expanded="false" aria-controls="advanced-collapse">'
-                     'Advanced Options</button></div>'),
-                css_id='reminder_fields'
-            ),
-            Div(
-                Field('clef'),
-                Field('key'),
-                Field('transpose_key'),
+                Div(
+                    HTML('<div class="card-header bg-secondary text-white">Advanced Options</div>'),
+                    Div(
+                        Field('clef'),
+                        Field('key'),
+                        Field('octave_shift'),
+                        Field('transpose_key'),
+                        css_class='card-body bg-light'
+                    ),
+                    css_class='card shadow-sm'
+                ),
                 css_id='advanced-collapse',  # This div controls showing/hiding advanced fields
-                css_class='collapse'  # Hidden by default via Bootstrap's `.collapse`
+                css_class='collapse mb-3'  # Hidden by default via Bootstrap's `.collapse`
+            ),
+            Field('reminder_type'),
+            Div(
+                Div(
+                    HTML('<div class="card-header bg-secondary text-white">Reminder Settings</div>'),
+                    Div(
+                        Field('reminder'),
+                        CustomTemplate('crispy/pushover.html',
+                                      context={'request': self.request,
+                                               'pushover_url': settings.PUSHOVER_SUBSCRIPTION_URL}),
+                        css_class='card-body bg-light'
+                    ),
+                    css_class='card shadow-sm'
+                ),
+                css_id='reminder_fields',
+                css_class='mb-3'
             ),
             Submit('submit', 'Submit')
         )
@@ -111,7 +127,6 @@ class LearningScenarioForm(forms.ModelForm):
                 # Convert to UTC for storage
                 utc_reminder = aware_reminder.astimezone(timezone.utc)
                 instance.reminder = utc_reminder
-
 
         if commit:
             instance.save()

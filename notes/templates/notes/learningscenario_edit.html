@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 {% load static %}
-{% load crispy_forms_tags %}
 
 {% block title %}
   Learning Scenario
@@ -46,9 +45,16 @@
 
       // Function to handle level changes
       const handleLevelChange = () => {
-        // If level is Beginner, we don't need to do anything special
-        // The transpose_key field is already in the advanced section
-        // which will be hidden/shown with the Advanced Options button
+        // Show the advanced-collapse element only if level is not 'Beginner'
+        if (levelSelect && advancedCollapse) {
+          if (levelSelect.value !== 'Beginner') {
+            // Show the advanced options
+            advancedCollapse.classList.add('show');
+          } else {
+            // Hide the advanced options
+            advancedCollapse.classList.remove('show');
+          }
+        }
       };
 
       // Function to handle reminder type changes

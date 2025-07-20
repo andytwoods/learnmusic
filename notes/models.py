@@ -71,14 +71,21 @@ class LearningScenario(TimeStampedModel):
         NONE = 'NO', 'No reminder'
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    label = models.CharField(max_length=64, null=True, blank=True, help_text='If you have lots of learning scenarios, it might help to give them memorable names')
+    label = models.CharField(max_length=64, null=True, blank=True,
+                             help_text='If you have lots of learning scenarios, it might help to give them memorable '
+                                       'names')
     instrument_name = models.CharField(max_length=64, null=True, blank=True)
     level = models.CharField(max_length=64, choices=LevelChoices.choices, default=LevelChoices.BEGINNER)
     notes = models.JSONField(null=True, blank=True)
     clef = models.CharField(max_length=64, choices=ClefChoices.choices, default=ClefChoices.TREBLE)
     key = models.CharField(max_length=2, choices=InstrumentKeys.choices, default=NoteChoices.C)
+    octave_shift = models.SmallIntegerField(default=0,
+                                            help_text="This is an advanced option. Leave as 0 if unsure. To shift the "
+                                                      "octave down one, specify -1. To shift up one, specify 1.")
     transpose_key = models.CharField(max_length=2, choices=transposing_choices,
-                                     default=BlankTransposingKey.BLANK , help_text='This is an advanced option. Leave as None if unsure')
+                                     default=BlankTransposingKey.BLANK ,
+                                     help_text='This is an advanced option. Leave as None if unsure.')
+
     reminder = models.DateTimeField(null=True, blank=True)
     reminder_type = models.CharField(max_length=2, choices=Reminder.choices, default=Reminder.NONE, null=True,
                                      blank=True, verbose_name="Daily reminder")

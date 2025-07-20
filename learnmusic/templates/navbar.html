@@ -1,7 +1,7 @@
 {% load i18n static %}
 <!-- Modern Navbar with enhanced styling -->
 <header class="shadow-sm">
-  <nav class="navbar navbar-expand-md  py-2">
+  <nav class="navbar navbar-expand-md navbar-light bg-light py-2">
     <div class="container">
       <!-- Brand with favicon -->
       <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
@@ -14,14 +14,14 @@
         class="navbar-toggler border-0"
         type="button"
         data-bs-toggle="collapse"
-        data-bs-target="#navbarContent"
-        aria-controls="navbarContent"
+        data-bs-target="#menubar"
+        aria-controls="menubar"
         aria-expanded="false"
         aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <div class="collapse navbar-collapse" id="navbarContent">
+      <div class="collapse navbar-collapse" id="menubar">
         <!-- Left-hand nav items -->
         <ul class="navbar-nav me-auto mb-2 mb-md-0">
           {% if request.user.is_authenticated %}
@@ -57,12 +57,17 @@
                   <span>{% translate "Sign Up" %}</span>
                 </a>
               </li>
-              <li class="nav-item mx-md-1">
-                <a id="sign-in-link" class="nav-link d-flex align-items-center" href="{% url 'account_login' %}">
-                  <span>{% translate "Sign In" %}</span>
-                </a>
-              </li>
+            {% else %}
+
+              <a id="sign-up-link" class="nav-link d-flex align-items-center text-danger">
+                <span>Sign-up disabled whist pre-mvp</span>
+              </a>
             {% endif %}
+            <li class="nav-item mx-md-1">
+              <a id="sign-in-link" class="nav-link d-flex align-items-center" href="{% url 'account_login' %}">
+                <span>{% translate "Sign In" %}</span>
+              </a>
+            </li>
           {% endif %}
         </ul>
       </div>
