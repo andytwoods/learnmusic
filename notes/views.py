@@ -148,6 +148,10 @@ def practice(request, learningscenario_id: int, sound: bool = False):
     return render(request, 'notes/practice.html', context=context)
 
 
+def practice_demo(request):
+    return practice_try(request, instrument='trumpet', clef='treble', key='Bb', level='beginner', octave=0, sound=False)
+
+
 def practice_try(request, instrument: str, clef: str, key: str, level: str, octave: int, sound: bool = False):
     # Ensure instrument is properly capitalized
 
@@ -210,7 +214,6 @@ def practice_data(request, package_id: int):
         correct=json_data.get('correct', False)
     )
     noterecord.save()
-
 
     return JsonResponse({'success': True})
 
@@ -609,7 +612,6 @@ def pushover_callback(request):
         request.user.pushover_key = ''
         request.user.save()
         messages.success(request, 'You have been unsubscribed from push notifications.')
-
 
     return redirect(reverse('notes-home'))
 

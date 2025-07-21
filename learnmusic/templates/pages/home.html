@@ -173,8 +173,8 @@
         <small>
           <ul class="list-unstyled mb-0">
             <li>
-              <i class="fas fa-chevron-right fa-xs me-2"></i>See the <i class="fa-solid fa-music"></i> menu to change
-              instrument, difficulty, transposition
+              <i class="fas fa-chevron-right fa-xs me-2"></i>See the <i class="fa-solid fa-edit"></i> menu to change
+              instrument, difficulty, transposition...
             </li>
             <li>
               <i class="fas fa-chevron-right fa-xs me-2"></i>See <i class="fas fa-cog"></i> menu to move around user
@@ -199,11 +199,7 @@
       {{ instruments|json_script:"instruments-data" }}
       <script>
         document.addEventListener("DOMContentLoaded", function () {
-          const url_start = "{{ request.scheme }}://{{ request.get_host }}/{{ practice_url }}/";
-          loadIframe(url_start + 'Trumpet/treble/Bb/Beginner/');
-        });
 
-        function loadIframe(src) {
           // Get the container where the iframe will be added
           const container = document.getElementById("iframe-container");
 
@@ -214,7 +210,7 @@
           const iframe = document.createElement("iframe");
 
           // Set iframe attributes
-          iframe.src = src;
+          iframe.src = {% url 'practice-demo' %};
           iframe.style.width = "100%"; // Take the full width of the parent
           iframe.style.height = "100%"; // Take the full height of the parent
           iframe.style.border = "none"; // Remove the border for a clean look
@@ -228,7 +224,7 @@
           };
           // Append the iframe within the container
           container.appendChild(iframe);
-        }
+        });
       </script>
     </div>
   </section>

@@ -36,8 +36,8 @@
 
 {% block cardheader %}
   <!-- Button to trigger modal -->
-  <button class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#settingsModal">
-    <i class="fa-solid fa-music"></i> {{ instrument }},
+  <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="modal" data-bs-target="#settingsModal">
+    <i class="fa-solid fa-edit"></i> {{ instrument }},
     {{ level }}{% if key != transpose_key %}, transposing to {{ transpose_key }}{% endif %}
   </button>
 
@@ -134,12 +134,13 @@
               <!-- Clef -->
               <div class="tab-pane fade" id="clef" role="tabpanel" aria-labelledby="clef-tab">
                 <div class="d-flex flex-wrap gap-3 bg-white">
+
                   {% for my_clef in clefs %}
                     <div class="form-check form-check-inline">
                       <input class="form-check-input" type="radio" name="clef"
                              id="clef-{{ forloop.counter }}"
                              value="{{ my_clef }}"
-                             {% if my_clef == clef %}checked{% endif %}>
+                             {% if my_clef|lower == clef %}checked{% endif %}>
                       <label class="form-check-label text-dark"
                              for="clef-{{ forloop.counter }}">
                         {{ my_clef }}
@@ -173,12 +174,14 @@
                 <div class="d-flex flex-wrap gap-3 bg-white">
                   <p class="bg-white text-dark">Move notes up or down how many octaves?</p>
                   <div>
+
                     {% for my_octave in octaves %}
+
                       <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="octave"
                                id="octave-{{ forloop.counter }}"
                                value="{{ my_octave }}"
-                               {% if my_octave == octave %}checked{% endif %}>
+                               {% if my_octave == octave|stringformat:"s"%}checked{% endif %}>
                         <label class="form-check-label text-dark"
                                for="octave-{{ forloop.counter }}">
                           {{ my_octave }}
