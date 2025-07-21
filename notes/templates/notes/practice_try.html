@@ -83,10 +83,17 @@
                   Transpose
                 </button>
               </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="octave-tab" data-bs-toggle="tab"
+                        data-bs-target="#octave" type="button" role="tab"
+                        aria-controls="octave" aria-selected="false">
+                  Octave
+                </button>
+              </li>
             </ul>
 
             <!-- Tab panes -->
-            <div class="tab-content p-3" id="settingsTabContent">
+            <div class="tab-content bg-white p-3" id="settingsTabContent">
 
               <!-- Instrument -->
               <div class="tab-pane fade show active" id="instrument" role="tabpanel" aria-labelledby="instrument-tab">
@@ -160,6 +167,30 @@
                 </div>
               </div>
 
+              <!-- Octave -->
+              <div class="tab-pane fade" id="octave" role="tabpanel" aria-labelledby="octave-tab">
+
+                <div class="d-flex flex-wrap gap-3 bg-white">
+                  <p class="bg-white text-dark">Move notes up or down how many octaves?</p>
+                  <div>
+                    {% for my_octave in octaves %}
+                      <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="octave"
+                               id="octave-{{ forloop.counter }}"
+                               value="{{ my_octave }}"
+                               {% if my_octave == octave %}checked{% endif %}>
+                        <label class="form-check-label text-dark"
+                               for="octave-{{ forloop.counter }}">
+                          {{ my_octave }}
+                        </label>
+                      </div>
+                    {% endfor %}
+                  </div>
+
+                </div>
+              </div>
+
+
             </div>
           </div>
 
@@ -177,16 +208,19 @@
             const instrument = formData.get('instrument') || '{{ instrument }}';
             const level = formData.get('level') || '{{ level }}';
             const clef = formData.get('clef') || '{{ clef }}';
+            const octave = formData.get('octave') || '{{ octave }}';
+
             let key = formData.get('key') || '{{ key }}';
 
             key = key.replace('#', 'sharp');
             key = key.replace('b', 'flat');
 
-            const url = "{% url 'practice-try' instrument='INSTRUMENT' clef='CLEF' key='KEY' level='LEVEL' %}"
+            const url = "{% url 'practice-try' instrument='INSTRUMENT' clef='CLEF' key='KEY' level='LEVEL' octave='OCTAVE' %}"
               .replace('INSTRUMENT', instrument)
               .replace('CLEF', clef)
               .replace('KEY', key)
-              .replace('LEVEL', level);
+              .replace('LEVEL', level)
+              .replace('OCTAVE', octave);
 
             window.location.href = url;
           });

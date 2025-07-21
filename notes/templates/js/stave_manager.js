@@ -129,41 +129,47 @@ const stave_manager = (function () {
     }
 
     // public: draw a (black) note ---------------------------------------------
-api.updateNote = function (noteStr) {
-  api.currentNote = noteStr;
-  freshRenderer();
+    api.updateNote = function (noteStr) {
+        api.currentNote = noteStr;
+        freshRenderer();
 
-  const transposed = transpose(noteStr);
-  const stemDir = calcStemDirection(transposed);
+        let transposed = transpose(noteStr);
+        const stemDir = calcStemDirection(transposed);
 
-  // 1. build the note with centre-alignment
-  const note = new VF.StaveNote({
-    keys: [transposed],
-    duration: "q",
-    clef: my_clef,
-    stem_direction: stemDir,
-    align_center: true,          // keep this
-  });
+        const octave_mod = Number('{{ octave|default:0 }}');
+        if (octave_mod !== 0) {
+            const current_octave = parseInt(transposed.split('/')[1]);
+            transposed = transposed.replace(/\/\d+/, `/${current_octave + octave_mod}`);
+        }
 
-  // 2. optional accidental
-  let accidentalWidth = 0;
-  if (/[#b]/.test(transposed)) {
-    const acc = new VF.Accidental(transposed.includes("#") ? "#" : "b");
-    note.addModifier(acc, 0);
-    accidentalWidth = acc.getWidth();   // glyph width is known immediately
-  }
+        // 1. build the note with centre-alignment
+        const note = new VF.StaveNote({
+            keys: [transposed],
+            duration: "q",
+            clef: my_clef,
+            stem_direction: stemDir,
+            align_center: true,          // keep this
+        });
 
-  // 3. format & centre the tickable as usual
-  const voice = new VF.Voice({num_beats: 1, beat_value: 4}).addTickables([note]);
-  new VF.Formatter().joinVoices([voice]).format([voice], staveWidth / 2);
+        // 2. optional accidental
+        let accidentalWidth = 0;
+        if (/[#b]/.test(transposed)) {
+            const acc = new VF.Accidental(transposed.includes("#") ? "#" : "b");
+            note.addModifier(acc, 0);
+            accidentalWidth = acc.getWidth();   // glyph width is known immediately
+        }
 
-  // 4. Nudge the whole tickable left so the HEAD, not the group, is centred
-  if (accidentalWidth) {
-    note.setXShift(7);  // negative = move left :contentReference[oaicite:0]{index=0}
-  }
+        // 3. format & centre the tickable as usual
+        const voice = new VF.Voice({num_beats: 1, beat_value: 4}).addTickables([note]);
+        new VF.Formatter().joinVoices([voice]).format([voice], staveWidth / 2);
 
-  voice.draw(context, stave);
-};
+        // 4. Nudge the whole tickable left so the HEAD, not the group, is centred
+        if (accidentalWidth) {
+            note.setXShift(7);  // negative = move left :contentReference[oaicite:0]{index=0}
+        }
+
+        voice.draw(context, stave);
+    };
 
 
     // public: draw a red feedback note ----------------------------------------

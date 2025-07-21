@@ -140,6 +140,7 @@ def practice(request, learningscenario_id: int, sound: bool = False):
         'sound': sound,
         'transpose_key': learningscenario.get_transposeKey(),
         'level': learningscenario.level.lower(),
+        'octave': learningscenario.octave_shift,
     }
 
     context.update(common_context(instrument_name=instrument_name, clef=package.learningscenario.clef, sound=sound))
@@ -147,7 +148,7 @@ def practice(request, learningscenario_id: int, sound: bool = False):
     return render(request, 'notes/practice.html', context=context)
 
 
-def practice_try(request, instrument: str, clef: str, key: str, level: str, sound: bool = False):
+def practice_try(request, instrument: str, clef: str, key: str, level: str, octave: int, sound: bool = False):
     # Ensure instrument is properly capitalized
 
     if 'sharp' in key:
@@ -177,6 +178,8 @@ def practice_try(request, instrument: str, clef: str, key: str, level: str, soun
         'clef': clef,
         'keys': [key[1] for key in InstrumentKeys.choices],
         'clefs': [clef[1] for clef in ClefChoices.choices],
+        'octaves': ['2', '1', '0', '-1', '-2'],
+        'octave': octave,
     }
 
     context.update(common_context(instrument_name=capitalized_instrument, clef=clef, sound=sound))

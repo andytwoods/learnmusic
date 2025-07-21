@@ -30,8 +30,8 @@ urlpatterns = [
     path("practice-graph/<int:learningscenario_id>/", views.learningscenario_graph, name='learningscenario_graph'),
 
 
-    path('practice-try/<str:instrument>/<str:clef>/<str:key>/<str:level>/', views.practice_try, name='practice-try'),
-    path('practice-sound-try/<str:instrument>/<str:clef>/<str:key>/<str:level>/', views.practice_try,
+    path('practice-try/<str:instrument>/<str:clef>/<str:key>/<str:level>/<str:octave>/', views.practice_try, name='practice-try'),
+    path('practice-sound-try/<str:instrument>/<str:clef>/<str:key>/<str:level>/<str:octave>/', views.practice_try,
          kwargs={'sound': True}, name='practice-sound-try'),
     path("learningscenario-graph-try/<str:instrument>/<str:level>/",
          views.learningscenario_graph_try, name='learningscenario_graph_try'),
