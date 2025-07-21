@@ -30,7 +30,7 @@ class TestPagesWork(TestCase):
     def test_practice_try(self):
         for view in ['practice-sound-try', 'practice-try']:
             url = reverse(view, kwargs={'instrument': 'Trumpet', 'clef': 'Treble',
-                                        'key': 'Bb', 'level': 'Beginner'})
+                                        'key': 'Bb', 'level': 'Beginner', 'octave': 0})
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
 
@@ -85,4 +85,3 @@ class TestPagesWork(TestCase):
         self.assertTrue(response.status_code, 200)
         for item in ['form', 'learningscenario_pk', 'instruments_info', 'new']:
             self.assertTrue(item in response.context)
-

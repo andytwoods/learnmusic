@@ -14,7 +14,8 @@ def home(request):
         'instrument': 'dummy',
         'key': 'dummy',
         'clef': 'dummy',
-        'level': 'dummy'}).split('/')[1]
+        'level': 'dummy',
+        'octave': 0}).split('/')[1]
 
     instruments_data = {}
     for instrument, instrument_info in instruments.items():
