@@ -22,4 +22,4 @@ pushover_complete==2.0.0
 bx_django_utils==89
 psycopg-binary==3.2.9
 psycopg-pool==3.2.6
-
+django-simple-captcha==0.6.2

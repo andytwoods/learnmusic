@@ -96,3 +96,4 @@ peewee==3.18.1
 pywebpush==2.0.3
 pushover_complete==2.0.0
 bx_django_utils==89
+django-simple-captcha==0.6.2

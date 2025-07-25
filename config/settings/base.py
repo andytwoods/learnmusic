@@ -94,7 +94,8 @@ THIRD_PARTY_APPS = [
     "django_htmx",
     'axes',
     'bx_django_utils',
-    "huey.contrib.djhuey"
+    "huey.contrib.djhuey",
+    'captcha',
 ]
 
 LOCAL_APPS = [
@@ -287,7 +288,7 @@ REDIS_SSL = REDIS_URL.startswith("rediss://")
 # django-allauth  (≥ v65.8)
 # --------------------------------------------------------------------------
 
-ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", False)
+ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", True)
 
 # --- NEW, replaces ACCOUNT_AUTHENTICATION_METHOD ---------------------------
 ACCOUNT_LOGIN_METHODS = {'email', }  # users enter an email to log in
@@ -347,3 +348,7 @@ HUEY = {
 PUSHOVER_APP_TOKEN = env.str("PUSHOVER_APP_TOKEN", "SET IN .ENV")
 PUSHOVER_SUBSCRIPTION_URL = env.str("PUSHOVER_SUBSCRIPTION_URL",
                                     'https://pushover.net/subscribe/Tootology-kirqmdy91454sf1')
+
+CAPTCHA_CHALLENGE_FUNCT = 'captcha.helpers.word_challenge'
+CAPTCHA_WORDS_DICTIONARY = 'config/captcha_dictionary.txt'
+

@@ -35,6 +35,7 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
     path("", include("notes.urls")),
+    path('captcha/', include('captcha.urls')),
 
     path('test-rollbar/', views.test_rollbar, name='test-rollbar'),
     # Media files
