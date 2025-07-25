@@ -333,3 +333,4 @@ learnmusic/media/
 !.envs/.local/
 .aider*
 sendgrid.env
+/db.sqlite3

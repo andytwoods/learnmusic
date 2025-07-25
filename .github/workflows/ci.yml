@@ -71,9 +71,20 @@ jobs:
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
 
-      - name: Run Unit Tests
+      - name: Run Python Unit Tests
         run: |
           source .venv/bin/activate
           python manage.py test learnmusic notes config
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Run JavaScript Tests
+        run: npm test

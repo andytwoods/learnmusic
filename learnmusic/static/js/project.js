@@ -346,3 +346,100 @@ document.addEventListener("DOMContentLoaded", function () {
     // Load element positions from cache
     loadelPositionsFromCache();
 });
+
+/**
+ * Cache module for storing and retrieving data in localStorage
+ *
+ * This module provides a simple interface for storing and retrieving data
+ * in localStorage, with permission management to respect user consent.
+ *
+ * Error logging is suppressed during testing to avoid cluttering the test output.
+ */
+const cache = (() => {
+    const CKEY = 'tootology-consent';
+    let consent = false;
+
+    const ok = () => consent;
+    const canStore = () => typeof window !== 'undefined' && 'localStorage' in window;
+
+    function readConsent() {
+        if (!canStore()) return false;
+        consent = localStorage.getItem(CKEY) === 'true';
+        return consent;
+    }
+
+    function writeConsent(value) {
+        if (!canStore()) return false;
+        localStorage.setItem(CKEY, value ? 'true' : 'false');
+        consent = value;
+        return true;
+    }
+
+    function save(key, data) {
+        if (!ok()) return false;
+        try {
+            localStorage.setItem(key, JSON.stringify(data));
+            return true;
+        } catch (e) {
+            // Only log errors in non-test environment
+            // This prevents console.error messages from appearing in test output
+            // while still showing them in development and production
+            if (typeof process === 'undefined' || !process.env.NODE_ENV || process.env.NODE_ENV !== 'test') {
+                console.error(e);
+            }
+            return false;
+        }
+    }
+
+    function get(key) {
+        if (!ok()) return null;
+        try {
+            const raw = localStorage.getItem(key);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            // Only log errors in non-test environment
+            // This prevents console.error messages from appearing in test output
+            // while still showing them in development and production
+            if (typeof process === 'undefined' || !process.env.NODE_ENV || process.env.NODE_ENV !== 'test') {
+                console.error(e);
+            }
+            return null;
+        }
+    }
+
+    function remove(key) {
+        if (!ok()) return false;
+        try {
+            localStorage.removeItem(key);
+            return true;
+        } catch (e) {
+            // Only log errors in non-test environment
+            // This prevents console.error messages from appearing in test output
+            // while still showing them in development and production
+            if (typeof process === 'undefined' || !process.env.NODE_ENV || process.env.NODE_ENV !== 'test') {
+                console.error(e);
+            }
+            return false;
+        }
+    }
+
+    return {
+        checkPermission: readConsent,
+        permissionGiven: () => writeConsent(true),
+        permissionRemoved: () => {
+            localStorage.removeItem(CKEY);
+            consent = false;
+            return true;
+        },
+        save, get, remove,
+        // Expose internal functions for testing
+        _testing: {
+            canStore
+        }
+    };
+})();
+
+// Export for testing in Node.js environment
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { cache };
+}
