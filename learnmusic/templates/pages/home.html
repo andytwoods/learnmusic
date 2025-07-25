@@ -182,7 +182,7 @@
             </li>
             <li>
               <i class="fas fa-chevron-right fa-xs me-2"></i>Do in a <a
-              href="{{ request.scheme }}://{{ request.get_host }}/{{ practice_url }}/Trumpet/treble/Bb/Beginner/"
+              href="{% url 'practice-demo' %}"
               target="_blank">separate browser tab?</a>
             </li>
           </ul>
@@ -190,10 +190,7 @@
 
       </div>
 
-
-      <div id="iframe-container" class="overflow-hidden">
-        <!-- The iframe will be added here dynamically -->
-      </div>
+      <div id="iframe-container" class="overflow-hidden"></div>
 
 
       {{ instruments|json_script:"instruments-data" }}
