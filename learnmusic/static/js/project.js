@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 500); // Match the transition duration
 
         // Clear cache
-        localStorage.removeItem(elPositionsCacheKey);
+        cache.remove(elPositionsCacheKey);
 
         console.log("El positions reset to original HTML positions, cache cleared");
     }
@@ -294,17 +294,17 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-        localStorage.setItem(elPositionsCacheKey, JSON.stringify(positions));
+        cache.save(elPositionsCacheKey, positions);
         console.log("El positions saved to cache:", positions);
     }
 
     // Load element positions from cache
     function loadelPositionsFromCache() {
         try {
-            const cachedPositions = localStorage.getItem(elPositionsCacheKey);
+            const cachedPositions = cache.get(elPositionsCacheKey);
 
             if (cachedPositions) {
-                const positions = JSON.parse(cachedPositions);
+                const positions = cachedPositions;
                 const move_dur = 500;
                 // First, ensure all elements have no transform to start the animation from the initial position
                 for (const draggable of get_draggables()) {
@@ -355,11 +355,13 @@ document.addEventListener("DOMContentLoaded", function () {
  *
  * Error logging is suppressed during testing to avoid cluttering the test output.
  */
-const cache = (() => {
+let cache = (() => {
     const CKEY = 'tootology-consent';
-    let consent = false;
 
-    const ok = () => true; // hard setting this during dev // consent;
+    const cookie_consent_js_id = 'tootology-consent'
+    let consent = localStorage.getItem(cookie_consent_js_id) === 'true';
+
+    const ok = () => consent;
     const canStore = () => typeof window !== 'undefined' && 'localStorage' in window;
 
     function readConsent() {
