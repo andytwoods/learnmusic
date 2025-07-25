@@ -106,14 +106,14 @@
     <div class="stave-resize-controls position-absolute bottom-0 start-0">
       <div class="p-2">
         <div class="btn-group">
+          <button type="button" class="btn btn-lg btn-light text-secondary px-4" id="increase-magnification"
+                  title="Zoom out (increase size)">
+            <i class="fas fa-search-minus"></i>
+          </button>
           <button type="button" class="btn btn-lg btn-light text-secondary px-4 border-end"
                   id="decrease-magnification"
                   title="Zoom in (decrease size)">
             <i class="fas fa-search-plus"></i>
-          </button>
-          <button type="button" class="btn btn-lg btn-light text-secondary px-4" id="increase-magnification"
-                  title="Zoom out (increase size)">
-            <i class="fas fa-search-minus"></i>
           </button>
         </div>
       </div>
@@ -125,8 +125,31 @@
 
   </div>
 
-  {{ progress|json_script:"progress-data" }}
+  {% block saveResult %}
+    <script>
+      function saveResult(note, reactionTime, correct) {
 
+        {% if package_id %}
+          fetch("{% url 'practice-data' package_id=package_id %}", {
+            method: 'POST', // HTTP method
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': "{{ csrf_token }}"
+            },
+            body: JSON.stringify({
+              note: note.note,
+              alter: note.alter,
+              octave: note.octave,
+              reaction_time: reactionTime,
+              correct: correct
+            })
+          });
+        {% endif %}
+      }
+    </script>
+  {% endblock saveResult %}
+
+  {{ progress|json_script:"progress-data" }}
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -134,38 +157,16 @@
         document.instrument_data = _instrument_data;
       });
     });
-  </script>
 
-  <script>
-
-
-    function sendSingleNoteResultToBackend(note, reactionTime, correct) {
-      {% if package_id %}
-        fetch("{% url 'practice-data' package_id=package_id %}", {
-          method: 'POST', // HTTP method
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': "{{ csrf_token }}"
-          },
-          body: JSON.stringify({
-            note: note.note,
-            alter: note.alter,
-            octave: note.octave,
-            reaction_time: reactionTime,
-            correct: correct
-          })
-        });
-      {% endif %}
-    }
-  </script>
-
-
-  <script>
 
     window.progress_data = JSON.parse(
       document.getElementById('progress-data').textContent
     )
+  </script>
+    {% block load_progress_data_from_cache %}
+    {% endblock load_progress_data_from_cache %}
 
+  <script>
     {% include 'js/stave_manager.js' %}
     {% include 'js/countdown_manager.js' %}
     {% include 'js/trial_manager.js' %}
