@@ -9,6 +9,39 @@
   bg-light
 {% endblock %}
 
+{% block saveResult %}
+
+  <script>
+    (function cache_key() {
+      const instrument = '{{ instrument }}';
+      const level = '{{ level }}';
+      const clef = '{{ clef }}';
+      const shifted_octave = '{{ octave }}';
+      window.cache_key = [instrument, level, clef, shifted_octave].join('_')
+    }());
+
+    function saveResult(note, reactionTime, correct) {
+      cache.save(window.cache_key, window.progress_data);
+    }
+  </script>
+
+{% endblock saveResult %}
+
+{% block load_progress_data_from_cache %}
+  <script>
+    (function () {
+      let progress_data_exists = cache.get(window.cache_key, []) || [];
+      if (progress_data_exists.length > 0) {
+        window.progress_data = progress_data_exists;
+        console.log('Progress data loaded from cache');
+      }
+    }())
+
+  </script>
+
+
+{% endblock load_progress_data_from_cache %}
+
 {% block timeup %}
   <div class="card z-3 shadow text-bg-primary" id="time-up" style="display: none;">
     <div class="card-body">
@@ -181,7 +214,7 @@
                         <input class="form-check-input" type="radio" name="octave"
                                id="octave-{{ forloop.counter }}"
                                value="{{ my_octave }}"
-                               {% if my_octave == octave|stringformat:"s"%}checked{% endif %}>
+                               {% if my_octave == octave|stringformat:"s" %}checked{% endif %}>
                         <label class="form-check-label text-dark"
                                for="octave-{{ forloop.counter }}">
                           {{ my_octave }}
@@ -211,19 +244,19 @@
             const instrument = formData.get('instrument') || '{{ instrument }}';
             const level = formData.get('level') || '{{ level }}';
             const clef = formData.get('clef') || '{{ clef }}';
-            const octave = formData.get('octave') || '{{ octave }}';
+            const shifted_octave = formData.get('octave') || '{{ octave }}';
 
             let key = formData.get('key') || '{{ key }}';
 
             key = key.replace('#', 'sharp');
             key = key.replace('b', 'flat');
 
-            const url = "{% url 'practice-try' instrument='INSTRUMENT' clef='CLEF' key='KEY' level='LEVEL' octave='OCTAVE' %}"
+            const url = "{% url 'practice-try' instrument='INSTRUMENT' clef='CLEF' key='KEY' level='LEVEL' octave='SHIFTED_OCTAVE' %}"
               .replace('INSTRUMENT', instrument)
               .replace('CLEF', clef)
               .replace('KEY', key)
               .replace('LEVEL', level)
-              .replace('OCTAVE', octave);
+              .replace('SHIFTED_OCTAVE', shifted_octave);
 
             window.location.href = url;
           });

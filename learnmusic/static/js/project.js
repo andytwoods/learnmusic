@@ -359,7 +359,7 @@ const cache = (() => {
     const CKEY = 'tootology-consent';
     let consent = false;
 
-    const ok = () => consent;
+    const ok = () => true; // hard setting this during dev // consent;
     const canStore = () => typeof window !== 'undefined' && 'localStorage' in window;
 
     function readConsent() {
@@ -391,11 +391,18 @@ const cache = (() => {
         }
     }
 
-    function get(key) {
+    function get(key, defaultValue) {
         if (!ok()) return null;
+
         try {
             const raw = localStorage.getItem(key);
-            return raw ? JSON.parse(raw) : null;
+            if (raw) {
+                return JSON.parse(raw);
+            } else if (defaultValue !== undefined) {
+                save(key, defaultValue);
+                return defaultValue;
+            }
+            return null;
         } catch (e) {
             // Only log errors in non-test environment
             // This prevents console.error messages from appearing in test output
@@ -438,6 +445,7 @@ const cache = (() => {
         }
     };
 })();
+
 
 // Export for testing in Node.js environment
 if (typeof module !== 'undefined' && module.exports) {

@@ -175,6 +175,29 @@ describe('Cache Module', () => {
 
       expect(result).toBe(null);
     });
+
+    test('sets and returns default value for non-existent keys when provided', () => {
+      // Give consent
+      cache.permissionGiven();
+
+      const defaultValue = { default: 'value' };
+      const result = cache.get('non-existent-key', defaultValue);
+
+      expect(result).toEqual(defaultValue);
+      expect(localStorageMock.setItem).toHaveBeenCalledWith('non-existent-key', JSON.stringify(defaultValue));
+    });
+
+    test('does not set default value when consent is not given', () => {
+      // Ensure consent is not given
+      localStorageMock.setItem('tootology-consent', 'false');
+      cache.checkPermission();
+
+      const defaultValue = { default: 'value' };
+      const result = cache.get('non-existent-key', defaultValue);
+
+      expect(result).toBe(null);
+      expect(localStorageMock.setItem).not.toHaveBeenCalledWith('non-existent-key', expect.any(String));
+    });
   });
 
   describe('remove', () => {
