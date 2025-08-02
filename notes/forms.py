@@ -44,26 +44,26 @@ class LearningScenarioForm(forms.ModelForm):
             label="Instrument Name"
         )
 
-        # Convert reminder from UTC to user's timezone if it exists
+        # Convert reminder from UTC to user's timezone if it exists and extract only time
         if self.instance and self.instance.reminder and self.request:
             user_timezone = self.request.user.timezone
             if timezone.is_aware(self.instance.reminder):
                 # Convert from UTC to user's timezone
                 local_reminder = self.instance.reminder.astimezone(ZoneInfo(user_timezone))
-                self.initial['reminder'] = local_reminder
+                # Extract only the time component
+                self.initial['reminder'] = local_reminder.strftime("%H:%M")
 
-        self.fields['reminder'] = forms.DateTimeField(
-            widget=DateTimeInput(
+        self.fields['reminder'] = forms.TimeField(
+            widget=forms.TimeInput(
                 attrs={
-                    "type": "datetime-local",  # HTML5 widget
+                    "type": "time",  # HTML5 time widget
                     "class": "form-control",  # bootstrap styling, optional
                 }
             ),
-            input_formats=["%Y-%m-%dT%H:%M"],  # matches datetime-local
+            input_formats=["%H:%M"],  # matches time input format
             required=False,  # or True if the field is mandatory
             label="Daily reminder time",
-            help_text="Set in your local timezone. Specify the next time you want to be reminded. "
-                      "Thereafter, you will be reminded at the same time every 24 hours."
+            help_text="Set the time you want to be reminded daily. The reminder will occur at this time every day."
         )
 
         # Crispy Forms for layout
@@ -112,21 +112,37 @@ class LearningScenarioForm(forms.ModelForm):
             Submit('submit', 'Submit')
         )
 
+    def clean_reminder(self):
+        """
+        Convert the time field value to a datetime object before validation.
+        This ensures the model's DateTimeField receives the correct type.
+        """
+        time_value = self.cleaned_data.get('reminder')
+        if not time_value or not self.request:
+            return None
+
+        user_timezone = self.request.user.timezone
+
+        # Get current date in user's timezone
+        current_datetime = timezone.now().astimezone(ZoneInfo(user_timezone))
+        current_date = current_datetime.date()
+
+        # Combine current date with time input
+        from datetime import datetime
+        combined_datetime = datetime.combine(
+            current_date,
+            time_value
+        )
+
+        # Make timezone aware using user's timezone
+        aware_reminder = timezone.make_aware(combined_datetime, ZoneInfo(user_timezone))
+
+        # Convert to UTC for storage
+        utc_reminder = aware_reminder.astimezone(ZoneInfo("UTC"))
+        return utc_reminder
+
     def save(self, commit=True):
         instance = super().save(commit=False)
-
-        # Convert reminder from user's timezone to UTC if it exists
-        if self.cleaned_data.get('reminder') and self.request:
-            reminder = self.cleaned_data.get('reminder')
-
-            user_timezone = self.request.user.timezone
-
-            # If the reminder is naive (no timezone info), make it aware using user's timezone
-            if timezone.is_naive(reminder):
-                aware_reminder = timezone.make_aware(reminder, ZoneInfo(user_timezone))
-                # Convert to UTC for storage
-                utc_reminder = aware_reminder.astimezone(timezone.utc)
-                instance.reminder = utc_reminder
 
         if commit:
             instance.save()

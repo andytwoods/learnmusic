@@ -2,295 +2,335 @@
 {% load static %}
 
 {% block css %}
-  {{ block.super }}
+    {{ block.super }}
 {% endblock css %}
 
 {% block bodyclass %}
-  bg-light
+    bg-light
 {% endblock %}
 
 {% block saveResult %}
 
-  <script>
-    (function cache_key() {
-      const instrument = '{{ instrument }}';
-      const level = '{{ level }}';
-      const clef = '{{ clef }}';
-      const shifted_octave = '{{ octave }}';
-      window.cache_key = [instrument, level, clef, shifted_octave].join('_')
-    }());
+    <script>
+        (function cache_key() {
+            const instrument = '{{ instrument }}';
+            const level = '{{ level }}';
+            const clef = '{{ clef }}';
+            const shifted_octave = '{{ octave }}';
+            window.cache_key = [instrument, level, clef, shifted_octave].join('_')
+        }());
 
-    function saveResult(note, reactionTime, correct) {
-      cache.save(window.cache_key, window.progress_data);
-    }
-  </script>
+        function saveResult(note, reactionTime, correct) {
+            cache.save(window.cache_key, window.progress_data);
+        }
+    </script>
 
 {% endblock saveResult %}
 
 {% block load_progress_data_from_cache %}
-  <script>
-    (function () {
-      let progress_data_exists = cache.get(window.cache_key, []) || [];
-      if (progress_data_exists.length > 0) {
-        window.progress_data = progress_data_exists;
-        console.log('Progress data loaded from cache');
-      }
-    }());
+    <script>
+        (function () {
+            let progress_data_exists = cache.get(window.cache_key, []) || [];
+            if (progress_data_exists.length > 0) {
+                window.progress_data = progress_data_exists;
+                console.log('Progress data loaded from cache');
+            }
+        }());
 
-  </script>
+    </script>
 
 
 {% endblock load_progress_data_from_cache %}
 
 {% block timeup %}
-  <div class="card z-3 shadow text-bg-primary" id="time-up" style="display: none;">
-    <div class="card-body">
-      <button type="button" class="btn-close position-absolute top-0 end-0 m-2"
-              aria-label="Close"
-              onclick="document.getElementById('time-up').remove()"></button>
-      <p><strong>Time’s up!</strong></p>
-      <p>To continue practising, close this popup.</p>
+    <div class="card z-3 shadow text-bg-secondary bg-gradient" id="time-up" style="_display: none;">
+        <div class="card-body position-relative">
+            <button type="button"
+                    class="btn-close btn-close-white position-absolute top-0 end-0 m-2"
+                    aria-label="Close"
+                    onclick="document.getElementById('time-up').remove()">
+            </button>
 
-      <p class="mb-2">
-        <button class="btn btn-dark btn-sm">Save to cache</button>
-        Want to save your progress without signing up?
-        Pick this option to save to cache and go to a page you
-        can bookmark. There you can practise whenever you want, and this message won’t pop up.
-      </p>
-      <p class="mb-2">
-        <button class="btn btn-dark btn-sm">Save with app</button>
-        Select this option to save your progress through this app and get access to a whole host of features such as
-        progress reports, reminders, etc. This requires signing up. Unless costs mount, this app will remain free.
-      </p>
-      <p>{% include 'phrase.html' with fullstop=True %}</p>
-    </div>
-  </div>
-{% endblock timeup %}
+            <h5 class="card-title mb-3">
+                <i class="fa-regular fa-clock me-2"></i>To continue practising, close this popup. Or...
+            </h5>
+            <p class="mb-4"></p>
+
+            <div class="d-flex flex-column gap-4">
+
+                <div class="option-block">
+                    <!-- Loading indicator -->
+                    <div id="save-loading-indicator" class="htmx-indicator">
+                        <i class="fa-solid fa-spinner fa-spin me-2"></i>Saving...
+                    </div>
+
+                    <!-- Success message -->
+                    <div id="save-success-message" class="d-none">
+                        <i class="fa-solid fa-check me-2"></i>Saved successfully
+                    </div>
+
+                    <!-- Error message -->
+                    <div id="save-error-message" class="d-none">
+                        <i class="fa-solid fa-exclamation-triangle me-2"></i>Failed to save
+                    </div>
+
+                    <button id="save-to-cloud-btn"
+                            class="btn btn-light btn-sm mb-2"
+                            hx-post="{{ request.path }}"
+                            hx-trigger="click"
+                            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                            hx-no-confirm="true"
+                            hx-vals='{"progress_data": js:JSON.stringify(window.progress_data)}'
+                    >
+                        <i class="fa-solid fa-cloud-arrow-up me-2"></i>Save in the cloud
+                    </button>
+
+                    <p class="small mb-0">
+                        Select this option to save your progress in the cloud to get access
+                        to progress reports, reminders, and more. This requires signing up.
+                        Unless costs mount, this app will remain free.
+                    </p>
+
+                </div>
+
+                <div class="option-block">
+                    <a class="btn btn-light btn-sm mb-2" target="_blank" href="{{ request.build_absolute_uri }}">
+                        <i class="fa-solid fa-database me-2"></i>Save to cache
+                    </a>
+                    <p class="small mb-0">
+                        Select this option to save to your browser cache. You will be directed to a page you can
+                        bookmark.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>{% endblock timeup %}
 
 {% block cardheader %}
-  <!-- Button to trigger modal -->
-  <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="modal" data-bs-target="#settingsModal">
-    <i class="fa-solid fa-edit"></i> {{ instrument }},
-    {{ level }}{% if key != transpose_key %}, transposing to {{ transpose_key }}{% endif %}
-  </button>
+    <!-- Button to trigger modal -->
+    <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="modal" data-bs-target="#settingsModal">
+        <i class="fa-solid fa-edit"></i> {{ instrument }},
+        {{ level }}{% if key != transpose_key %}, transposing to {{ transpose_key }}{% endif %}
+    </button>
 
-  <!-- Settings Modal -->
-  <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="settingsModalLabel">Music settings</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="settingsModalLabel">Music settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
 
-        <form id="musicSettingsForm">
-          <div class="modal-body">
+                <form id="musicSettingsForm">
+                    <div class="modal-body">
 
-            <!-- Nav tabs -->
-            <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
-              <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="instrument-tab" data-bs-toggle="tab"
-                        data-bs-target="#instrument" type="button" role="tab"
-                        aria-controls="instrument" aria-selected="true">
-                  Instrument
-                </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" id="level-tab" data-bs-toggle="tab"
-                        data-bs-target="#level" type="button" role="tab"
-                        aria-controls="level" aria-selected="false">
-                  Level
-                </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" id="clef-tab" data-bs-toggle="tab"
-                        data-bs-target="#clef" type="button" role="tab"
-                        aria-controls="clef" aria-selected="false">
-                  Clef
-                </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" id="key-tab" data-bs-toggle="tab"
-                        data-bs-target="#key" type="button" role="tab"
-                        aria-controls="key" aria-selected="false">
-                  Transpose
-                </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" id="octave-tab" data-bs-toggle="tab"
-                        data-bs-target="#octave" type="button" role="tab"
-                        aria-controls="octave" aria-selected="false">
-                  Octave
-                </button>
-              </li>
-            </ul>
+                        <!-- Nav tabs -->
+                        <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="instrument-tab" data-bs-toggle="tab"
+                                        data-bs-target="#instrument" type="button" role="tab"
+                                        aria-controls="instrument" aria-selected="true">
+                                    Instrument
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="level-tab" data-bs-toggle="tab"
+                                        data-bs-target="#level" type="button" role="tab"
+                                        aria-controls="level" aria-selected="false">
+                                    Level
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="clef-tab" data-bs-toggle="tab"
+                                        data-bs-target="#clef" type="button" role="tab"
+                                        aria-controls="clef" aria-selected="false">
+                                    Clef
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="key-tab" data-bs-toggle="tab"
+                                        data-bs-target="#key" type="button" role="tab"
+                                        aria-controls="key" aria-selected="false">
+                                    Transpose
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="octave-tab" data-bs-toggle="tab"
+                                        data-bs-target="#octave" type="button" role="tab"
+                                        aria-controls="octave" aria-selected="false">
+                                    Octave
+                                </button>
+                            </li>
+                        </ul>
 
-            <!-- Tab panes -->
-            <div class="tab-content bg-white p-3" id="settingsTabContent">
+                        <!-- Tab panes -->
+                        <div class="tab-content bg-white p-3" id="settingsTabContent">
 
-              <!-- Instrument -->
-              <div class="tab-pane fade show active" id="instrument" role="tabpanel" aria-labelledby="instrument-tab">
-                <div class="d-flex flex-wrap gap-3 bg-white">
-                  {% for my_instrument in instruments %}
-                    <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" name="instrument"
-                             id="instrument-{{ forloop.counter }}"
-                             value="{{ my_instrument }}"
-                             {% if my_instrument == instrument %}checked{% endif %}>
-                      <label class="form-check-label text-dark"
-                             for="instrument-{{ forloop.counter }}">
-                        {{ my_instrument }}
-                      </label>
+                            <!-- Instrument -->
+                            <div class="tab-pane fade show active" id="instrument" role="tabpanel"
+                                 aria-labelledby="instrument-tab">
+                                <div class="d-flex flex-wrap gap-3 bg-white">
+                                    {% for my_instrument in instruments %}
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="instrument"
+                                                   id="instrument-{{ forloop.counter }}"
+                                                   value="{{ my_instrument }}"
+                                                   {% if my_instrument == instrument %}checked{% endif %}>
+                                            <label class="form-check-label text-dark"
+                                                   for="instrument-{{ forloop.counter }}">
+                                                {{ my_instrument }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Level -->
+                            <div class="tab-pane fade" id="level" role="tabpanel" aria-labelledby="level-tab">
+                                <div class="d-flex flex-wrap gap-3 bg-white">
+                                    {% for my_level in levels %}
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="level"
+                                                   id="level-{{ forloop.counter }}"
+                                                   value="{{ my_level }}"
+                                                   {% if my_level == level %}checked{% endif %}>
+                                            <label class="form-check-label text-dark"
+                                                   for="level-{{ forloop.counter }}">
+                                                {{ my_level }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Clef -->
+                            <div class="tab-pane fade" id="clef" role="tabpanel" aria-labelledby="clef-tab">
+                                <div class="d-flex flex-wrap gap-3 bg-white">
+
+                                    {% for my_clef in clefs %}
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="clef"
+                                                   id="clef-{{ forloop.counter }}"
+                                                   value="{{ my_clef }}"
+                                                   {% if my_clef|lower == clef %}checked{% endif %}>
+                                            <label class="form-check-label text-dark"
+                                                   for="clef-{{ forloop.counter }}">
+                                                {{ my_clef }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Key -->
+                            <div class="tab-pane fade" id="key" role="tabpanel" aria-labelledby="key-tab">
+                                <div class="d-flex flex-wrap gap-3 bg-white">
+                                    {% for my_key in keys %}
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="key"
+                                                   id="key-{{ forloop.counter }}"
+                                                   value="{{ my_key }}"
+                                                   {% if my_key == transpose_key %}checked{% endif %}>
+                                            <label class="form-check-label text-dark"
+                                                   for="key-{{ forloop.counter }}">
+                                                Key: {{ my_key }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Octave -->
+                            <div class="tab-pane fade" id="octave" role="tabpanel" aria-labelledby="octave-tab">
+
+                                <div class="d-flex flex-wrap gap-3 bg-white">
+                                    <p class="bg-white text-dark">Move notes up or down how many octaves?</p>
+                                    <div>
+
+                                        {% for my_octave in octaves %}
+
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="octave"
+                                                       id="octave-{{ forloop.counter }}"
+                                                       value="{{ my_octave }}"
+                                                       {% if my_octave == octave|stringformat:"s" %}checked{% endif %}>
+                                                <label class="form-check-label text-dark"
+                                                       for="octave-{{ forloop.counter }}">
+                                                    {{ my_octave }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                        </div>
                     </div>
-                  {% endfor %}
-                </div>
-              </div>
 
-              <!-- Level -->
-              <div class="tab-pane fade" id="level" role="tabpanel" aria-labelledby="level-tab">
-                <div class="d-flex flex-wrap gap-3 bg-white">
-                  {% for my_level in levels %}
-                    <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" name="level"
-                             id="level-{{ forloop.counter }}"
-                             value="{{ my_level }}"
-                             {% if my_level == level %}checked{% endif %}>
-                      <label class="form-check-label text-dark"
-                             for="level-{{ forloop.counter }}">
-                        {{ my_level }}
-                      </label>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Apply settings</button>
                     </div>
-                  {% endfor %}
-                </div>
-              </div>
+                </form>
 
-              <!-- Clef -->
-              <div class="tab-pane fade" id="clef" role="tabpanel" aria-labelledby="clef-tab">
-                <div class="d-flex flex-wrap gap-3 bg-white">
+                <script>
+                    document.getElementById('musicSettingsForm').addEventListener('submit', function (e) {
+                        e.preventDefault();
 
-                  {% for my_clef in clefs %}
-                    <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" name="clef"
-                             id="clef-{{ forloop.counter }}"
-                             value="{{ my_clef }}"
-                             {% if my_clef|lower == clef %}checked{% endif %}>
-                      <label class="form-check-label text-dark"
-                             for="clef-{{ forloop.counter }}">
-                        {{ my_clef }}
-                      </label>
-                    </div>
-                  {% endfor %}
-                </div>
-              </div>
+                        const formData = new FormData(this);
+                        const instrument = formData.get('instrument') || '{{ instrument }}';
+                        const level = formData.get('level') || '{{ level }}';
+                        const clef = formData.get('clef') || '{{ clef }}';
+                        const shifted_octave = formData.get('octave') || '{{ octave }}';
 
-              <!-- Key -->
-              <div class="tab-pane fade" id="key" role="tabpanel" aria-labelledby="key-tab">
-                <div class="d-flex flex-wrap gap-3 bg-white">
-                  {% for my_key in keys %}
-                    <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" name="key"
-                             id="key-{{ forloop.counter }}"
-                             value="{{ my_key }}"
-                             {% if my_key == transpose_key %}checked{% endif %}>
-                      <label class="form-check-label text-dark"
-                             for="key-{{ forloop.counter }}">
-                        Key: {{ my_key }}
-                      </label>
-                    </div>
-                  {% endfor %}
-                </div>
-              </div>
+                        let key = formData.get('key') || '{{ key }}';
 
-              <!-- Octave -->
-              <div class="tab-pane fade" id="octave" role="tabpanel" aria-labelledby="octave-tab">
+                        key = key.replace('#', 'sharp');
+                        key = key.replace('b', 'flat');
 
-                <div class="d-flex flex-wrap gap-3 bg-white">
-                  <p class="bg-white text-dark">Move notes up or down how many octaves?</p>
-                  <div>
+                        const url = "{% url 'practice-try' instrument='INSTRUMENT' clef='CLEF' key='KEY' level='LEVEL' octave='SHIFTED_OCTAVE' %}"
+                            .replace('INSTRUMENT', instrument)
+                            .replace('CLEF', clef)
+                            .replace('KEY', key)
+                            .replace('LEVEL', level)
+                            .replace('SHIFTED_OCTAVE', shifted_octave);
 
-                    {% for my_octave in octaves %}
-
-                      <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="octave"
-                               id="octave-{{ forloop.counter }}"
-                               value="{{ my_octave }}"
-                               {% if my_octave == octave|stringformat:"s" %}checked{% endif %}>
-                        <label class="form-check-label text-dark"
-                               for="octave-{{ forloop.counter }}">
-                          {{ my_octave }}
-                        </label>
-                      </div>
-                    {% endfor %}
-                  </div>
-
-                </div>
-              </div>
-
-
+                        window.location.href = url;
+                    });
+                </script>
             </div>
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-primary">Apply settings</button>
-          </div>
-        </form>
-
-        <script>
-          document.getElementById('musicSettingsForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const formData = new FormData(this);
-            const instrument = formData.get('instrument') || '{{ instrument }}';
-            const level = formData.get('level') || '{{ level }}';
-            const clef = formData.get('clef') || '{{ clef }}';
-            const shifted_octave = formData.get('octave') || '{{ octave }}';
-
-            let key = formData.get('key') || '{{ key }}';
-
-            key = key.replace('#', 'sharp');
-            key = key.replace('b', 'flat');
-
-            const url = "{% url 'practice-try' instrument='INSTRUMENT' clef='CLEF' key='KEY' level='LEVEL' octave='SHIFTED_OCTAVE' %}"
-              .replace('INSTRUMENT', instrument)
-              .replace('CLEF', clef)
-              .replace('KEY', key)
-              .replace('LEVEL', level)
-              .replace('SHIFTED_OCTAVE', shifted_octave);
-
-            window.location.href = url;
-          });
-        </script>
-      </div>
+        </div>
     </div>
-  </div>
 
-  {% include 'notes/components/practice_dropdown_menu_right.html' %}
+    {% include 'notes/components/practice_dropdown_menu_right.html' %}
 {% endblock cardheader %}
 
 {% block see_results %}
-  <a id="see-results" class="btn btn-link btn-xs text-start p-0 m-0">Stop and see your results</a>
-  <script>
-    document.getElementById('see-results').addEventListener('click', () => {
-      fetch("{% url 'learningscenario_graph_try' instrument level %}", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': "{{ csrf_token }}"
-        },
-        body: JSON.stringify(window.progress_data)
-      })
-        .then(res => res.redirected ? window.location.href = res.url : res.text())
-        .then(html => {
-          if (html) {
-            document.open();
-            document.write(html);
-            document.close();
-          }
-        })
-        .catch(err => console.error('Error:', err));
-    });
-  </script>
+    <a id="see-results" class="btn btn-link btn-xs text-start p-0 m-0">Stop and see your results</a>
+    <script>
+        document.getElementById('see-results').addEventListener('click', () => {
+            fetch("{% url 'learningscenario_graph_try' instrument level %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': "{{ csrf_token }}"
+                },
+                body: JSON.stringify(window.progress_data)
+            })
+                .then(res => res.redirected ? window.location.href = res.url : res.text())
+                .then(html => {
+                    if (html) {
+                        document.open();
+                        document.write(html);
+                        document.close();
+                    }
+                })
+                .catch(err => console.error('Error:', err));
+        });
+    </script>
 {% endblock see_results %}
 
 {% block navbar %}{% endblock navbar %}

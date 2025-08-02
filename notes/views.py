@@ -149,11 +149,20 @@ def practice(request, learningscenario_id: int, sound: bool = False):
 
 
 def practice_demo(request):
-    return practice_try(request, instrument='trumpet', clef='treble', key='Bb', level='beginner', octave=0, sound=False)
-
+    url = reverse('practice-try',
+                  kwargs={'instrument': 'trumpet',
+                          'clef': 'treble',
+                          'key': 'Bb',
+                          'level': 'beginner',
+                          'octave': 0})
+    return redirect(url)
 
 def practice_try(request, instrument: str, clef: str, key: str, level: str, octave: int, sound: bool = False):
     # Ensure instrument is properly capitalized
+    # Handle POST request with progress data
+    if request.method == 'POST':
+        data = request.POST.get('save-to-cloud-btn')
+        print(request.POST)
 
     if 'sharp' in key:
         key = key.replace('sharp', '#')
@@ -162,6 +171,8 @@ def practice_try(request, instrument: str, clef: str, key: str, level: str, octa
 
     capitalized_instrument = instrument.capitalize() if instrument else instrument
 
+
+    # Handle GET request
     serialised_notes = tools.generate_serialised_notes(capitalized_instrument, level)
 
     instrument_info = instrument_infos[capitalized_instrument]
