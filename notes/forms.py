@@ -116,6 +116,9 @@ class LearningScenarioForm(forms.ModelForm):
         """
         Convert the time field value to a datetime object before validation.
         This ensures the model's DateTimeField receives the correct type.
+
+        If the reminder time has already passed for the current day,
+        the reminder will be set for the next day.
         """
         time_value = self.cleaned_data.get('reminder')
         if not time_value or not self.request:
@@ -123,12 +126,12 @@ class LearningScenarioForm(forms.ModelForm):
 
         user_timezone = self.request.user.timezone
 
-        # Get current date in user's timezone
+        # Get current date and time in user's timezone
         current_datetime = timezone.now().astimezone(ZoneInfo(user_timezone))
         current_date = current_datetime.date()
 
         # Combine current date with time input
-        from datetime import datetime
+        from datetime import datetime, timedelta
         combined_datetime = datetime.combine(
             current_date,
             time_value
@@ -136,6 +139,10 @@ class LearningScenarioForm(forms.ModelForm):
 
         # Make timezone aware using user's timezone
         aware_reminder = timezone.make_aware(combined_datetime, ZoneInfo(user_timezone))
+
+        # If the reminder time has already passed for today, set it for tomorrow
+        if aware_reminder < current_datetime:
+            aware_reminder += timedelta(days=1)
 
         # Convert to UTC for storage
         utc_reminder = aware_reminder.astimezone(ZoneInfo("UTC"))
