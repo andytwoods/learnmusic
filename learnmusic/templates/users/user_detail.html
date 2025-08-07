@@ -7,48 +7,55 @@
   <div class="container py-5">
     <div class="row justify-content-center">
       <div class="col-lg-8">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow rounded-3 hover-shadow">
+          <div class="card-header bg-gradient text-center py-3 border-0" style="background-color: #f8f9fc;">
+            <h4 class="text-primary mb-0"><i class="fas fa-user-circle me-2"></i>User Profile</h4>
+          </div>
           <div class="card-body p-4 p-md-5">
             <div class="text-center mb-4">
-              <div class="d-flex align-items-center justify-content-center mx-auto mb-3"
-                   style="width: 100px; height: 100px;">
+              <!-- User avatar circle -->
+              <div class="d-flex align-items-center justify-content-center mx-auto mb-4"
+                   style="width: 100px; height: 100px; background-color: #4e73df; border-radius: 50%;">
                 <span class="display-4 text-white">{{ object.name|make_list|first|upper }}</span>
-
-                <h1 class="h2 mb-3">{{ object }}</h1>
-                <hr class="my-4">
               </div>
 
+              <!-- User name and divider -->
+              <h1 class="h2 mb-3 text-primary">{{ object }}</h1>
+              <p class="text-muted mb-4">Account Management</p>
+              <hr class="my-4">
 
-              <div class="row g-3">
+
+              <!-- User action buttons -->
+              <div class="row g-4 mt-2">
                 <div class="col-sm-6 col-md-3">
-                  <a class="btn btn-primary d-flex align-items-center justify-content-center gap-2 w-100 py-2"
+                  <a class="btn btn-primary d-flex align-items-center justify-content-center gap-2 w-100 py-3 shadow-sm rounded-3"
                      href="{% url 'users:update' %}">
-                    <i class="fas fa-user-edit"></i>
-                    <span>My Info</span>
+                    <i class="fas fa-user-edit fa-lg"></i>
+                    <span class="ms-2">My Info</span>
                   </a>
                 </div>
 
                 <div class="col-sm-6 col-md-3">
-                  <a class="btn btn-primary d-flex align-items-center justify-content-center gap-2 w-100 py-2"
+                  <a class="btn btn-info d-flex align-items-center justify-content-center gap-2 w-100 py-3 shadow-sm rounded-3 text-white"
                      href="{% url 'account_email' %}">
-                    <i class="fas fa-envelope"></i>
-                    <span>E-Mail</span>
+                    <i class="fas fa-envelope fa-lg"></i>
+                    <span class="ms-2">E-Mail</span>
                   </a>
                 </div>
 
                 <div class="col-sm-6 col-md-3">
-                  <a class="btn btn-primary d-flex align-items-center justify-content-center gap-2 w-100 py-2"
+                  <a class="btn btn-warning d-flex align-items-center justify-content-center gap-2 w-100 py-3 shadow-sm rounded-3"
                      href="{% url 'mfa_index' %}">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>Multi-Factor Authentication</span>
+                    <i class="fas fa-shield-alt fa-lg"></i>
+                    <span class="ms-2">MFA</span>
                   </a>
                 </div>
 
                 <div class="col-sm-6 col-md-3">
-                  <a class="btn btn-outline-primary d-flex align-items-center justify-content-center gap-2 w-100 py-2"
+                  <a class="btn btn-success d-flex align-items-center justify-content-center gap-2 w-100 py-3 shadow-sm rounded-3"
                      href="{% url 'reminders' %}">
-                    <i class="fas fa-bell"></i>
-                    <span>Reminders</span>
+                    <i class="fas fa-bell fa-lg"></i>
+                    <span class="ms-2">Reminders</span>
                   </a>
                 </div>
               </div>
