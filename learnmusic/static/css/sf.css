@@ -1,0 +1,60 @@
+/*  storyfutures-theme.css  */
+/*  ©2025 – palette derived from storyfutures.com  */
+
+/* ----------  Core palette as CSS variables  ---------- */
+:root,
+[data-bs-theme="light"] {             /* default (light) theme */
+  /* Brand rainbow (taken from the logo’s rainbow “Futures”) */
+  --sf-red:     #E34A34;  /* logo “F” */
+  --sf-orange:  #F49400;  /* logo “u” */
+  --sf-green:   #A3C845;  /* logo “t” */
+  --sf-blue:    #3AA2E1;  /* logo “r” */
+  --sf-purple:  #7146B5;  /* logo “e” */
+  --sf-pink:    #E51C5D;  /* accent used in marketing pieces */
+
+  /* Neutrals */
+  --sf-dark:    #0D1023;  /* deep navy background  */
+  --sf-light:   #FFFFFF;  /* pure white            */
+
+  /* ----------  Bootstrap 5 mappings  ---------- */
+  --bs-primary:           var(--sf-red);
+  --bs-secondary:         var(--sf-purple);
+  --bs-success:           var(--sf-green);
+  --bs-info:              var(--sf-blue);
+  --bs-warning:           var(--sf-orange);
+  --bs-danger:            var(--sf-pink);
+  --bs-light:             var(--sf-light);
+  --bs-dark:              var(--sf-dark);
+
+  /* RGB fall-backs for utilities that expect them */
+  --bs-primary-rgb:       227, 74, 52;
+  --bs-secondary-rgb:     113, 70, 181;
+  --bs-success-rgb:       163, 200, 69;
+  --bs-info-rgb:          58, 162, 225;
+  --bs-warning-rgb:       244, 148, 0;
+  --bs-danger-rgb:        229, 28, 93;
+  --bs-light-rgb:         255, 255, 255;
+  --bs-dark-rgb:          13, 16, 35;
+
+  /* Optional bespoke touch: a rainbow gradient helper */
+  --sf-gradient: linear-gradient(90deg,
+                     #E34A34  0%,  #F49400 15%, #A3C845 35%,
+                     #3AA2E1 55%, #7146B5 75%, #E51C5D 100%);
+}
+
+/* ----------  Optional dark mode (uses BS5 data attribute) ---------- */
+[data-bs-theme="dark"] {
+  /* flip foreground/background */
+  --bs-body-bg:         var(--sf-dark);
+  --bs-body-color:      var(--sf-light);
+  /* tweak component backgrounds */
+  --bs-card-bg:         #16192C;
+  --bs-navbar-bg:       #111425;
+}
+
+/* ----------  Utility class for gradient headings ---------- */
+.sf-gradient-text {
+  background: var(--sf-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
