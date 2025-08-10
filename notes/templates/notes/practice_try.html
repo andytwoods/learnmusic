@@ -154,7 +154,17 @@
       }
 
       function ensureInstallBanner() {
+        // Use a per-page cache key so dismissal is remembered for this specific practice config
+        const bannerCacheKey = `installBannerDismissed:${location.pathname}`;
+        // Do not show if already in DOM or user previously dismissed
         if (document.getElementById('install-banner')) return;
+        try {
+          const dismissed = cache.get(bannerCacheKey);
+          if (dismissed === true) return;
+        } catch (e) {
+          // If cache access fails, proceed without persistence
+        }
+
         const banner = document.createElement('div');
         banner.id = 'install-banner';
         banner.style.position = 'fixed';
@@ -169,12 +179,15 @@
         banner.style.display = (window.top === window.self) ? 'flex' : 'none';
         banner.style.alignItems = 'center';
         banner.style.gap = '10px';
-        banner.innerHTML = '<span><i class="fa-solid fa-download me-1"></i> Install this app</span>' +
+        banner.innerHTML = '<span><i class="fa-solid fa-download me-1"></i> Install this practice as an app on your device</span>' +
                            '<button id="install-banner-btn" class="btn btn-light btn-sm">Install</button>' +
                            '<button id="install-banner-close" class="btn-close btn-close-white" aria-label="Close"></button>';
         document.body.appendChild(banner);
         document.getElementById('install-banner-btn').addEventListener('click', function(e){ e.preventDefault(); installPWA(); });
-        document.getElementById('install-banner-close').addEventListener('click', function(){ banner.remove(); });
+        document.getElementById('install-banner-close').addEventListener('click', function(){
+          try { cache.save(bannerCacheKey, true); } catch (_) {}
+          banner.remove();
+        });
       }
 
       function hideInstallButton() {
