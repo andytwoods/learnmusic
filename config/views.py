@@ -3,6 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.conf import settings
+from django.contrib.staticfiles.storage import staticfiles_storage
 
 from notes.instrument_data import instruments, instrument_infos
 
@@ -37,3 +38,16 @@ def test_rollbar(request):
     a = None
     a.hello()  # Creating an error with an invalid line of code
     return HttpResponse("Hello, world. You're at the pollapp index.")
+
+
+def service_worker(request):
+    """Serve the service worker at the site root so its scope is '/'.
+    This makes pages like /practice-try/... installable (required by PWA install criteria).
+    """
+    from django.contrib.staticfiles import finders
+    file_path = finders.find("js/service-worker.js") or finders.find("service-worker.js")
+    if not file_path:
+        return HttpResponse("// service worker not found", content_type="application/javascript", status=404)
+    with open(file_path, "rb") as f:
+        content = f.read()
+    return HttpResponse(content, content_type="application/javascript")

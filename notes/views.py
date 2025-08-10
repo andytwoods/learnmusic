@@ -157,6 +157,52 @@ def practice_demo(request):
                           'octave': 0})
     return redirect(url)
 
+def practice_try_manifest(request, instrument: str, clef: str, key: str, level: str, octave: int):
+    """Generate dynamic PWA manifest for practice-try pages"""
+    # Handle key formatting for display
+    display_key = key
+    if 'sharp' in key:
+        display_key = key.replace('sharp', '#')
+    elif 'flat' in key:
+        display_key = key.replace('flat', 'b')
+
+    # Create dynamic app name based on parameters
+    app_name = f"{instrument.capitalize()} Practice - {level.capitalize()}"
+    if display_key and display_key != instrument.capitalize():
+        app_name += f" ({display_key})"
+
+    # Generate start URL for this specific configuration (remove /manifest.json from the end)
+    start_url = request.build_absolute_uri().replace('/manifest.json', '/')
+
+    manifest_data = {
+        "name": app_name,
+        "short_name": f"{instrument.capitalize()} {level}",
+        "description": f"Practice {instrument} reading in {clef} clef at {level} level",
+        "start_url": start_url,
+        "scope": "/",
+        "display": "standalone",
+        "orientation": "any",
+        "background_color": "#ffffff",
+        "theme_color": "#007bff",
+        "icons": [
+            {
+                "src": "/static/favicon/android-chrome-192x192.png",
+                "sizes": "192x192",
+                "type": "image/png",
+                "purpose": "any maskable"
+            },
+            {
+                "src": "/static/favicon/android-chrome-512x512.png",
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "any maskable"
+            }
+        ]
+    }
+
+    return JsonResponse(manifest_data)
+
+
 def practice_try(request, instrument: str, clef: str, key: str, level: str, octave: int, sound: bool = False):
     # Ensure instrument is properly capitalized
     # Handle POST request with progress data
@@ -195,6 +241,8 @@ def practice_try(request, instrument: str, clef: str, key: str, level: str, octa
         'clefs': [clef[1] for clef in ClefChoices.choices],
         'octaves': ['2', '1', '0', '-1', '-2'],
         'octave': octave,
+        # Add original key for manifest URL generation
+        'original_key': key,
     }
 
     context.update(common_context(instrument_name=capitalized_instrument, clef=clef, sound=sound))
