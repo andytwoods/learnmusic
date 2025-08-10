@@ -20,11 +20,12 @@
       opacity: 1; /* Fully visible when enabled */
     }
 
-     .tab-content {
+    .tab-content {
       position: relative;
       overflow: hidden;
       height: 200px;
     }
+
     .tab-pane {
       position: absolute;
       width: 100%;
@@ -35,25 +36,93 @@
       transform: translateX(100%);
       z-index: 0;
     }
+
     .tab-pane.slide-in-left {
       transform: translateX(0);
       opacity: 1;
       z-index: 1;
     }
+
     .tab-pane.slide-out-left {
       transform: translateX(-100%);
       opacity: 0;
       z-index: 0;
     }
+
     .tab-pane.slide-in-right {
       transform: translateX(0);
       opacity: 1;
       z-index: 1;
     }
+
     .tab-pane.slide-out-right {
       transform: translateX(100%);
       opacity: 0;
       z-index: 0;
+    }
+
+    /* Features section polish */
+    #features {
+      background: rgba(13, 110, 253, 0.08);
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    #features .feature-card {
+      transition: transform 200ms ease, box-shadow 200ms ease;
+      border-radius: 0.75rem;
+    }
+
+    #features .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.1);
+    }
+
+    /* Controls */
+    #featuresCarousel .carousel-control-prev,
+    #featuresCarousel .carousel-control-next {
+      width: 3rem;
+    }
+
+    #featuresCarousel .carousel-control-prev .control-pill,
+    #featuresCarousel .carousel-control-next .control-pill {
+      background: #0d6efd;
+      color: #fff;
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0.5rem 1rem rgba(13, 110, 253, 0.25);
+      transition: transform 150ms ease, background-color 150ms ease;
+    }
+
+    #featuresCarousel .carousel-control-prev:hover .control-pill,
+    #featuresCarousel .carousel-control-next:hover .control-pill {
+      transform: scale(1.05);
+      background: #0b5ed7;
+    }
+
+    /* Indicators */
+    #featuresCarousel .carousel-indicators [data-bs-target] {
+      width: .75rem;
+      height: .75rem;
+      border-radius: 50%;
+      background-color: rgba(13, 110, 253, .35);
+    }
+
+    #featuresCarousel .carousel-indicators .active {
+      background-color: #0d6efd;
+    }
+
+    /* Faster slide transition feel */
+    #featuresCarousel {
+      --bs-carousel-transition-duration: .35s;
+    }
+
+    .carousel-indicators {
+      position: relative !important;
     }
   </style>
 {% endblock css %}
@@ -227,120 +296,124 @@
   </section>
 
 
-  <div class="container py-4">
-  <ul class="nav nav-tabs mb-3" id="carouselTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active" data-index="0" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab">Slide 1</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" data-index="1" data-bs-toggle="tab" data-bs-target="#tab2" type="button" role="tab">Slide 2</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" data-index="2" data-bs-toggle="tab" data-bs-target="#tab3" type="button" role="tab">Slide 3</button>
-    </li>
-  </ul>
-
-  <div class="tab-content" id="carouselTabsContent">
-    <div class="tab-pane slide-in-left active" id="tab1" role="tabpanel">
-      <div class="p-4 bg-light border">This is the content for Slide 1</div>
-    </div>
-    <div class="tab-pane" id="tab2" role="tabpanel">
-      <div class="p-4 bg-light border">This is the content for Slide 2</div>
-    </div>
-    <div class="tab-pane" id="tab3" role="tabpanel">
-      <div class="p-4 bg-light border">This is the content for Slide 3</div>
-    </div>
-  </div>
-</div>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const tabButtons = document.querySelectorAll('#carouselTabs button');
-    let currentIndex = 0;
-
-    // Initialize Bootstrap tabs
-    const tabList = document.querySelector('#carouselTabs');
-    const tabs = new bootstrap.Tab(tabList);
-
-    // Handle tab show event (before the tab is shown)
-    tabList.addEventListener('show.bs.tab', function(event) {
-      const newTab = event.target;
-      const newIndex = parseInt(newTab.getAttribute('data-index'));
-      const tabPanes = document.querySelectorAll('.tab-pane');
-
-      // Determine direction (left or right)
-      const direction = newIndex > currentIndex ? 'right' : 'left';
-
-      // Remove all animation classes first
-      tabPanes.forEach(pane => {
-        pane.classList.remove('slide-in-left', 'slide-out-left', 'slide-in-right', 'slide-out-right');
-      });
-
-      // Add appropriate animation classes
-      if (direction === 'right') {
-        // Current pane slides out to left
-        tabPanes[currentIndex].classList.add('slide-out-left');
-        // New pane slides in from right
-        tabPanes[newIndex].classList.add('slide-in-right');
-      } else {
-        // Current pane slides out to right
-        tabPanes[currentIndex].classList.add('slide-out-right');
-        // New pane slides in from left
-        tabPanes[newIndex].classList.add('slide-in-left');
-      }
-
-      // Update current index
-      currentIndex = newIndex;
-    });
-  });
-</script>
 
   <!-- Features Section -->
-  <section id="features" class="py-5">
+  <!-- Features Section -->
+  <section id="features" class="py-5 position-relative">
+
+
     <div class="container">
-      <div class="text-center mb-4">
+      <div class="text-center">
         <h2><a href="{% url 'account_signup' %}">Sign-up</a> for advanced features</h2>
       </div>
-      <div class="row g-2">
+
+      <div id="featuresCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+          <button type="button" data-bs-target="#featuresCarousel" data-bs-slide-to="0" class="active"
+                  aria-current="true" aria-label="Slide 1"></button>
+          <button type="button" data-bs-target="#featuresCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        </div>
 
 
-        <div class="col-md-3">
-          <div class="card h-100 shadow-sm border-0 bg-light">
-            <div class="card-body text-center">
-              <h5 class="card-title"><i class="fas fa-chart-bar"></i> Compare</h5>
-              <p class="card-text">Where do you stand compared to others?</p>
+        <div class="carousel-inner">
+          <!-- First slide -->
+          <div class="carousel-item active" data-bs-interval="2200">
+            <div class="row g-3 justify-content-center">
+              <div class="col-md-4">
+                <div class="card feature-card h-100 shadow-sm border-0 bg-light">
+                  <div class="card-body text-center">
+                    <h5 class="card-title mb-2"><i class="fas fa-chart-bar me-2 text-primary"></i>Compare</h5>
+                    <p class="card-text text-muted mb-0">Where do you stand compared to others?</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card feature-card h-100 shadow-sm border-0 bg-light">
+                  <div class="card-body text-center">
+                    <h5 class="card-title mb-2"><i class="fas fa-chart-line me-2 text-success"></i>Track</h5>
+                    <p class="card-text text-muted mb-0">Detailed insights and analytics on where to focus</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Second slide -->
+          <div class="carousel-item" data-bs-interval="4000">
+            <div class="row g-3 justify-content-center">
+              <div class="col-md-4">
+                <div class="card feature-card h-100 shadow-sm border-0 bg-light">
+                  <div class="card-body text-center">
+                    <h5 class="card-title mb-2"><i class="fas fa-cloud-upload-alt me-2 text-info"></i>Backup</h5>
+                    <p class="card-text text-muted mb-0">Data stored securely and not in your browser's cache</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card feature-card h-100 shadow-sm border-0 bg-light">
+                  <div class="card-body text-center">
+                    <h5 class="card-title mb-2"><i class="fas fa-flask me-2 text-warning"></i>Science</h5>
+                    <p class="card-text text-muted mb-0">Your anonymous data can be used to benefit all</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="col-md-3">
-          <div class="card h-100 shadow-sm border-0 bg-light">
-            <div class="card-body text-center">
-              <h5 class="card-title"><i class="fas fa-chart-line"></i> Track</h5>
-              <p class="card-text">Detailed insights and analytics on where to focus</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card h-100 shadow-sm border-0 bg-light">
-            <div class="card-body text-center">
-              <h5 class="card-title"><i class="fas fa-cloud-upload-alt"></i> Backup</h5>
-              <p class="card-text">
-                Data stored in securely and not in your browser's cache
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card h-100 shadow-sm border-0 bg-light">
-            <div class="card-body text-center">
-              <h5 class="card-title"><i class="fas fa-flask"></i> Science</h5>
-              <p class="card-text">
-                Your anonymous data can be used to benefit all
-            </div>
-          </div>
+
+        <!-- Controls -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#featuresCarousel" data-bs-slide="prev"
+                aria-label="Previous">
+          <span class="control-pill" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#featuresCarousel" data-bs-slide="next"
+                aria-label="Next">
+          <span class="control-pill" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
+        </button>
+
+        <!-- Free usage message -->
+        <div class="text-center mt-4">
+          <p class="mb-0">
+            Unless costs mount, will remain free.
+          <p>{% include 'phrase.html' %}
+            <a class="ms-2"
+               href="https://github.com/andytwoods/learnmusic"
+               target="_blank"
+               data-bs-toggle="tooltip"
+               data-bs-placement="bottom"
+               title="MIT with Commons Clause License">
+              <i class="fab fa-github me-2"></i>MIT-CC
+            </a>
+          </p>
         </div>
       </div>
     </div>
   </section>
+
+  <script>
+    // Bootstrap 5: faster auto-slide + nice defaults
+    document.addEventListener('DOMContentLoaded', function () {
+      new bootstrap.Carousel(document.getElementById('featuresCarousel'), {
+        interval: 10000, // faster cycling
+        ride: 'carousel',
+        touch: true,
+        pause: true     // keep it moving unless user interacts
+      });
+    });
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Initialize the carousel with custom settings
+      const carousel = new bootstrap.Carousel(document.getElementById('featuresCarousel'), {
+        interval: 5000, // Change slides every 5 seconds
+        touch: true,    // Enable touch swiping on mobile
+        pause: 'hover'  // Pause on mouse hover
+      });
+    });
+  </script>
+
+
   <!-- Testimonials Section -->
   <section id="testimonials" class="bg-light py-5">
     <div class="container">
