@@ -8,7 +8,7 @@ const countdown_manager = (function () {
 
     api.start = function (durationInSeconds) {
         if (remainingTime !== undefined) return;
-        if (durationInSeconds === undefined) durationInSeconds = 1;
+        if (durationInSeconds === undefined) durationInSeconds = 60;
         document.getElementById('counter').style.display = 'block';
         remainingTime = durationInSeconds;
         counterSpan.textContent = remainingTime;
