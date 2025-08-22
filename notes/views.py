@@ -19,7 +19,7 @@ from notes import tools
 from notes.forms import LearningScenarioForm
 from notes.instrument_data import instrument_infos, instruments
 from notes.models import LearningScenario, NoteRecordPackage, NoteRecord, LevelChoices, InstrumentKeys, ClefChoices
-from notes.tools import generate_notes, compile_notes_per_skilllevel, convert_note_slash_to_db
+from notes.tools import generate_notes, compile_notes_per_skilllevel, convert_note_slash_to_db, toCamelCase
 
 PRACTICE_TRY = 'practice-try'
 
@@ -215,7 +215,7 @@ def practice_try(request, instrument: str, clef: str, key: str, level: str, octa
     elif 'flat' in key:
         key = key.replace('flat', 'b')
 
-    capitalized_instrument = instrument.capitalize() if instrument else instrument
+    capitalized_instrument = toCamelCase(instrument) if instrument else instrument
 
 
     # Handle GET request

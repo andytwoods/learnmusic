@@ -542,7 +542,8 @@
             e.preventDefault();
 
             const formData = new FormData(this);
-            const instrument = formData.get('instrument') || '{{ instrument }}';
+            let instrument = formData.get('instrument') || '{{ instrument }}';
+            instrument = instrument.replace(' ', '-');
             const level = formData.get('level') || '{{ level }}';
             const clef = formData.get('clef') || '{{ clef }}';
             const shifted_octave = formData.get('octave') || '{{ octave }}';

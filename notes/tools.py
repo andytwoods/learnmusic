@@ -125,12 +125,22 @@ def serialise_note(note_str):
         'correct': [],
     }
 
+def toCamelCase(string):
+    if not string:
+        return string
+        # Split the string by hyphens and filter out empty strings
+    # Capitalize first letter of each word
+    print(string,222)
+    words = [word.capitalize() for word in string.split('-') ]
+    # Join the words back together
+    return ' '.join(words)
+
 
 def generate_serialised_notes(instrument, level):
     # Ensure instrument and level are properly capitalized
-    instrument = instrument.capitalize() if instrument else instrument
+    instrument = instrument
     level = level.capitalize() if level else level
-
+    print(instrument, level)
     instrument_notes_info = instruments[instrument][level]
     if 'notes' in instrument_notes_info and instrument_notes_info['notes'] is not None:
         return serialise_notes(instrument_notes_info['notes'])
