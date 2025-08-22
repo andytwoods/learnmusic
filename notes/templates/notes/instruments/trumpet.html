@@ -20,7 +20,7 @@
       color: white !important;
     }
 
-    #trumpet-right {
+    #valves-right {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -28,7 +28,7 @@
       top: 10px;
     }
 
-    #trumpet-right .valve {
+    #valves-right .valve {
       position: relative !important;
       margin: 10px 0;
     }
@@ -63,7 +63,7 @@
   </div>
 </div>
 
-<div id='trumpet-right' class="position-absolute fs-6">
+<div id='valves-right' class="position-absolute fs-6">
   {% block keys %}
     <button class="valve rounded-pill input-button p-2 trumpet-b3 draggable" id='valve3' data-valve="3">3</button>
     <button class="valve rounded-pill input-button p-2 trumpet-b2 draggable" id='valve2' data-valve="2">2</button>
@@ -79,7 +79,7 @@
     function setup() {
       if (placeholder) return
       placeholder = document.getElementById('right-of-sheet-placeholder');
-      trumpet_right = document.getElementById('trumpet-right');
+      trumpet_right = document.getElementById('valves-right');
       trumpet_bottom = document.getElementById('trumpet-bottom');
 
       placeholder.parentElement.replaceChild(trumpet_right, placeholder);

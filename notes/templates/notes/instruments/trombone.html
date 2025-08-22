@@ -1,37 +1,18 @@
 {% extends 'notes/instruments/trumpet.html' %}
 
-{% block button_css %}
-  <style>
-    .input-button {
-      min-width: 70px;
-      background-color: white; /* Default white background */
-      color: black; /* Default black text */
-      border: 2px solid black; /* Optional: Add a black border */
-      transition: all 0s ease; /* Smooth transition */
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
-    }
-
-    .active {
-      background-color: black !important;
-      color: white !important;
-    }
-  </style>
-{% endblock button_css %}
 
 {% block keys %}
   <style>
     .valve {
-      display: block;
-      margin: 0 auto; /* Center the buttons horizontally */
+      border-radius: 15px!important;
+      width: 80px!important;
+      height: 55px!important;
     }
+
   </style>
-  <button class="valve input-button my-1 p-3 trumpet-b7" data-valve="7">7</button>
-  <button class="valve input-button my-1 p-3 trumpet-b6" data-valve="6">6</button>
-  <button class="valve input-button my-1 p-3 trumpet-b5" data-valve="5">5</button>
-  <button class="valve input-button my-1 p-3 trumpet-b4" data-valve="4">4</button>
-  <button class="valve input-button my-1 p-3 trumpet-b3" data-valve="3">3</button>
-  <button class="valve input-button my-1 p-3 trumpet-b2" data-valve="2">2</button>
-  <button class="valve input-button my-1 p-3 trumpet-b1" data-valve="1">1</button>
+  {% for i in '1234567'|make_list  reversed%}
+  <button class="valve input-button my-1  trumpet-b{{ i }} draggable" id='valve{{ i }}' data-valve="{{ i }}">{{ i }}</button>
+  {% endfor %}
 
 {% endblock keys %}
 
@@ -45,7 +26,7 @@
 
 {% block instrument_modify %}
   <script>
-    const valves_container = document.getElementById('trumpet-right');
+    const valves_container = document.getElementById('valves-right');
     valves_container.style.opacity = '0';
     valves_container.style.display = 'block';
     setTimeout(function () {
