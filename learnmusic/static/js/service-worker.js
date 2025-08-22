@@ -53,39 +53,42 @@ const sameOrigin = req => new URL(req.url).origin === location.origin;
 
 /* ---------- fetch ------------------------------------------------------- */
 self.addEventListener("fetch", event => {
-	const { request } = event;
+  const { request } = event;
 
-	/* ignore non-GET or cross-origin – let the browser handle them */
-	if (request.method !== "GET" || !sameOrigin(request)) return;
+  // ignore non-GET or cross-origin – let the browser handle them
+  if (request.method !== "GET" || new URL(request.url).origin !== location.origin) return;
 
-	/* HTML – network-first, fallback to offline */
-	if (request.headers.get("accept")?.includes("text/html")) {
-		event.respondWith(
-			fetch(request)
-				.then(resp => resp)
-				.catch(() => caches.match("/static/offline.html"))
-		);
-		return;
-	}
+  // HTML – network-first, fallback to offline
+  if (request.headers.get("accept")?.includes("text/html")) {
+    event.respondWith(
+      fetch(request).catch(() => caches.match("/static/offline.html"))
+    );
+    return;
+  }
 
-	/* other static files – stale-while-revalidate */
-	event.respondWith(
-		caches.match(request).then(cached => {
-			const fetchAndUpdate = fetch(request)
-				.then(resp => {
-					if (resp && resp.status === 200) {
-						// Clone the response before using it
-						const respToCache = resp.clone();
-						caches.open(DYNAMIC_CACHE)
-							.then(cache => cache.put(request, respToCache));
-					}
-					return resp;
-				})
-				.catch(() => cached); // network failed – use cache if we have it
-			return cached || fetchAndUpdate;
-		})
-	);
+  // other static files – stale-while-revalidate
+  event.respondWith(
+    caches.match(request).then(cached => {
+      const fetchAndUpdate = fetch(request)
+        .then(resp => {
+          if (resp && resp.status === 200) {
+            const copy = resp.clone();
+            // ensure the put finishes even if the handler returns
+            event.waitUntil(
+              caches.open(DYNAMIC_CACHE).then(cache => cache.put(request, copy))
+            );
+          }
+          return resp;
+        })
+        // If network fails: use cache if available; otherwise return a Response
+        .catch(() => cached || Response.error());
+
+      // If we have a cached Response, return it immediately; otherwise wait for network
+      return cached || fetchAndUpdate;
+    })
+  );
 });
+
 
 /* ---------- push -------------------------------------------------------- */
 self.addEventListener("push", event => {
