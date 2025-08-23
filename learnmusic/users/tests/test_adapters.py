@@ -6,6 +6,8 @@ from datetime import timedelta
 from unittest.mock import patch, MagicMock
 
 from learnmusic.users.adapters import AccountAdapter, SocialAccountAdapter
+from allauth.account.adapter import DefaultAccountAdapter
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from learnmusic.users.models import LoginCodeRequest, User
 from learnmusic.users.tests.factories import UserFactory
 
@@ -139,7 +141,7 @@ class TestAccountAdapter:
         adapter = AccountAdapter()
 
         # Mock the parent save_user method
-        with patch.object(AccountAdapter, 'save_user', return_value=user) as mock_parent_save_user:
+        with patch.object(DefaultAccountAdapter, 'save_user', return_value=user) as mock_parent_save_user:
             # Call the method
             result = adapter.save_user(request, user, form)
 
@@ -178,7 +180,7 @@ class TestAccountAdapter:
         adapter = AccountAdapter()
 
         # Mock the parent save_user method
-        with patch.object(AccountAdapter, 'save_user', return_value=user) as mock_parent_save_user:
+        with patch.object(DefaultAccountAdapter, 'save_user', return_value=user) as mock_parent_save_user:
             # Call the method
             result = adapter.save_user(request, user, form)
 
@@ -216,7 +218,7 @@ class TestAccountAdapter:
         adapter = AccountAdapter()
 
         # Mock the parent save_user method
-        with patch.object(AccountAdapter, 'save_user', return_value=user) as mock_parent_save_user:
+        with patch.object(DefaultAccountAdapter, 'save_user', return_value=user) as mock_parent_save_user:
             # Call the method
             result = adapter.save_user(request, user, form)
 
@@ -252,7 +254,7 @@ class TestSocialAccountAdapter:
         adapter = SocialAccountAdapter()
 
         # Mock the parent save_user method
-        with patch.object(SocialAccountAdapter, 'save_user', return_value=user) as mock_parent_save_user:
+        with patch.object(DefaultSocialAccountAdapter, 'save_user', return_value=user) as mock_parent_save_user:
             # Call the method
             result = adapter.save_user(request, sociallogin)
 
@@ -292,7 +294,7 @@ class TestSocialAccountAdapter:
         adapter = SocialAccountAdapter()
 
         # Mock the parent save_user method
-        with patch.object(SocialAccountAdapter, 'save_user', return_value=user) as mock_parent_save_user:
+        with patch.object(DefaultSocialAccountAdapter, 'save_user', return_value=user) as mock_parent_save_user:
             # Call the method
             result = adapter.save_user(request, sociallogin)
 
@@ -332,7 +334,7 @@ class TestSocialAccountAdapter:
         adapter = SocialAccountAdapter()
 
         # Mock the parent save_user method
-        with patch.object(SocialAccountAdapter, 'save_user', return_value=user) as mock_parent_save_user:
+        with patch.object(DefaultSocialAccountAdapter, 'save_user', return_value=user) as mock_parent_save_user:
             # Call the method
             result = adapter.save_user(request, sociallogin)
 
@@ -371,7 +373,7 @@ class TestSocialAccountAdapter:
         adapter = SocialAccountAdapter()
 
         # Mock the parent save_user method
-        with patch.object(SocialAccountAdapter, 'save_user', return_value=user) as mock_parent_save_user:
+        with patch.object(DefaultSocialAccountAdapter, 'save_user', return_value=user) as mock_parent_save_user:
             # Call the method
             result = adapter.save_user(request, sociallogin)
 

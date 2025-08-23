@@ -107,9 +107,16 @@ def edit_learningscenario_notes(request, pk: int):
 
 
 def common_context(instrument_name: str, clef: str, sound: bool):
-    # Ensure instrument_name is properly capitalized
-    capitalized_instrument = instrument_name.capitalize() if instrument_name else instrument_name
-    instrument_info = instrument_infos[capitalized_instrument]
+    """Build common context for practice views using a centralized resolver."""
+    from notes.instrument_data import resolve_instrument
+
+    canonical = resolve_instrument(instrument_name)
+    if not canonical:
+        from django.http import Http404
+        raise Http404(f"Instrument not found: {instrument_name}")
+
+    instrument_info = instrument_infos[canonical]
+
     if sound:
         instrument_template = 'notes/instruments/mic_input.html'
         score_css = 'justify-content-center'
@@ -117,12 +124,13 @@ def common_context(instrument_name: str, clef: str, sound: bool):
         instrument_template = 'notes/instruments/' + instrument_info['answer_template']
         score_css = ''
 
-    return {'answers_json': instrument_info['answers'],
-            'instrument_template': instrument_template,
-            'clef': clef.lower(),
-            'instrument': instrument_name,
-            'score_css': score_css,
-            }
+    return {
+        'answers_json': instrument_info['answers'],
+        'instrument_template': instrument_template,
+        'clef': clef.lower(),
+        'instrument': canonical,
+        'score_css': score_css,
+    }
 
 
 @login_required
@@ -215,16 +223,19 @@ def practice_try(request, instrument: str, clef: str, key: str, level: str, octa
     elif 'flat' in key:
         key = key.replace('flat', 'b')
 
-    capitalized_instrument = toCamelCase(instrument) if instrument else instrument
-
+    from notes.instrument_data import resolve_instrument
+    canonical_instrument = resolve_instrument(instrument)
+    if not canonical_instrument:
+        from django.http import Http404
+        raise Http404(f"Instrument not found: {instrument}")
 
     # Handle GET request
-    serialised_notes = tools.generate_serialised_notes(capitalized_instrument, level)
+    serialised_notes = tools.generate_serialised_notes(canonical_instrument, level)
 
-    instrument_info = instrument_infos[capitalized_instrument]
+    instrument_info = instrument_infos[canonical_instrument]
 
     my_instruments = instrument_infos.keys()
-    levels = instruments.get(capitalized_instrument, {}).keys()
+    levels = instruments.get(canonical_instrument, {}).keys()
 
     context = {
         'learningscenario_id': PRACTICE_TRY,
@@ -233,7 +244,7 @@ def practice_try(request, instrument: str, clef: str, key: str, level: str, octa
         'transpose_key': key.capitalize() if key else '',
         'level': level,
         'sound': sound,
-        'instrument': capitalized_instrument,  # Use capitalized instrument name for consistency
+        'instrument': canonical_instrument,  # Canonical instrument name for consistency
         'levels': levels,
         'instruments': my_instruments,
         'clef': clef,
@@ -245,7 +256,7 @@ def practice_try(request, instrument: str, clef: str, key: str, level: str, octa
         'original_key': key,
     }
 
-    context.update(common_context(instrument_name=capitalized_instrument, clef=clef, sound=sound))
+    context.update(common_context(instrument_name=canonical_instrument, clef=clef, sound=sound))
 
     rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
                                               for n in serialised_notes])
@@ -296,13 +307,16 @@ def learningscenario_graph(request, learningscenario_id):
 
 
 def learningscenario_graph_try(request, instrument: str, level: str):
-    # Ensure instrument is properly capitalized
-    capitalized_instrument = instrument.capitalize() if instrument else instrument
+    from notes.instrument_data import resolve_instrument
+    canonical_instrument = resolve_instrument(instrument)
+    if not canonical_instrument:
+        from django.http import Http404
+        raise Http404(f"Instrument not found: {instrument}")
 
     if request.method == 'POST':
         serialised_notes = json.loads(request.body)
     else:
-        serialised_notes = tools.generate_serialised_notes(capitalized_instrument, level.capitalize())
+        serialised_notes = tools.generate_serialised_notes(canonical_instrument, level.capitalize())
 
     rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
                                               for n in serialised_notes])

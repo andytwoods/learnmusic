@@ -1,7 +1,7 @@
 import random
 from unittest import case
 
-from notes.instrument_data import instruments
+from notes.instrument_data import instruments, resolve_instrument
 
 notes = [
     "A♭ / G♯",
@@ -136,11 +136,12 @@ def toCamelCase(string):
 
 
 def generate_serialised_notes(instrument, level):
-    # Ensure instrument and level are properly capitalized
-    instrument = instrument
+    # Resolve instrument to canonical name and normalize level
+    canonical = resolve_instrument(instrument)
+    if not canonical:
+        raise ValueError(f"Unknown instrument: {instrument}")
     level = level.capitalize() if level else level
-    print(instrument, level)
-    instrument_notes_info = instruments[instrument][level]
+    instrument_notes_info = instruments[canonical][level]
     if 'notes' in instrument_notes_info and instrument_notes_info['notes'] is not None:
         return serialise_notes(instrument_notes_info['notes'])
 
@@ -150,12 +151,13 @@ def generate_serialised_notes(instrument, level):
     return [serialise_note(note) for note in notes_list]
 
 
-def get_instrument_range(instrument:str, level:str):
-    # Ensure instrument and level are properly capitalized
-    instrument = instrument.capitalize() if instrument else instrument
+def get_instrument_range(instrument: str, level: str):
+    canonical = resolve_instrument(instrument)
+    if not canonical:
+        return None, None
     level = level.capitalize() if level else level
 
-    instrument_notes_info = instruments[instrument][level]
+    instrument_notes_info = instruments[canonical][level]
     if 'notes' in instrument_notes_info and instrument_notes_info['notes'] is not None:
         _notes = instrument_notes_info['notes'].split(';')
         return _notes[0], _notes[-1]
