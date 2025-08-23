@@ -14,6 +14,7 @@ def home(request):
     practice_url = reverse('practice-try', kwargs={
         'instrument': 'dummy',
         'key': 'dummy',
+        'transpose': 'dummy',
         'clef': 'dummy',
         'level': 'dummy',
         'octave': 0}).split('/')[1]
