@@ -130,7 +130,6 @@ def toCamelCase(string):
         return string
         # Split the string by hyphens and filter out empty strings
     # Capitalize first letter of each word
-    print(string,222)
     words = [word.capitalize() for word in string.split('-') ]
     # Join the words back together
     return ' '.join(words)

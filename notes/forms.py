@@ -10,7 +10,7 @@ from django.forms import DateTimeInput
 from django.template.loader import render_to_string
 from django.utils import timezone
 
-from .instruments import instrument_infos
+from .instrument_data import instrument_infos
 from .models import LearningScenario
 
 
