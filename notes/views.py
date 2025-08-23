@@ -17,7 +17,7 @@ from pushover_complete import PushoverAPI
 
 from notes import tools
 from notes.forms import LearningScenarioForm
-from notes.instrument_data import instrument_infos, instruments
+from notes.instrument_data import instrument_infos, instruments, get_instrument_defaults
 from notes.models import LearningScenario, NoteRecordPackage, NoteRecord, LevelChoices, InstrumentKeys, ClefChoices
 from notes.tools import generate_notes, compile_notes_per_skilllevel, convert_note_slash_to_db, toCamelCase
 
@@ -161,11 +161,12 @@ def practice_demo(request):
                   kwargs={'instrument': 'trumpet',
                           'clef': 'treble',
                           'key': 'Bb',
+                          'transpose': 'Bb',
                           'level': 'beginner',
                           'octave': 0})
     return redirect(url)
 
-def practice_try_manifest(request, instrument: str, clef: str, key: str, level: str, octave: int):
+def practice_try_manifest(request, instrument: str, clef: str, key: str, transpose:str, level: str, octave: int):
     """Generate dynamic PWA manifest for practice-try pages"""
     # Handle key formatting for display
     display_key = key
@@ -211,7 +212,7 @@ def practice_try_manifest(request, instrument: str, clef: str, key: str, level: 
     return JsonResponse(manifest_data)
 
 
-def practice_try(request, instrument: str, clef: str, key: str, level: str, octave: int, sound: bool = False):
+def practice_try(request, instrument: str, clef: str, key: str, transpose: str, level: str, octave: int, sound: bool = False):
     # Ensure instrument is properly capitalized
     # Handle POST request with progress data
     if request.method == 'POST':
@@ -222,6 +223,15 @@ def practice_try(request, instrument: str, clef: str, key: str, level: str, octa
         key = key.replace('sharp', '#')
     elif 'flat' in key:
         key = key.replace('flat', 'b')
+
+    if 'sharp' in transpose:
+        transpose = transpose.replace('sharp', '#')
+    elif 'flat' in transpose:
+        transpose = transpose.replace('flat', 'b')
+
+    # Slug-safe variants for URLs
+    key_slug = key.replace('#', 'sharp').replace('b', 'flat') if key else ''
+    transpose_slug = transpose.replace('#', 'sharp').replace('b', 'flat') if transpose else ''
 
     from notes.instrument_data import resolve_instrument
     canonical_instrument = resolve_instrument(instrument)
@@ -240,20 +250,23 @@ def practice_try(request, instrument: str, clef: str, key: str, level: str, octa
     context = {
         'learningscenario_id': PRACTICE_TRY,
         'progress': serialised_notes,
-        'key': instrument_info['common_keys'][0],
-        'transpose_key': key.capitalize() if key else '',
+        'key': key.capitalize() if key else instrument_info['common_keys'][0],
+        'transpose_key': transpose.capitalize() if transpose else '',
         'level': level,
         'sound': sound,
         'instrument': canonical_instrument,  # Canonical instrument name for consistency
         'levels': levels,
         'instruments': my_instruments,
         'clef': clef,
+        'instrument_defaults': get_instrument_defaults(),
         'keys': [key[1] for key in InstrumentKeys.choices],
         'clefs': [clef[1] for clef in ClefChoices.choices],
         'octaves': ['2', '1', '0', '-1', '-2'],
         'octave': octave,
         # Add original key for manifest URL generation
-        'original_key': key,
+        'original_key': key,  # already formatted with #/b above
+                'original_key_slug': key_slug,
+                'transpose_key_slug': transpose_slug,
     }
 
     context.update(common_context(instrument_name=canonical_instrument, clef=clef, sound=sound))

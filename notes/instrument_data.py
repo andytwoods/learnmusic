@@ -62,6 +62,12 @@ def resolve_instrument(name_or_slug: str) -> str | None:
     slug = _instrument_slug(name_or_slug)
     return INSTRUMENTS_BY_SLUG.get(slug)
 
+def get_instrument_defaults() -> dict[str, dict[str, str | None]]:
+    defaults: dict[str, dict[str, str | None]] = {}
+    for name, data in INSTRUMENTS.items():
+        slug = _instrument_slug(name)
+        defaults[slug] = {"clefs": data.get("clefs"), "keys": data.get("common_keys")}
+    return defaults
 
 def get_instrument(name: str):
     """Get data for a specific instrument from the in-process snapshot."""

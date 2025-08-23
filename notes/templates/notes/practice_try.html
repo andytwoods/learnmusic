@@ -44,6 +44,13 @@
 
 {% block cardbody %}
 
+  {{ instrument_defaults|json_script:"instrument_defaults" }}
+  <script>
+    window.instrument_defaults = JSON.parse(
+      document.getElementById('instrument_defaults').textContent
+    )
+  </script>
+
   <div id="right-menu-local-options" style="display: none;">
     <li>
       <a class="dropdown-item" href="#" id="move-data-to-cloud-btn">
@@ -91,16 +98,16 @@
         // Add dynamic manifest link
         const manifestLink = document.createElement('link');
         manifestLink.rel = 'manifest';
-        manifestLink.href = '{% url "practice-try-manifest" instrument=instrument clef=clef key=original_key level=level octave=octave %}';
+        manifestLink.href = '{% url "practice-try-manifest" instrument=instrument clef=clef key=original_key_slug transpose=transpose_key_slug level=level octave=octave %}';
         document.head.appendChild(manifestLink);
 
         // Register service worker
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
-            .then(function(registration) {
+          navigator.serviceWorker.register('/service-worker.js', {scope: '/'})
+            .then(function (registration) {
               console.log('ServiceWorker registration successful with scope: ', registration.scope);
             })
-            .catch(function(error) {
+            .catch(function (error) {
               console.log('ServiceWorker registration failed: ', error);
             });
         }
@@ -111,7 +118,7 @@
 
       function setupInstallPrompt() {
         // Listen for the beforeinstallprompt event
-        window.addEventListener('beforeinstallprompt', function(e) {
+        window.addEventListener('beforeinstallprompt', function (e) {
           console.log('beforeinstallprompt event fired');
           // Prevent the mini-infobar from appearing on mobile
           e.preventDefault();
@@ -122,7 +129,7 @@
         });
 
         // Listen for the appinstalled event
-        window.addEventListener('appinstalled', function(e) {
+        window.addEventListener('appinstalled', function (e) {
           console.log('PWA was installed');
           isInstalled = true;
           hideInstallButton();
@@ -180,12 +187,18 @@
         banner.style.alignItems = 'center';
         banner.style.gap = '10px';
         banner.innerHTML = '<span><i class="fa-solid fa-download me-1"></i> Install this practice as an app on your device</span>' +
-                           '<button id="install-banner-btn" class="btn btn-light btn-sm">Install</button>' +
-                           '<button id="install-banner-close" class="btn-close btn-close-white" aria-label="Close"></button>';
+          '<button id="install-banner-btn" class="btn btn-light btn-sm">Install</button>' +
+          '<button id="install-banner-close" class="btn-close btn-close-white" aria-label="Close"></button>';
         document.body.appendChild(banner);
-        document.getElementById('install-banner-btn').addEventListener('click', function(e){ e.preventDefault(); installPWA(); });
-        document.getElementById('install-banner-close').addEventListener('click', function(){
-          try { cache.save(bannerCacheKey, true); } catch (_) {}
+        document.getElementById('install-banner-btn').addEventListener('click', function (e) {
+          e.preventDefault();
+          installPWA();
+        });
+        document.getElementById('install-banner-close').addEventListener('click', function () {
+          try {
+            cache.save(bannerCacheKey, true);
+          } catch (_) {
+          }
           banner.remove();
         });
       }
@@ -205,7 +218,7 @@
         // Install button handler
         const installBtn = document.getElementById('install-pwa-btn');
         if (installBtn) {
-          installBtn.addEventListener('click', function(e) {
+          installBtn.addEventListener('click', function (e) {
             e.preventDefault();
             installPWA();
           });
@@ -214,7 +227,7 @@
         // Add to homescreen button handler (for iOS and fallback)
         const homescreenBtn = document.getElementById('add-homescreen-btn');
         if (homescreenBtn) {
-          homescreenBtn.addEventListener('click', function(e) {
+          homescreenBtn.addEventListener('click', function (e) {
             e.preventDefault();
             showHomescreenInstructions();
           });
@@ -232,7 +245,7 @@
         deferredPrompt.prompt();
 
         // Wait for the user to respond to the prompt
-        deferredPrompt.userChoice.then(function(choiceResult) {
+        deferredPrompt.userChoice.then(function (choiceResult) {
           if (choiceResult.outcome === 'accepted') {
             console.log('User accepted the install prompt');
           } else {
@@ -248,8 +261,8 @@
           Swal.fire({
             title: 'Welcome!',
             html: 'The {{ instrument|title }} Practice app has been installed successfully!<br><br>' +
-                  'You can now access it from your home screen even when offline.<br>' +
-                  'Your practice progress will be saved locally.',
+              'You can now access it from your home screen even when offline.<br>' +
+              'Your practice progress will be saved locally.',
             icon: 'success',
             confirmButtonText: 'Start Practicing',
             timer: 8000,
@@ -270,26 +283,26 @@
         if (isIOS) {
           title = 'Install on iOS';
           instructions = 'To install this app on your iOS device:<br><br>' +
-                        '1. Tap the <strong>Share</strong> button <i class="fa-solid fa-square-arrow-up"></i><br>' +
-                        '2. Scroll down and tap <strong>"Add to Home Screen"</strong> <i class="fa-solid fa-plus-square"></i><br>' +
-                        '3. Tap <strong>"Add"</strong> to confirm';
+            '1. Tap the <strong>Share</strong> button <i class="fa-solid fa-square-arrow-up"></i><br>' +
+            '2. Scroll down and tap <strong>"Add to Home Screen"</strong> <i class="fa-solid fa-plus-square"></i><br>' +
+            '3. Tap <strong>"Add"</strong> to confirm';
         } else if (isAndroid) {
           title = 'Install on Android';
           instructions = 'To install this app on your Android device:<br><br>' +
-                        '1. Tap the <strong>menu</strong> button (⋮)<br>' +
-                        '2. Tap <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong><br>' +
-                        '3. Tap <strong>"Add"</strong> or <strong>"Install"</strong> to confirm';
+            '1. Tap the <strong>menu</strong> button (⋮)<br>' +
+            '2. Tap <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong><br>' +
+            '3. Tap <strong>"Add"</strong> or <strong>"Install"</strong> to confirm';
         } else if (isBrave && isMac) {
           title = 'Install on Brave (macOS)';
           instructions = 'To install this app in Brave on macOS:<br><br>' +
-                        '1. Click the <strong>Install</strong> icon in the address bar (if shown), or<br>' +
-                        '2. Open the <strong>Brave menu</strong> (≡) → <strong>Apps</strong> → <strong>Install this site as an app…</strong><br>' +
-                        '3. Confirm <strong>Install</strong>';
+            '1. Click the <strong>Install</strong> icon in the address bar (if shown), or<br>' +
+            '2. Open the <strong>Brave menu</strong> (≡) → <strong>Apps</strong> → <strong>Install this site as an app…</strong><br>' +
+            '3. Confirm <strong>Install</strong>';
         } else {
           instructions = 'To add this app to your device:<br><br>' +
-                        '• Look for an "Install" or "Add to Home Screen" option in your browser menu<br>' +
-                        '• The app will then be available from your home screen<br>' +
-                        '• You can use it offline and it will remember your progress';
+            '• Look for an "Install" or "Add to Home Screen" option in your browser menu<br>' +
+            '• The app will then be available from your home screen<br>' +
+            '• You can use it offline and it will remember your progress';
         }
 
         if (typeof Swal !== 'undefined') {
@@ -310,12 +323,12 @@
         moveBtn.addEventListener("click", function (e) {
           e.preventDefault();
 
-            Swal.fire({
-              title: "Move data to the cloud",
-              html: "To move your data to the cloud, please <a href={% url 'account_signup' %}>create an account</a> or <a href='{% url 'account_login' %}'>sign in</a>. " +
-                    "Once your account is set up, we will ask you if you want to move your cache practice data to the cloud.",
-              confirmButtonText: "OK"
-            });
+          Swal.fire({
+            title: "Move data to the cloud",
+            html: "To move your data to the cloud, please <a href={% url 'account_signup' %}>create an account</a> or <a href='{% url 'account_login' %}'>sign in</a>. " +
+              "Once your account is set up, we will ask you if you want to move your cache practice data to the cloud.",
+            confirmButtonText: "OK"
+          });
         });
       }
     });
@@ -351,18 +364,23 @@
 
         <div class="option-block">
           <!-- Loading indicator -->
-{% with link_css="fw-bold link-light link-underline-opacity-50 link-underline-opacity-100-hover" %}
+          {% with link_css="fw-bold link-light link-underline-opacity-50 link-underline-opacity-100-hover" %}
 
-            To move your practice data to the cloud (see the rest of this page of why this is a good idea!), please <a class='{{ link_css }}' href="{% url 'account_signup' %}">create an account</a> or <a class='{{ link_css }}' href='{% url 'account_login' %}'>sign in</a>. We will then ask for your permission to upload your data.
+            To move your practice data to the cloud (see the rest of this page of why this is a good idea!), please
+            <a class='{{ link_css }}' href="{% url 'account_signup' %}">create an account</a> or
+            <a class='{{ link_css }}' href='{% url 'account_login' %}'>sign in</a>. We will then ask for your permission
+            to upload your data.
 
-        </div>
+            </div>
 
-        <div class="option-block">
-            Alternatively you can practice whenever you want, where you left of, by visiting <a class="{{ link_css }}" target="_blank" href="{{ request.build_absolute_uri }}">this
-           page</a>.
+            <div class="option-block">
+              Alternatively you can practice whenever you want, where you left of, by visiting <a class="{{ link_css }}"
+                                                                                                  target="_blank"
+                                                                                                  href="{{ request.build_absolute_uri }}">this
+              page</a>.
 
-        </div>
-        {% endwith link_css %}
+            </div>
+          {% endwith link_css %}
       </div>
     </div>
   </div>{% endblock timeup %}
@@ -396,6 +414,13 @@
                 </button>
               </li>
               <li class="nav-item" role="presentation">
+                <button class="nav-link" id="key-tab" data-bs-toggle="tab"
+                        data-bs-target="#key" type="button" role="tab"
+                        aria-controls="key" aria-selected="false">
+                  Key
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
                 <button class="nav-link" id="level-tab" data-bs-toggle="tab"
                         data-bs-target="#level" type="button" role="tab"
                         aria-controls="level" aria-selected="false">
@@ -410,9 +435,9 @@
                 </button>
               </li>
               <li class="nav-item" role="presentation">
-                <button class="nav-link" id="key-tab" data-bs-toggle="tab"
-                        data-bs-target="#key" type="button" role="tab"
-                        aria-controls="key" aria-selected="false">
+                <button class="nav-link" id="transpose-tab" data-bs-toggle="tab"
+                        data-bs-target="#transpose" type="button" role="tab"
+                        aria-controls="transpose" aria-selected="false">
                   Transpose
                 </button>
               </li>
@@ -484,17 +509,35 @@
                 </div>
               </div>
 
+              <!-- Transpose -->
+              <div class="tab-pane fade" id="transpose" role="tabpanel" aria-labelledby="transpose-tab">
+                <div class="d-flex flex-wrap gap-3 bg-white">
+                  {% for my_key in keys %}
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="radio" name="transpose-key"
+                             id="transpose-key-{{ forloop.counter }}"
+                             value="{{ my_key }}"
+                             {% if my_key == transpose_key %}checked{% endif %}>
+                      <label class="form-check-label text-dark"
+                             for="transpose-key-{{ forloop.counter }}">
+                        Transpose to: {{ my_key }}
+                      </label>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+
               <!-- Key -->
               <div class="tab-pane fade" id="key" role="tabpanel" aria-labelledby="key-tab">
                 <div class="d-flex flex-wrap gap-3 bg-white">
                   {% for my_key in keys %}
                     <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" name="key"
-                             id="key-{{ forloop.counter }}"
+                      <input class="form-check-input" type="radio" name="original_key"
+                             id="original-key-{{ forloop.counter }}"
                              value="{{ my_key }}"
-                             {% if my_key == transpose_key %}checked{% endif %}>
+                             {% if my_key == key %}checked{% endif %}>
                       <label class="form-check-label text-dark"
-                             for="key-{{ forloop.counter }}">
+                             for="original-key-{{ forloop.counter }}">
                         Key: {{ my_key }}
                       </label>
                     </div>
@@ -546,22 +589,124 @@
             instrument = instrument.replace(' ', '-');
             const level = formData.get('level') || '{{ level }}';
             const clef = formData.get('clef') || '{{ clef }}';
+            const transpose = formData.get('transpose-key') || '{{ transpose_key }}';
             const shifted_octave = formData.get('octave') || '{{ octave }}';
 
-            let key = formData.get('key') || '{{ key }}';
+            let key = formData.get('original_key') || '{{ key }}';
 
             key = key.replace('#', 'sharp');
             key = key.replace('b', 'flat');
 
-            const url = "{% url 'practice-try' instrument='INSTRUMENT' clef='CLEF' key='KEY' level='LEVEL' octave='SHIFTED_OCTAVE' %}"
+            let trans = String(transpose || '');
+            trans = trans.replace('#', 'sharp');
+            trans = trans.replace('b', 'flat');
+
+            const url = "{% url 'practice-try' instrument='INSTRUMENT' clef='CLEF' key='KEY' transpose='TRANSPOSE' level='LEVEL' octave='SHIFTED_OCTAVE' %}"
               .replace('INSTRUMENT', instrument)
               .replace('CLEF', clef)
               .replace('KEY', key)
+              .replace('TRANSPOSE', trans)
               .replace('LEVEL', level)
               .replace('SHIFTED_OCTAVE', shifted_octave);
 
             window.location.href = url;
           });
+        </script>
+        <script>
+          (function () {
+
+            function slugify(name) {
+              return String(name || '')
+                .trim()
+                .toLowerCase()
+                .replace(/[_\s]+/g, '-')
+                .replace(/-+/g, '-');
+            }
+
+            function getInstrumentInfo(instrumentName) {
+              const slug = slugify(instrumentName);
+              const dict = window.instrument_defaults || {};
+              return (
+                dict[slug] ||
+                dict[instrumentName] ||
+                dict[instrumentName?.toLowerCase?.()] ||
+                null
+              );
+            }
+
+            function findFirstMatchingRadio(radioNodeList, preferredValues) {
+              // Try preferred values (case-insensitive) in order
+
+              for (const pref of preferredValues) {
+                const match = Array.from(radioNodeList).find(r =>
+                  String(r.value).toLowerCase() === String(pref).toLowerCase()
+                );
+                if (match) return match;
+              }
+              return null;
+            }
+
+            function selectRadioIfDifferent(inputEl) {
+              if (!inputEl || inputEl.checked) return;
+              inputEl.checked = true;
+              inputEl.dispatchEvent(new Event('change', {bubbles: true}));
+            }
+
+            function selectClefForInstrument(instrumentName) {
+              const info = getInstrumentInfo(instrumentName);
+              if (!info || !Array.isArray(info.clefs)) return;
+
+              const clefRadios = document.querySelectorAll('input[name="clef"]');
+              if (!clefRadios.length) return;
+
+              const toSelect = findFirstMatchingRadio(clefRadios, info.clefs);
+              if (toSelect) selectRadioIfDifferent(toSelect);
+            }
+
+            function selectKeyForInstrument(instrumentName) {
+              const info = getInstrumentInfo(instrumentName);
+              if (!info || !Array.isArray(info.keys)) return;
+
+              for (const el_name of ['transpose-key', 'original_key']) {
+                const keyRadios = document.querySelectorAll(`input[name="${el_name}"]`);
+                if (!keyRadios.length) continue;
+
+                // Prefer the instrument’s default keys in order; fall back to first available if none match
+                let toSelect = findFirstMatchingRadio(keyRadios, info.keys);
+                if (!toSelect) toSelect = keyRadios[0];
+                if (toSelect) selectRadioIfDifferent(toSelect);
+              }
+            }
+
+            function applyDefaultsForInstrument(instrumentName) {
+              selectClefForInstrument(instrumentName);
+              selectKeyForInstrument(instrumentName);
+            }
+
+            function getCheckedInstrumentValue() {
+              const checked = document.querySelector('input[name="instrument"]:checked');
+              return checked ? checked.value : null;
+            }
+
+            function bindInstrumentListeners() {
+              const instrumentRadios = document.querySelectorAll('input[name="instrument"]');
+              instrumentRadios.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                  if (e.target && e.target.checked) {
+                    applyDefaultsForInstrument(e.target.value);
+                  }
+                });
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+              bindInstrumentListeners();
+              const initialInstrument = getCheckedInstrumentValue();
+              if (initialInstrument) {
+                applyDefaultsForInstrument(initialInstrument);
+              }
+            });
+          })();
         </script>
       </div>
     </div>
