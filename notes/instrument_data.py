@@ -17,7 +17,12 @@ def _get_instruments_dir() -> str:
 
 
 def load_instruments():
-    """Load all instrument data from JSON files (no Django caching)."""
+    """Load all instrument data from JSON files (no Django caching).
+
+    Also annotates each loaded JSON with its source filename under the key
+    "_source_filename" so that downstream code can reference the exact static
+    file name (handles spaces, hyphens, underscores consistently).
+    """
     instruments_dir = _get_instruments_dir()
 
     instruments_data = {}
@@ -25,6 +30,8 @@ def load_instruments():
         if filename.endswith(".json"):
             with open(os.path.join(instruments_dir, filename)) as f:
                 instrument_data = json.load(f)
+                # Remember the original filename to generate accurate static URLs
+                instrument_data["_source_filename"] = filename
                 instruments_data[instrument_data["name"]] = instrument_data
     return instruments_data
 
@@ -121,10 +128,13 @@ for name, data in INSTRUMENTS.items():
     for level, level_data in data["skill_levels"].items():
         instruments[name][level] = level_data
 
+    # Determine the correct static filename for answers JSON
+    answers_filename = data.get("_source_filename") or f"{name.lower()}.json"
+
     # Create instrument_infos dictionary structure
     instrument_infos[name] = {
         "answer_template": data["ui_template"],
-        "answers": f"{name.lower()}.json",
+        "answers": answers_filename,
         "clef": data["clefs"],
         "common_keys": data["common_keys"],
     }
