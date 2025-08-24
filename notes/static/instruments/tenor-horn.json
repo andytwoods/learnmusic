@@ -1,5 +1,5 @@
 {
-  "name": "Tenor Horn (Eb Alto Horn)",
+  "name": "Tenor Horn",
   "ui_template": "trumpet.html",
   "clefs": ["TREBLE"],
   "common_keys": ["Eb", "F", "C", "Bb"],
@@ -14,7 +14,7 @@
     "Advanced": {
       "lowest_note": "A -1 2",
       "highest_note": "E 0 5"
-    },
+    }
   },
   "fingerings": {
     "C/3": [""],
