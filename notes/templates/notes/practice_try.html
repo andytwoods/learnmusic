@@ -98,7 +98,7 @@
         // Add dynamic manifest link
         const manifestLink = document.createElement('link');
         manifestLink.rel = 'manifest';
-        manifestLink.href = '{% url "practice-try-manifest" instrument=instrument clef=clef key=original_key_slug transpose=transpose_key_slug level=level octave=octave %}';
+        manifestLink.href = '{% if transpose_key_slug %}{% url "practice-try-manifest" instrument=instrument clef=clef key=original_key_slug transpose=transpose_key_slug level=level octave=octave %}{% else %}{% url "practice-try-manifest" instrument=instrument clef=clef key=original_key_slug level=level octave=octave %}{% endif %}';
         document.head.appendChild(manifestLink);
 
         // Register service worker

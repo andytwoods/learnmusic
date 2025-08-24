@@ -30,7 +30,14 @@ urlpatterns = [
     path("practice-graph/<int:learningscenario_id>/", views.learningscenario_graph, name='learningscenario_graph'),
 
     path('practice-demo/', views.practice_demo, name='practice-demo'),
+    # Backward-compatible routes without transpose segment
+    path('practice-try/<str:instrument>/<str:clef>/<str:key>/<str:level>/<str:octave>/', views.practice_try, name='practice-try'),
+    path('practice-sound-try/<str:instrument>/<str:clef>/<str:key>/<str:level>/<str:octave>/', views.practice_try,
+         kwargs={'sound': True}, name='practice-sound-try'),
+    # New routes including transpose segment
     path('practice-try/<str:instrument>/<str:clef>/<str:key>/<str:transpose>/<str:level>/<str:octave>/', views.practice_try, name='practice-try'),
+    # Backward-compatible manifest without transpose
+    path('practice-try/<str:instrument>/<str:clef>/<str:key>/<str:level>/<str:octave>/manifest.json', views.practice_try_manifest, name='practice-try-manifest'),
     path('practice-try/<str:instrument>/<str:clef>/<str:key>/<str:transpose>/<str:level>/<str:octave>/manifest.json', views.practice_try_manifest, name='practice-try-manifest'),
     path('practice-sound-try/<str:instrument>/<str:clef>/<str:key>/<str:transpose>/<str:level>/<str:octave>/', views.practice_try,
          kwargs={'sound': True}, name='practice-sound-try'),

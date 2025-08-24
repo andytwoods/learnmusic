@@ -71,10 +71,10 @@ jobs:
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
 
-      - name: Run Python Unit Tests
+      - name: Run Python Unit Tests (pytest)
         run: |
           source .venv/bin/activate
-          python manage.py test learnmusic notes config
+          pytest -q
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
 

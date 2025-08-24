@@ -166,7 +166,7 @@ def practice_demo(request):
                           'octave': 0})
     return redirect(url)
 
-def practice_try_manifest(request, instrument: str, clef: str, key: str, transpose:str, level: str, octave: int):
+def practice_try_manifest(request, instrument: str, clef: str, key: str, transpose: str = "", level: str = "", octave: int = 0):
     """Generate dynamic PWA manifest for practice-try pages"""
     # Handle key formatting for display
     display_key = key
@@ -212,7 +212,7 @@ def practice_try_manifest(request, instrument: str, clef: str, key: str, transpo
     return JsonResponse(manifest_data)
 
 
-def practice_try(request, instrument: str, clef: str, key: str, transpose: str, level: str, octave: int, sound: bool = False):
+def practice_try(request, instrument: str, clef: str, key: str, transpose: str = "", level: str = "", octave: int = 0, sound: bool = False):
     # Ensure instrument is properly capitalized
     # Handle POST request with progress data
     if request.method == 'POST':
