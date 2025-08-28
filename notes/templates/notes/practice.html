@@ -7,33 +7,6 @@
   <script src="{% static 'js/vexflow.js' %}"></script>
 {% endblock javascript %}
 
-{% block css %}
-  {{ block.super }}
-  <style>
-    .stave-resize-controls {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .stave-resize-controls button {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-    }
-
-    .stave-resize-controls button:hover {
-      background-color: #6c757d;
-      color: white;
-    }
-
-  </style>
-{% endblock css %}
-
 {% block title %}
   {{ instrument }} note trainer{% if key %}, {{ key }}{% endif %}
 {% endblock %}
@@ -103,23 +76,8 @@
     </div>
     <div id="cardbottom"></div>
     {% block cardbottom %}{% endblock %}
-    <div class="stave-resize-controls position-absolute bottom-0 start-0">
-      <div class="p-2">
-        <div class="btn-group">
-          <button type="button" class="btn btn-lg btn-light text-black-50 px-4" id="increase-magnification"
-                  title="Zoom out (increase size)">
-            <i class="fas fa-search-minus"></i>
-          </button>
-          <button type="button" class="btn btn-lg btn-light text-black-50 px-4 border-end"
-                  id="decrease-magnification"
-                  title="Zoom in (decrease size)">
-            <i class="fas fa-search-plus"></i>
-          </button>
-        </div>
-      </div>
-    </div>
+
     <div class="position-absolute bottom-0 end-0 p-3">
-      {#      {% include 'notes/components/toggle_progress.html' %}#}
       {% include 'notes/components/toggle_help.html' %}
     </div>
 
@@ -163,8 +121,8 @@
       document.getElementById('progress-data').textContent
     )
   </script>
-    {% block load_progress_data_from_cache %}
-    {% endblock load_progress_data_from_cache %}
+  {% block load_progress_data_from_cache %}
+  {% endblock load_progress_data_from_cache %}
 
   <script>
     {% include 'js/stave_manager.js' %}

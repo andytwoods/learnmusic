@@ -1,8 +1,26 @@
 <div class="dropdown">
-  <button class="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+  <button class="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton"
+          data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
     <i class="fas fa-cog"></i>
   </button>
+
   <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton" id="right-menu">
+<li> <button type="button"
+              class="btn-close position-absolute top-0 end-0 m-2"
+              aria-label="Close" title="close menu"
+              id="dropdown-close-btn"></button>
+
+        </li>
+        {% include 'notes/components/stave_resize_controls.html' %}
   </ul>
 </div>
-
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const toggleBtn = document.getElementById('dropdownMenuButton');
+    const closeBtn = document.getElementById('dropdown-close-btn');
+    if (toggleBtn && closeBtn && window.bootstrap?.Dropdown) {
+      const dd = bootstrap.Dropdown.getOrCreateInstance(toggleBtn);
+      closeBtn.addEventListener('click', function () { dd.hide(); });
+    }
+  });
+</script>

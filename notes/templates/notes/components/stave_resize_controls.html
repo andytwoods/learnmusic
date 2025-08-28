@@ -1,0 +1,42 @@
+<style>
+  .stave-resize-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .stave-resize-controls button {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .stave-resize-controls button:hover {
+    background-color: #6c757d;
+    color: white;
+  }
+
+</style>
+
+<li><h6 class="dropdown-header">Stave Size</h6></li>
+<li class="stave-resize-controls w-100 px-2">
+  <div class="btn-group d-flex w-100" role="group" aria-label="Stave size controls">
+    <button type="button"
+            class="btn btn-lg btn-light text-black-50 flex-fill py-3"
+            id="increase-magnification"
+            title="Zoom out">
+      <i class="fas fa-search-minus"></i>
+    </button>
+    <button type="button"
+            class="btn btn-lg btn-light text-black-50 flex-fill py-3"
+            id="decrease-magnification"
+            title="Zoom in">
+      <i class="fas fa-search-plus"></i>
+    </button>
+  </div>
+</li>
+      <hr class="dropdown-divider">
