@@ -10,6 +10,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils.timezone import now
+from django.views.decorators.http import require_POST
 from django_htmx.http import HttpResponseClientRefresh
 from zoneinfo import available_timezones, ZoneInfo
 
@@ -773,3 +774,8 @@ def reminders(request):
     }
 
     return render(request, 'notes/reminders.html', context)
+
+@require_POST
+def cache_to_backend(request):
+    print(request.POST)
+    return JsonResponse({}, status=200)

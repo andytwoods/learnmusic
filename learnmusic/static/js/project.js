@@ -310,7 +310,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 for (const draggable of get_draggables()) {
                     draggable.style.transform = '';
                     // Add transition property before movement
-                    draggable.style.transition = 'transform ' + move_dur.toString() / 1000+'s ease';
+                    draggable.style.transition = 'transform ' + move_dur.toString() / 1000 + 's ease';
                 }
 
                 // Use setTimeout to ensure the browser has time to render the initial state
@@ -451,5 +451,5 @@ let cache = (() => {
 
 // Export for testing in Node.js environment
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { cache };
+    module.exports = {cache};
 }
