@@ -107,9 +107,15 @@ def compile_notes_per_skilllevel(notes):
 
 
 def serialise_notes(notes_str):
+    """Serialise a semicolon-separated list of note strings.
+
+    This function is intentionally strict and will raise if any note is malformed.
+    Validation is covered by tests; no internal try/except here to avoid hiding issues.
+    """
     serialised_notes = []
     for note in notes_str.split(';'):
-        serialised_notes.append(serialise_note(note))
+        serialised_note = serialise_note(note)
+        serialised_notes.append(serialised_note)
     return serialised_notes
 
 
@@ -143,7 +149,8 @@ def generate_serialised_notes(instrument, level):
     level = level.capitalize() if level else level
     instrument_notes_info = instruments[canonical][level]
     if 'notes' in instrument_notes_info and instrument_notes_info['notes'] is not None:
-        return serialise_notes(instrument_notes_info['notes'])
+        instrument_notes = instrument_notes_info['notes']
+        return serialise_notes(instrument_notes)
 
     notes_list = generate_notes(lowest_note=instrument_notes_info['lowest_note'],
                                 highest_note=instrument_notes_info['highest_note'])

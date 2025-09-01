@@ -1,11 +1,11 @@
 {
   "name": "Tuba (Treble Clef)",
-  "ui_template": "tuba.html",
+  "ui_template": "trumpet.html",
   "clefs": ["TREBLE", "BASS"],
   "common_keys": ["Eb", "Bb"],
   "skill_levels": {
     "Beginner": {
-      "notes": "C 0 4;D 0 4;E 0 4;F 0 4;G 0 4; A 0 4;B 0 3; A 0 3; G 0 3; B 0 4;C 0 5; B -1 4;B -1 3; F 1 4; G -1 3;"
+      "notes": "C 0 4;D 0 4;E 0 4;F 0 4;G 0 4;A 0 4;B 0 3;A 0 3;G 0 3;B 0 4;C 0 5;B -1 4;B -1 3;F 1 4;G -1 3"
     },
     "Intermediate": {
       "lowest_note": "D 0 3",
