@@ -88,3 +88,11 @@ jobs:
 
       - name: Run JavaScript Tests
         run: npm test
+
+      - name: Notify Appliku Webhook
+        if: success()
+        run: |
+          curl -X POST https://api.appliku.com/api/deploy_webhook/2789/B8FVnzRsLcIyD5HHKUexagU9Djk9hRJ_G4vJ2M6yJ6w
+
+
+
