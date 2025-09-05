@@ -358,8 +358,9 @@ document.addEventListener("DOMContentLoaded", function () {
 let cache = (() => {
     const CKEY = 'tootology-consent';
 
-    const cookie_consent_js_id = 'tootology-consent'
-    let consent = localStorage.getItem(cookie_consent_js_id) === 'true';
+    //const cookie_consent_js_id = 'tootology-consent'
+    //let consent = localStorage.getItem(cookie_consent_js_id) === 'true';
+    let consent = true;
 
     const ok = () => consent;
     const canStore = () => typeof window !== 'undefined' && 'localStorage' in window;
