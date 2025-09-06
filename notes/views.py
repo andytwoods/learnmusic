@@ -19,7 +19,7 @@ from pushover_complete import PushoverAPI
 from notes import tools
 from notes.forms import LearningScenarioForm
 from notes.instrument_data import instrument_infos, instruments, get_instrument_defaults
-from notes.models import LearningScenario, NoteRecordPackage, NoteRecord, LevelChoices, InstrumentKeys, ClefChoices
+from notes.models import LearningScenario, NoteRecordPackage, NoteRecord, LevelChoices, InstrumentKeys, ClefChoices, BlankTransposingKey
 from notes.tools import generate_notes, compile_notes_per_skilllevel, convert_note_slash_to_db, toCamelCase
 
 PRACTICE_TRY = 'practice-try'
@@ -212,7 +212,6 @@ def practice_try_manifest(request, instrument: str, clef: str, key: str, transpo
 
     return JsonResponse(manifest_data)
 
-
 def practice_try(request, instrument: str, clef: str, key: str, transpose: str = "", level: str = "", octave: int = 0, sound: bool = False):
     # Ensure instrument is properly capitalized
     # Handle POST request with progress data
@@ -262,7 +261,7 @@ def practice_try(request, instrument: str, clef: str, key: str, transpose: str =
         'instrument_defaults': get_instrument_defaults(),
         'keys': [key[1] for key in InstrumentKeys.choices],
         'clefs': [clef[1] for clef in ClefChoices.choices],
-        'octaves': ['2', '1', '0', '-1', '-2'],
+        'octaves': ['3', '2', '1', '0', '-1', '-2', '-3', ],
         'octave': octave,
         # Add original key for manifest URL generation
         'original_key': key,  # already formatted with #/b above
@@ -775,7 +774,15 @@ def reminders(request):
 
     return render(request, 'notes/reminders.html', context)
 
+@login_required
 @require_POST
 def cache_to_backend(request):
-    print(request.POST)
-    return JsonResponse({}, status=200)
+    frontend_data = json.loads(request.body).get('data', {})
+    notes_history = frontend_data.get('notes_history')
+    info = frontend_data.get('info')
+
+    ls, package = LearningScenario.ingest_frontend_cache(user=request.user, info=info, notes_history=notes_history)
+
+    return JsonResponse({'learningscenario_id': ls.id, 'package_id': package.id}, status=200)
+
+

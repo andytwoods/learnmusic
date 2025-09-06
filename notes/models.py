@@ -230,6 +230,42 @@ class LearningScenario(TimeStampedModel):
             scenario.streak_count = streak_count
 
 
+    @classmethod
+    def ingest_frontend_cache(cls, user, info, notes_history):
+        """
+        Create or find a LearningScenario for the given user based on the provided info dict,
+        and persist the provided notes_history into a new NoteRecordPackage.
+
+        Args:
+            user: Django user
+            info: dict with keys like instrument, level, clef, key, shifted_octave, transpose_key
+            notes_history: list of note progress dicts from the frontend
+
+        Returns:
+            (LearningScenario, NoteRecordPackage)
+        """
+
+        ls_defaults = {
+            'label': None,
+            'notes': None,
+            'ux': {},
+        }
+        ls, created = cls.objects.get_or_create(
+            user=user,
+            instrument_name=info.get('instrument', ''),
+            level=info.get('level'),
+            clef=info.get('clef'),
+            key=info.get('key') ,
+            octave_shift=int(info.get('shifted_octave')),
+            transpose_key=info.get('transpose_key') ,
+            defaults=ls_defaults,
+        )
+
+        package = NoteRecordPackage.objects.create(learningscenario=ls)
+        package.process_answers(notes_history)
+
+        return ls, package
+
 class NoteRecord(TimeStampedModel):
     """
     Model to store individual note practice results.
@@ -338,6 +374,10 @@ class NoteRecordPackage(TimeStampedModel):
     def process_answers(self, json_data):
         self.log = json_data
         self.save()
+
+        # Only create NoteRecord entries when json_data is a list of dicts
+        if not isinstance(json_data, list):
+            return
 
         # Also create individual NoteRecord entries for each note in the json_data
         for note_data in json_data:

@@ -1,0 +1,31 @@
+<div>
+  {% for my_octave in octaves %}
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" data-sync-octave="true" name="octave{{ suffix_id }}"
+             id="octave-{{ forloop.counter }}{{ suffix_id }}"
+             value="{{ my_octave }}"
+             {% if my_octave == octave|stringformat:"s" %}checked{% endif %}>
+      <label class="form-check-label text-dark"
+             for="octave-{{ forloop.counter }}{{ suffix_id }}">
+        {{ my_octave }}
+      </label>
+    </div>
+  {% endfor %}
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (!window.hasOwnProperty('octave_sync_occurred')) {
+      window.octave_sync_occurred = true;
+      const synced_els = document.querySelectorAll('[data-sync-octave]');
+      synced_els.forEach(el => {
+        el.addEventListener('change', function () {
+          synced_els.forEach(other_el => {
+            if (el !== other_el && el.value === other_el.value) {
+              other_el.checked = el.checked;
+            }
+          });
+        });
+      });
+    }
+  });
+</script>
