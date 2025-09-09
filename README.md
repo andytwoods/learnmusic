@@ -145,7 +145,45 @@ For more details about JavaScript testing, see the [JavaScript tests README](lea
 
 ## ⚙️ Project Settings
 
-For detailed information about the project settings, refer to the [Cookiecutter Django settings documentation](https://cookiecutter-django.readthedocs.io/en/latest/1-getting-started/settings.html).
+The project includes multiple Django settings modules to support different environments:
+
+- Default local development: `config.settings.local` (used by manage.py and docs by default)
+- Explicit local SQLite: `config.settings.local_sqlite` (imports from `local` and pins SQLite DB)
+- Test/CI: `config.settings.test` (used in CI workflows)
+- Production: `config.settings.production`
+
+Base settings (config/settings/base.py) already use SQLite by default. The `local_sqlite` settings module exists to make this explicit and to allow you to easily switch from any other local configuration back to SQLite.
+
+### Using local_sqlite settings
+
+You can run Django commands with the `local_sqlite` settings in two ways:
+
+1) Temporarily via the command line:
+
+```bash
+# macOS/Linux
+DJANGO_SETTINGS_MODULE=config.settings.local_sqlite python manage.py runserver
+
+# Windows (PowerShell)
+$Env:DJANGO_SETTINGS_MODULE = "config.settings.local_sqlite"; python manage.py runserver
+```
+
+2) Persistently via a .env file in the project root:
+
+```
+DJANGO_SETTINGS_MODULE=config.settings.local_sqlite
+```
+
+After switching settings, run migrations and start the server:
+
+```bash
+python manage.py migrate
+python manage.py runserver
+```
+
+By default, `local_sqlite` stores the database file at `BASE_DIR / "local_db.sqlite3"`. If you prefer the default `db.sqlite3` from base settings, you can continue using `config.settings.local` instead.
+
+For detailed information about Cookiecutter Django settings, refer to the official docs: https://cookiecutter-django.readthedocs.io/en/latest/1-getting-started/settings.html
 
 ## 📄 License
 
