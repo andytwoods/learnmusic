@@ -514,7 +514,7 @@
                 <button class="nav-link" id="absolute-pitch-tab" data-bs-toggle="tab"
     data-bs-target="#absolute-pitch" type="button" role="tab"
     aria-controls="absolute-pitch" aria-selected="false">
-    Absolute pitch
+    Transpose
                 </button>
               </li>
               <li class="nav-item" role="presentation">
@@ -727,7 +727,7 @@
               const info = getInstrumentInfo(instrumentName);
               if (!info || !Array.isArray(info.keys)) return;
 
-              for (const el_name of ['transpose-key', 'original_key']) {
+              for (const el_name of ['absolute-pitch', 'original_key']) {
                 const keyRadios = document.querySelectorAll(`input[name="${el_name}"]`);
                 if (!keyRadios.length) continue;
 

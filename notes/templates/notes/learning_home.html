@@ -125,8 +125,8 @@
             <div class="card-footer text-muted small mt-3">
               <div>
                 Clef: {{ learningscenario.clef }}
-                {% if learningscenario.absolute_key != "BL" %}
-                  , transposing from {{ learningscenario.absolute_key }}
+                {% if learningscenario.absolute_pitch != "BL" %}
+                  , absolute pitch {{ learningscenario.absolute_pitch }}
                 {% endif %}
               </div>
               <div>

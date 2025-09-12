@@ -1,5 +1,5 @@
-// --- transpose.js -----------------------------------------------------------
-const transpose = (function () {
+// --- key_adjust.js -----------------------------------------------------------
+const keyAdjust = (function () {
     const KEY_TO_SEMITONES = {
         C: 0, "C#": 1, Db: 1,
         D: 2, "D#": 3, Eb: 3,
@@ -23,7 +23,7 @@ const transpose = (function () {
         return diff;
     }
 
-    function transposeNoteString(noteStr, shift) {
+    function adjustNoteString(noteStr, shift) {
         const [pitchPart, octavePart] = noteStr.split("/");
         let octave = parseInt(octavePart, 10);
         const noteLetter = pitchPart[0].toUpperCase();
@@ -43,12 +43,12 @@ const transpose = (function () {
 
     // NB: these two placeholders are replaced by Django in the template
     const currentFromKey = "{{ key }}";        // e.g. "Bb"
-    const currentToKey = "{{ transpose_key }}"; // e.g. "Bb"
+    const currentToKey = "{{ absolute_pitch }}"; // e.g. "Bb" or empty
 
     return function (noteStr) {
-        if (currentFromKey === currentToKey) return noteStr;
+        if (!currentToKey || currentFromKey === currentToKey) return noteStr;
         const shift = getSemitoneShift(currentFromKey, currentToKey);
-        return transposeNoteString(noteStr, shift);
+        return adjustNoteString(noteStr, shift);
     };
 })();
 
@@ -133,7 +133,7 @@ const stave_manager = (function () {
         api.currentNote = noteStr;
         freshRenderer();
 
-        let transposed = transpose(noteStr);
+        let transposed = keyAdjust(noteStr);
         const stemDir = calcStemDirection(transposed);
 
         const octave_mod = Number('{{ octave|default:0 }}');
