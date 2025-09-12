@@ -37,6 +37,7 @@ class LearningScenarioForm(forms.ModelForm):
         super(LearningScenarioForm, self).__init__(*args, **kwargs)
 
         self.fields['absolute_pitch'].label = 'Absolute pitch key'
+        self.fields['absolute_pitch'].required = False
 
         self.fields['instrument_name'] = forms.ChoiceField(
             choices=[(i, i) for i in instrument_infos.keys()],

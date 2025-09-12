@@ -108,6 +108,11 @@ class LearningScenario(TimeStampedModel):
     def __str__(self):
         return f'{self.id}'
 
+    # Backward-compatible alias for renamed field
+    @property
+    def absolute_key(self):
+        return self.absolute_pitch
+
     def last_practiced(self):
         try:
             date_last_practiced = NoteRecordPackage.objects.filter(learningscenario=self).last().created
@@ -257,16 +262,17 @@ class LearningScenario(TimeStampedModel):
         }
         # Accept only new keys (legacy 'key' supported for relative only)
         rel_key = info.get('relative_key', info.get('key'))
-        abs_pitch = info.get('absolute_pitch')
+        # Accept both new 'absolute_pitch' and legacy 'absolute_key'; default to blank sentinel if missing
+        abs_pitch = info.get('absolute_pitch', info.get('absolute_key', BlankAbsolutePitch.BLANK))
 
         ls, created = cls.objects.get_or_create(
             user=user,
             instrument_name=info.get('instrument', ''),
             level=info.get('level'),
             clef=info.get('clef'),
-            relative_key=rel_key ,
+            relative_key=rel_key,
             octave_shift=int(info.get('shifted_octave')),
-            absolute_pitch=abs_pitch ,
+            absolute_pitch=abs_pitch,
             defaults=ls_defaults,
         )
 
