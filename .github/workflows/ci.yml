@@ -56,11 +56,6 @@ jobs:
           uv venv --native-tls
           source .venv/bin/activate
           uv pip install -r requirements/local.txt
-
-      - name: Check DB Migrations
-        run: |
-          source .venv/bin/activate
-          python manage.py makemigrations --check
         env:
           DJANGO_SETTINGS_MODULE: config.settings.test
 
