@@ -36,8 +36,8 @@ class TestLearningScenarioForm(TestCase):
             'label': 'Test Label',
             'level': 'Beginner',  # Valid choice from LevelChoices
             'clef': 'Treble',     # Valid choice from ClefChoices
-            'key': 'C',           # Valid choice from InstrumentKeys
-            'transpose_key': 'BL', # Valid choice from transposing_choices (None)
+            'relative_key': 'C',           # Valid choice from InstrumentKeys
+            'absolute_key': 'BL', # Valid choice from transposing_choices (None)
             'octave_shift': 0,     # Default value
             'reminder_type': 'AL'  # Valid choice from Reminder.choices (All notifications)
         }

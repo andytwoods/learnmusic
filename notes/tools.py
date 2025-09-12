@@ -147,6 +147,7 @@ def generate_serialised_notes(instrument, level):
     if not canonical:
         raise ValueError(f"Unknown instrument: {instrument}")
     level = level.capitalize() if level else level
+
     instrument_notes_info = instruments[canonical][level]
     if 'notes' in instrument_notes_info and instrument_notes_info['notes'] is not None:
         instrument_notes = instrument_notes_info['notes']

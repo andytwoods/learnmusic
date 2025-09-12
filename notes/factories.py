@@ -27,7 +27,7 @@ class LearningScenarioFactory(factory.django.DjangoModelFactory):
     clef = factory.LazyFunction(lambda: random.choice(ClefChoices.choices))
     instrument_name = 'Trumpet'
     level = 'Beginner'
-    key = 'Bb'
+    relative_key = 'Bb'
     notes = ["B -1 2", "C 0 3", "D 0 3"]
 
 

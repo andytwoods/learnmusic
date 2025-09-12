@@ -18,8 +18,9 @@
       const clef = '{{ clef }}';
       const shifted_octave = '{{ octave }}';
       const key = '{{ key }}';
-      const transpose_key = '{{ transpose_key }}';
-      window.cache_key = [instrument, level, clef, shifted_octave, key, transpose_key].join('_')
+      let absolute_pitch = '{{ absolute_pitch }}';
+
+      window.cache_key = [instrument, level, clef, shifted_octave, key, absolute_pitch].join('_')
     }());
 
     function saveResult(note, reactionTime, correct) {
@@ -102,7 +103,7 @@
         // Add dynamic manifest link
         const manifestLink = document.createElement('link');
         manifestLink.rel = 'manifest';
-        manifestLink.href = '{% if transpose_key_slug %}{% url "practice-try-manifest" instrument=instrument clef=clef key=original_key_slug transpose=transpose_key_slug level=level octave=octave %}{% else %}{% url "practice-try-manifest" instrument=instrument clef=clef key=original_key_slug level=level octave=octave %}{% endif %}';
+        manifestLink.href = '{% if absolute_pitch_slug %}{% url "practice-try-manifest" instrument=instrument clef=clef key=original_key_slug absolute_pitch=absolute_pitch_slug level=level octave=octave %}{% else %}{% url "practice-try-manifest" instrument=instrument clef=clef key=original_key_slug level=level octave=octave %}{% endif %}';
         document.head.appendChild(manifestLink);
 
         // Register service worker
@@ -390,7 +391,7 @@
                   clef: '{{ clef }}',
                   shifted_octave: '{{ octave }}',
                   key: '{{ key }}',
-                  transpose_key: '{{transpose_key }}'
+                  absolute_pitch: '{{absolute_pitch }}'
                 }
                   send_json_to_backend(data_bundle, '{% url 'cache-to-backend' %}');
               }
@@ -464,7 +465,7 @@
   <!-- Button to trigger modal -->
   <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="modal" data-bs-target="#settingsModal">
     <i class="fa-solid fa-edit"></i> {{ instrument }},
-    {{ level }}{% if key != transpose_key %}, transposing to {{ transpose_key }}{% endif %}
+    {{ level }}{% if key != absolute_pitch %}, absolute pitch {{ absolute_pitch }}{% endif %}
   </button>
 
   <!-- Settings Modal -->
@@ -510,10 +511,10 @@
                 </button>
               </li>
               <li class="nav-item" role="presentation">
-                <button class="nav-link" id="transpose-tab" data-bs-toggle="tab"
-                        data-bs-target="#transpose" type="button" role="tab"
-                        aria-controls="transpose" aria-selected="false">
-                  Transpose
+                <button class="nav-link" id="absolute-pitch-tab" data-bs-toggle="tab"
+    data-bs-target="#absolute-pitch" type="button" role="tab"
+    aria-controls="absolute-pitch" aria-selected="false">
+    Absolute pitch
                 </button>
               </li>
               <li class="nav-item" role="presentation">
@@ -587,18 +588,18 @@
                 </div>
               </div>
 
-              <!-- Transpose -->
-              <div class="tab-pane fade" id="transpose" role="tabpanel" aria-labelledby="transpose-tab">
+              <!-- Absolute pitch -->
+              <div class="tab-pane fade" id="absolute-pitch" role="tabpanel" aria-labelledby="absolute-pitch-tab">
                 <div class="d-flex flex-wrap gap-3 bg-white">
                   {% for my_key in keys %}
                     <div class="form-check form-check-inline">
-                      <input class="form-check-input" type="radio" name="transpose-key"
-                             id="transpose-key-{{ forloop.counter }}"
+                      <input class="form-check-input" type="radio" name="absolute-pitch"
+                             id="absolute-pitch-{{ forloop.counter }}"
                              value="{{ my_key }}"
-                             {% if my_key == transpose_key %}checked{% endif %}>
+                             {% if my_key == absolute_pitch %}checked{% endif %}>
                       <label class="form-check-label text-dark"
-                             for="transpose-key-{{ forloop.counter }}">
-                        Transpose to: {{ my_key }}
+                             for="absolute-pitch-{{ forloop.counter }}">
+                        Absolute pitch: {{ my_key }}
                       </label>
                     </div>
                   {% endfor %}
@@ -648,7 +649,7 @@
             instrument = instrument.replace(' ', '-');
             const level = formData.get('level') || '{{ level }}';
             const clef = formData.get('clef') || '{{ clef }}';
-            const transpose = formData.get('transpose-key') || '{{ transpose_key }}';
+            const absolutePitch = formData.get('absolute-pitch') || '{{ absolute_pitch }}';
             const shifted_octave = formData.get('octave') || '{{ octave }}';
 
             let key = formData.get('original_key') || '{{ key }}';
@@ -656,15 +657,15 @@
             key = key.replace('#', 'sharp');
             key = key.replace('b', 'flat');
 
-            let trans = String(transpose || '');
-            trans = trans.replace('#', 'sharp');
-            trans = trans.replace('b', 'flat');
+            let abs_pitch = String(absolutePitch || '');
+            abs_pitch = abs_pitch.replace('#', 'sharp');
+            abs_pitch = abs_pitch.replace('b', 'flat');
 
-            const url = "{% url 'practice-try' instrument='INSTRUMENT' clef='CLEF' key='KEY' transpose='TRANSPOSE' level='LEVEL' octave='SHIFTED_OCTAVE' %}"
+            const url = "{% url 'practice-try' instrument='INSTRUMENT' clef='CLEF' key='KEY' absolute_pitch='ABSOLUTE_PITCH' level='LEVEL' octave='SHIFTED_OCTAVE' %}"
               .replace('INSTRUMENT', instrument)
               .replace('CLEF', clef)
               .replace('KEY', key)
-              .replace('TRANSPOSE', trans)
+              .replace('ABSOLUTE_PITCH', abs_pitch)
               .replace('LEVEL', level)
               .replace('SHIFTED_OCTAVE', shifted_octave);
 

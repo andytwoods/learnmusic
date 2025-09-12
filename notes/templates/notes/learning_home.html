@@ -28,7 +28,7 @@
           <div class="card-body">
             <h5 class="card-title">
               {% if learningscenario.label %}{{ learningscenario.label }}{% else %}
-                {{ learningscenario.instrument_name }} {{ learningscenario.key }}
+                {{ learningscenario.instrument_name }} {{ learningscenario.relative_key }}
               {% endif %}
               <div class="dropdown position-absolute top-0 end-0 m-1">
                 <button
@@ -125,8 +125,8 @@
             <div class="card-footer text-muted small mt-3">
               <div>
                 Clef: {{ learningscenario.clef }}
-                {% if learningscenario.transpose_key != "BL" %}
-                  , transposing from {{ learningscenario.transpose_key }}
+                {% if learningscenario.absolute_key != "BL" %}
+                  , transposing from {{ learningscenario.absolute_key }}
                 {% endif %}
               </div>
               <div>

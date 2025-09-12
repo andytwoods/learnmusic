@@ -29,14 +29,14 @@ class CustomTemplate(LayoutObject):
 class LearningScenarioForm(forms.ModelForm):
     class Meta:
         model = LearningScenario
-        fields = ['instrument_name', 'label', 'level', 'clef', 'key', 'transpose_key', 'octave_shift', 'reminder',
+        fields = ['instrument_name', 'label', 'level', 'clef', 'relative_key', 'absolute_pitch', 'octave_shift', 'reminder',
                   'reminder_type']
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
         super(LearningScenarioForm, self).__init__(*args, **kwargs)
 
-        self.fields['transpose_key'].label = 'Transposing to which key'
+        self.fields['absolute_pitch'].label = 'Absolute pitch key'
 
         self.fields['instrument_name'] = forms.ChoiceField(
             choices=[(i, i) for i in instrument_infos.keys()],
@@ -83,9 +83,9 @@ class LearningScenarioForm(forms.ModelForm):
                     HTML('<div class="card-header bg-secondary text-white">Advanced Options</div>'),
                     Div(
                         Field('clef'),
-                        Field('key'),
+                        Field('relative_key'),
                         Field('octave_shift'),
-                        Field('transpose_key'),
+                        Field('absolute_pitch'),
                         css_class='card-body bg-light'
                     ),
                     css_class='card shadow-sm'

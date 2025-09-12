@@ -34,10 +34,10 @@ class InstrumentKeys(models.TextChoices):
     G_FLAT = "Gb", "Gb"
 
 
-class BlankTransposingKey(models.TextChoices):
+class BlankAbsolutePitch(models.TextChoices):
     BLANK = "BL", "None"
 
-transposing_choices = BlankTransposingKey.choices + InstrumentKeys.choices
+absolute_pitch_choices = BlankAbsolutePitch.choices + InstrumentKeys.choices
 
 
 class NoteChoices(models.TextChoices):
@@ -78,12 +78,12 @@ class LearningScenario(TimeStampedModel):
     level = models.CharField(max_length=64, choices=LevelChoices.choices, default=LevelChoices.BEGINNER)
     notes = models.JSONField(null=True, blank=True)
     clef = models.CharField(max_length=64, choices=ClefChoices.choices, default=ClefChoices.TREBLE)
-    key = models.CharField(max_length=2, choices=InstrumentKeys.choices, default=NoteChoices.C)
+    relative_key = models.CharField(max_length=2, choices=InstrumentKeys.choices, default=NoteChoices.C)
     octave_shift = models.SmallIntegerField(default=0,
                                             help_text="This is an advanced option. Leave as 0 if unsure. To shift the "
                                                       "octave down one, specify -1. To shift up one, specify 1.")
-    transpose_key = models.CharField(max_length=2, choices=transposing_choices,
-                                     default=BlankTransposingKey.BLANK ,
+    absolute_pitch = models.CharField(max_length=2, choices=absolute_pitch_choices,
+                                     default=BlankAbsolutePitch.BLANK ,
                                      help_text='This is an advanced option. Leave as None if unsure.')
 
     reminder = models.DateTimeField(null=True, blank=True)
@@ -176,10 +176,15 @@ class LearningScenario(TimeStampedModel):
         obj_copy.save()
         return obj_copy
 
-    def get_transposeKey(self):
-        if self.transpose_key == BlankTransposingKey.BLANK:
-            return self.key
-        return self.transpose_key
+    def get_absolute_pitch(self):
+        """Return the effective absolute pitch key.
+
+        If absolute_pitch is blank (BL), fall back to relative_key.
+        """
+        if self.absolute_pitch == BlankAbsolutePitch.BLANK:
+            return self.relative_key
+        return self.absolute_pitch
+
 
     @classmethod
     def add_history(cls, learningscenarios):
@@ -238,7 +243,7 @@ class LearningScenario(TimeStampedModel):
 
         Args:
             user: Django user
-            info: dict with keys like instrument, level, clef, key, shifted_octave, transpose_key
+            info: dict with keys like instrument, level, clef, relative_key, shifted_octave, absolute_key
             notes_history: list of note progress dicts from the frontend
 
         Returns:
@@ -250,14 +255,18 @@ class LearningScenario(TimeStampedModel):
             'notes': None,
             'ux': {},
         }
+        # Accept only new keys (legacy 'key' supported for relative only)
+        rel_key = info.get('relative_key', info.get('key'))
+        abs_pitch = info.get('absolute_pitch')
+
         ls, created = cls.objects.get_or_create(
             user=user,
             instrument_name=info.get('instrument', ''),
             level=info.get('level'),
             clef=info.get('clef'),
-            key=info.get('key') ,
+            relative_key=rel_key ,
             octave_shift=int(info.get('shifted_octave')),
-            transpose_key=info.get('transpose_key') ,
+            absolute_pitch=abs_pitch ,
             defaults=ls_defaults,
         )
 

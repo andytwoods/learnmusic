@@ -39,8 +39,7 @@
             {% else %}
               {{ instrument }}
             {% endif %}
-            {{ key }}{% if key != transpose_key %}, transposing from {{ transpose_key }}
-            {% endif %}
+            {{ key }}{% if key != absolute_pitch %}, absolute pitch {{ absolute_pitch }}{% endif %}
           </h5>
         </div>
         {% include 'notes/components/practice_dropdown_menu_right.html' %}

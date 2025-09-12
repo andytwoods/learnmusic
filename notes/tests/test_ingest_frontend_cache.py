@@ -23,11 +23,11 @@ class TestIngestFrontendCache(TestCase):
             "instrument": self.instrument,
             "level": self.level,
             "clef": self.clef,
-            "key": self.key,
+            "relative_key": self.key,
             # Provide as string to verify int casting occurs in ingest_frontend_cache
             "shifted_octave": "1",
             # Use blank transpose sentinel; the model accepts this value
-            "transpose_key": "BL",
+            "absolute_key": "BL",
         }
 
         # History with two entries -> creates three NoteRecord rows total (2 + 1)
@@ -57,9 +57,9 @@ class TestIngestFrontendCache(TestCase):
         self.assertEqual(ls.instrument_name, self.instrument)
         self.assertEqual(ls.level, self.level)
         self.assertEqual(ls.clef, self.clef)
-        self.assertEqual(ls.key, self.key)
+        self.assertEqual(ls.relative_key, self.key)
         self.assertEqual(ls.octave_shift, 1)  # ensure string was cast to int
-        self.assertEqual(ls.transpose_key, "BL")
+        self.assertEqual(ls.absolute_key, "BL")
 
         # Assert NoteRecordPackage/log
         self.assertIsInstance(pkg, NoteRecordPackage)
