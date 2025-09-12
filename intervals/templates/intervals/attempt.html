@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Intervals
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-3">Play a Note</h2>
+  <p class="text-muted">Select an instrument and enter a musical note (e.g., C4, F#3, Bb4), then press Play.</p>
+
+  <div class="row g-3 align-items-end">
+    <div class="col-md-4">
+      <label for="instrument" class="form-label">Instrument</label>
+      <select id="instrument" class="form-select">
+        <option value="acoustic_grand_piano">Acoustic Grand Piano</option>
+        <option value="electric_piano_1">Electric Piano 1</option>
+        <option value="acoustic_guitar_steel">Acoustic Guitar (steel)</option>
+        <option value="violin">Violin</option>
+        <option value="trumpet">Trumpet</option>
+        <option value="flute">Flute</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label for="note" class="form-label">Note</label>
+      <input id="note" class="form-control" type="text" placeholder="C4" value="C4"
+             pattern="^[A-Ga-g](?:#|b)?\d$" aria-describedby="noteHelp">
+      <div id="noteHelp" class="form-text">Format: A–G, optional #/b, octave 0–8 (e.g., F#3, Bb4)</div>
+    </div>
+
+    <div class="col-md-3">
+      <label for="duration" class="form-label">Duration</label>
+      <select id="duration" class="form-select">
+        <option value="0.5">0.5s</option>
+        <option value="1" selected>1s</option>
+        <option value="2">2s</option>
+        <option value="4">4s</option>
+      </select>
+    </div>
+
+    <div class="col-md-2 d-grid">
+      <button id="playBtn" class="btn btn-primary">Play</button>
+    </div>
+  </div>
+
+  <div id="status" class="mt-3 small text-muted"></div>
+</div>
+
+<!-- Soundfont-player with CDN fallback -->
+<script src="https://unpkg.com/soundfont-player@0.15.7/dist/soundfont-player.js"
+        onerror="(function(){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/soundfont-player@0.15.7/dist/soundfont-player.js';document.head.appendChild(s);}())"></script>
+
+<script>
+  (function () {
+    const instrumentSelect = document.getElementById("instrument");
+    const noteInput = document.getElementById("note");
+    const durationSelect = document.getElementById("duration");
+    const playBtn = document.getElementById("playBtn");
+    const statusEl = document.getElementById("status");
+
+    let audioCtx = null;
+    let currentPlayer = null; // soundfont-player instrument instance
+    const instrumentsToPreload = [
+      "acoustic_grand_piano",
+      "electric_piano_1",
+      "acoustic_guitar_steel",
+      "violin",
+      "trumpet",
+      "flute"
+    ];
+
+    function setStatus(msg, isError=false) {
+      statusEl.textContent = msg || "";
+      statusEl.classList.toggle("text-danger", !!isError);
+    }
+
+    function getOrCreateAudioContext() {
+      if (audioCtx) return audioCtx;
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (!Ctor) return null;
+      audioCtx = new Ctor(); // will be 'suspended' until resumed on user gesture
+      return audioCtx;
+    }
+
+    async function ensureAudioOnGesture() {
+      try {
+        const ctx = getOrCreateAudioContext();
+        if (!ctx) throw new Error("Web Audio API not supported");
+        if (ctx.state !== "running") {
+          await ctx.resume();
+        }
+        return ctx;
+      } catch (e) {
+        console.error(e);
+        setStatus("Could not start audio. Click the Play button again or check browser autoplay settings.", true);
+        throw e;
+      }
+    }
+
+    function loadScriptOnce(src) {
+      return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[data-dynamic="${src}"]`)) {
+          return resolve();
+        }
+        const s = document.createElement("script");
+        s.src = src;
+        s.async = true;
+        s.dataset.dynamic = src;
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+        document.head.appendChild(s);
+      });
+    }
+
+    async function ensureSoundfontLib() {
+      if (window.Soundfont) return true;
+      // Try multiple CDNs in order, resolve to boolean instead of throwing
+      const cdns = [
+        "https://unpkg.com/soundfont-player@0.15.7/dist/soundfont-player.js",
+        "https://cdn.jsdelivr.net/npm/soundfont-player@0.15.7/dist/soundfont-player.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/soundfont-player/0.15.7/soundfont-player.min.js",
+      ];
+      for (const url of cdns) {
+        try {
+          await loadScriptOnce(url);
+          if (window.Soundfont) return true;
+        } catch (e) {
+          console.warn("Soundfont CDN failed:", url, e);
+        }
+      }
+      return !!window.Soundfont;
+    }
+
+    async function preloadInstruments() {
+      try {
+        const hasLib = await ensureSoundfontLib();
+        if (!hasLib) {
+          console.warn("Soundfont lib not available; skipping preload");
+          return;
+        }
+        const ctx = getOrCreateAudioContext();
+        if (!ctx) return;
+        // Preload each instrument; ignore individual failures to avoid blocking the UI
+        instrumentsToPreload.forEach((name) => {
+          window.Soundfont.instrument(ctx, name).then(() => {
+            // cached by the library; no-op
+          }).catch((e) => {
+            console.warn("Preload failed for", name, e);
+          });
+        });
+      } catch (e) {
+        console.warn("Preload encountered an issue", e);
+      }
+    }
+
+    async function ensurePlayerFor(name) {
+      const hasLib = await ensureSoundfontLib();
+      if (!hasLib) {
+        throw new Error("Soundfont library not available");
+      }
+      const ctx = getOrCreateAudioContext();
+      if (!currentPlayer || currentPlayer.name !== name) {
+        setStatus("Loading instrument …");
+        currentPlayer = await window.Soundfont.instrument(ctx, name);
+        setStatus("");
+      }
+      return currentPlayer;
+    }
+
+    function validateNote(note) {
+      return /^[A-Ga-g](#|b)?\d$/.test(note);
+    }
+
+    async function playNote() {
+      const instrumentName = instrumentSelect.value;
+      const note = noteInput.value.trim();
+      const durationSec = parseFloat(durationSelect.value || "1");
+
+      if (!validateNote(note)) {
+        setStatus("Please enter a valid note like C4, F#3, or Bb4.", true);
+        return;
+      }
+
+      playBtn.disabled = true;
+      try {
+        const ctx = await ensureAudioOnGesture();
+        await ensurePlayerFor(instrumentName);
+        setStatus(`Playing ${note} on ${instrumentName} …`);
+        currentPlayer.play(note.toUpperCase(), 0, { duration: durationSec });
+        setTimeout(() => setStatus(""), 1200);
+      } catch (e) {
+        console.error(e);
+        setStatus("Error playing note. Check console for details.", true);
+      } finally {
+        playBtn.disabled = false;
+      }
+    }
+
+    // Event listeners
+    playBtn.addEventListener("click", playNote);
+    instrumentSelect.addEventListener("change", () => {
+      currentPlayer = null; // force reload next play
+    });
+
+    // Preload on page load without resuming audio to avoid autoplay policy issues
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", preloadInstruments);
+    } else {
+      preloadInstruments();
+    }
+  })();
+</script>
+{% endblock content %}

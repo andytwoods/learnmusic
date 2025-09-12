@@ -101,6 +101,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "learnmusic.users",
     "notes.apps.NotesConfig",
+    "intervals.apps.IntervalsConfig",
     "config",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
