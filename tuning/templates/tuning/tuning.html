@@ -1,5 +1,339 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block javascript %}
+  {{ block.super }}
+  <!-- VexFlow for the top stave demo -->
+  <script src="{% static 'js/vexflow.js' %}"></script>
+
+  <!-- Inline JS & CSS for Brass Consistency/Tuner UI (no separate files) -->
+  <style>
+    :root { --bg:#0f1116; --fg:#e6e6e6; --muted:#9aa3af; --green:#22c55e; --orange:#f59e0b; --red:#ef4444; }
+    * { box-sizing:border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    #tuning-page { background: var(--bg); color: var(--fg); }
+    #vf-top { background:#fff !important; }
+    .app { padding:16px; display:grid; gap:16px; max-width: 980px; margin: 0 auto; }
+    .row { display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+    .card { background:#151826; border:1px solid #1f2436; border-radius:16px; padding:16px; box-shadow:0 2px 16px rgba(0,0,0,.25); }
+    .btn { appearance:none; border:1px solid #2b314a; background:#1a1f33; color:var(--fg); padding:10px 14px; border-radius:10px; cursor:pointer; }
+    .btn[disabled] { opacity:.5; cursor:not-allowed; }
+    .small { color:var(--muted); font-size:12px; }
+    .metrics { display:grid; grid-template-columns: repeat(4, minmax(140px,1fr)); gap:12px; }
+    .metric { background:#0f1427; border:1px solid #1f2436; border-radius:12px; padding:10px; }
+    .metric b { display:block; font-size:18px; margin-top:4px; }
+    #dial, #spark { width: 320px; height: 200px; }
+    #spark { width: 520px; height: 120px; }
+    .band { display:inline-block; padding:2px 8px; border-radius:999px; }
+    .band.ok { background:#11331b; color:#50f07a; }
+    .band.warn { background:#332611; color:#f5c36b; }
+    .band.bad { background:#331616; color:#f19c9c; }
+  </style>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // ---------- TOP: VexFlow demo (kept from user's file) ----------
+      if (window.Vex) {
+        const VF = Vex;
+        const container = document.getElementById("vf-top");
+        if (container) {
+          container.innerHTML = "";
+          const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
+          const width = container.clientWidth || container.offsetWidth || 800;
+          const height = container.clientHeight || 300;
+          renderer.resize(width, height);
+          const context = renderer.getContext();
+          const stave = new VF.Stave(10, 20, Math.max(600, width - 20));
+          stave.addClef("treble").addTimeSignature("4/4");
+          stave.setContext(context).draw();
+          const letters = ["c", "d", "e", "f", "g", "a", "b"];
+          const accidentals = ["", "#", "b", "n"];
+          const octaves = ["4", "5"];
+          const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
+          const count = 4 + Math.floor(Math.random() * 5);
+          const notes = [];
+          for (let i = 0; i < count; i++) {
+            const letter = rand(letters);
+            const acc = rand(accidentals);
+            const octave = rand(octaves);
+            const key = `${letter}${acc}/${octave}`;
+            const n = new VF.StaveNote({ keys: [key], duration: "q" });
+            if (acc && typeof n.addAccidental === "function") {
+              n.addAccidental(0, new VF.Accidental(acc));
+            }
+            notes.push(n);
+          }
+          const voice = new VF.Voice({ num_beats: count, beat_value: 4 });
+          voice.addTickables(notes);
+          new VF.Formatter().joinVoices([voice]).format([voice], stave.getWidth() - 40);
+          voice.draw(context, stave);
+        }
+      } else {
+        console.warn("VexFlow not loaded");
+      }
+
+      // ---------- BOTTOM: Brass Consistency/Tuner UI ----------
+      const root = document.getElementById('bottom-empty');
+      if (!root) {
+        console.warn('tuning: #bottom-empty not found; tuner UI disabled');
+      }
+      // UI is now part of the HTML template; nothing to inject here.
+
+      // Helpers
+      const toNote = (hz, a4=440) => {
+        if (!hz || hz<=0) return { name:'–', cents:0, targetHz:0, midi:NaN };
+        const n = Math.round(12 * Math.log2(hz / a4) + 69);
+        const cents = 1200 * Math.log2(hz / (a4 * Math.pow(2, (n-69)/12)));
+        const names = ['C','C♯','D','E♭','E','F','F♯','G','A','B♭','B','C'];
+        const name = names[((n % 12)+12)%12] + (Math.floor(n/12) - 1);
+        const targetHz = a4 * Math.pow(2, (n-69)/12);
+        return { name, cents, targetHz, midi: n };
+      };
+      const ema = (prev, next, alpha) => prev + alpha * (next - prev);
+      const stddev = (arr) => {
+        if (!arr.length) return 0;
+        const m = arr.reduce((a,b)=>a+b,0)/arr.length;
+        const v = arr.reduce((a,b)=>a+(b-m)*(b-m),0)/(arr.length||1);
+        return Math.sqrt(v);
+      };
+      const ring = (cap)=>{ const a=new Float32Array(cap); let i=0, len=0;
+        return { push(v){ a[i]=v; i=(i+1)%cap; len=Math.min(len+1,cap); },
+          values(){ const out=new Array(len); for(let k=0;k<len;k++){ out[k]=a[(i-len+k+cap)%cap]; } return out; },
+          clear(){ i=0; len=0; }, size(){ return len; } };
+      };
+      const percentile = (arr, p)=>{
+        if (!arr.length) return 0;
+        const a = [...arr].sort((x,y)=>x-y);
+        const idx = (a.length-1)*p;
+        const lo = Math.floor(idx), hi = Math.ceil(idx);
+        return lo===hi ? a[lo] : a[lo] + (a[hi]-a[lo])*(idx-lo);
+      };
+
+      // Canvases
+      const dial = document.getElementById('dial');
+      const spark = document.getElementById('spark');
+      const dctx = dial ? dial.getContext('2d') : null;
+      const sctx = spark ? spark.getContext('2d') : null;
+      function drawDial(cents=0, conf=0) {
+        if (!dial || !dctx) return;
+        const w=dial.width, h=dial.height, cx=w/2, cy=h*0.9, r=h*0.8;
+        dctx.clearRect(0,0,w,h);
+        dctx.save(); dctx.translate(cx, cy);
+        // background arc
+        dctx.globalAlpha=0.2; dctx.beginPath(); dctx.strokeStyle='#888'; dctx.lineWidth=18;
+        dctx.arc(0,0,r,-Math.PI,0); dctx.stroke(); dctx.globalAlpha=1;
+        // pointer
+        const clamp = (x,min,max)=>Math.max(min,Math.min(max,x));
+        const angle = (-Math.PI) + (clamp(cents,-50,50)+50)/100 * Math.PI;
+        dctx.beginPath(); dctx.moveTo(0,0);
+        dctx.strokeStyle = conf>0.8 ? '#22c55e' : (conf>0.5 ? '#f59e0b' : '#ef4444');
+        dctx.lineWidth=6; dctx.lineCap='round';
+        dctx.rotate(angle); dctx.lineTo(r*0.95,0); dctx.stroke(); dctx.rotate(-angle);
+        // labels
+        dctx.fillStyle='#9aa3af'; dctx.textAlign='center'; dctx.font='12px system-ui';
+        dctx.fillText('-50¢', -r*0.95, -6); dctx.fillText('+50¢',  r*0.95, -6);
+        dctx.restore();
+      }
+
+          function drawSpark(centsSeries) {
+        if (!spark || !sctx) return;
+        const w = spark.width, h = spark.height;
+        sctx.clearRect(0, 0, w, h);
+        sctx.save();
+        sctx.translate(0, h / 2);
+
+        const xs = centsSeries;
+        if (xs.length < 2) {
+          // axis only while we accumulate points
+          sctx.strokeStyle = '#1f2436';
+          sctx.lineWidth = 1;
+          sctx.beginPath();
+          sctx.moveTo(0, 0);
+          sctx.lineTo(w, 0);
+          sctx.stroke();
+          sctx.restore();
+          return;
+        }
+
+        const maxC = 50;
+        const scaleY = (c) => -(Math.max(-maxC, Math.min(maxC, c)) / maxC) * (h / 2 - 8);
+
+        // axis
+        sctx.strokeStyle = '#1f2436';
+        sctx.lineWidth = 1;
+        sctx.beginPath();
+        sctx.moveTo(0, 0);
+        sctx.lineTo(w, 0);
+        sctx.stroke();
+
+        // One sample per pixel. While filling, we draw less than full width.
+        sctx.beginPath();
+        sctx.lineWidth = 2;
+        sctx.strokeStyle = '#e6e6e6';
+
+        // Draw from left to right across collected points.
+        for (let i = 0; i < xs.length; i++) {
+          const y = scaleY(xs[i]);
+          if (i === 0) sctx.moveTo(0, y);
+          else sctx.lineTo(i, y);
+        }
+        sctx.stroke();
+
+        sctx.restore();
+      }
+
+
+      // Metrics
+      let a4 = 440;
+      const centsBuf = ring(2000);   // ~20 s
+      const timeBuf  = ring(2000);
+      function computeMetrics(recCents, recTime) {
+        if (recCents.length < 8) return null;
+        // median(3) + EMA
+        const med = (arr,i)=> {
+          const a = arr[Math.max(0,i-1)], b=arr[i], c=arr[Math.min(arr.length-1, i+1)];
+          const s=[a,b,c].sort((x,y)=>x-y); return s[1];
+        };
+        const Cm=[]; for (let i=0;i<recCents.length;i++) Cm.push(med(recCents,i));
+        let E=Cm[0]; const Ce=[]; for (let i=0;i<Cm.length;i++){ E=ema(E,Cm[i],0.2); Ce.push(E); }
+        const mu = Ce.reduce((a,b)=>a+b,0)/Ce.length;
+        const sigma = stddev(Ce);
+        const within10 = Ce.filter(c=>Math.abs(c)<=10).length / Ce.length;
+        const t0 = recTime[0], tn = recTime[recTime.length-1], dur = Math.max(1e-3, tn - t0);
+        let sxy=0, sx=0, sy=0, sxx=0, n=Ce.length;
+        for (let i=0;i<n;i++){ const x=recTime[i]-t0, y=Ce[i]; sxy+=x*y; sx+=x; sy+=y; sxx+=x*x; }
+        const slope = (n*sxy - sx*sy) / Math.max(1e-6, (n*sxx - sx*sx)); // cents/sec
+        const detr = Ce.map((c,i)=>c - (mu + slope*(recTime[i]-t0)));
+        let zc=0; for (let i=1;i<detr.length;i++){ if ((detr[i-1]<=0 && detr[i]>0) || (detr[i-1]>=0 && detr[i]<0)) zc++; }
+        const vibRate = (zc/2) / dur; // Hz
+        const extent = (percentile(detr,0.95) - percentile(detr,0.05)) / 2;
+        let penaltySigma = Math.max(0,(sigma - 5) * 2);
+        if (vibRate>=4 && vibRate<=7) penaltySigma *= 0.5;
+        const penaltyDrift = Math.min(20, Math.abs(slope) * 1.5);
+        const penaltyOut = (1 - within10) * 40;
+        const score = Math.max(0, 100 - Math.min(40,penaltySigma) - penaltyDrift - penaltyOut);
+        return { mu, sigma, within10, slope, vibRate, extent, score };
+      }
+      // Cache metric elements once
+      const METRICS = {
+        note: document.getElementById('m-note'),
+        mean: document.getElementById('m-mean'),
+        sigma: document.getElementById('m-sigma'),
+        stab: document.getElementById('m-stab'),
+        vib: document.getElementById('m-vib'),
+        drift: document.getElementById('m-drift'),
+        rms: document.getElementById('m-rms'),
+        score: document.getElementById('m-score'),
+      };
+      function updateMetricsUI(noteName, M, rms) {
+        if (METRICS.note) METRICS.note.textContent = noteName;
+        if (METRICS.rms) METRICS.rms.textContent = Number.isFinite(rms) ? rms.toFixed(1) : '–';
+        if (!M) return;
+        if (METRICS.mean) METRICS.mean.textContent = `${M.mu>=0?'+':''}${M.mu.toFixed(1)}¢`;
+        if (METRICS.sigma) METRICS.sigma.textContent = `${M.sigma.toFixed(1)}¢`;
+        if (METRICS.stab) METRICS.stab.innerHTML = `<span class="band ${M.within10>0.8?'ok':(M.within10>0.6?'warn':'bad')}">${Math.round(M.within10*100)}%</span>`;
+        if (METRICS.vib) METRICS.vib.textContent = `${M.vibRate.toFixed(1)} Hz / ${M.extent.toFixed(1)}¢`;
+        if (METRICS.drift) METRICS.drift.textContent = `${M.slope>=0?'+':''}${M.slope.toFixed(1)}`;
+        if (METRICS.score) METRICS.score.textContent = Math.round(M.score);
+      }
+
+      // AudioWorklet module moved to external static file
+      const workletPath = "{% static 'tuning/js/pitch-worklet.js' %}";
+
+      // State & buffers
+      const centsSeries = [];
+      let lastHz=0, lastConf=0, lastRms=-100;
+      let smoothCents = 0;
+      let ctx, node, mediaStream;
+
+      async function start() {
+        document.getElementById('startBtn').disabled = true;
+        a4 = Number(document.getElementById('a4').value);
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation:false, noiseSuppression:false, autoGainControl:false,
+              channelCount:1, sampleRate:{ ideal:48000 }
+            }
+          });
+        } catch (e) {
+          alert('Microphone permission is required.');
+          console.error(e);
+          document.getElementById('startBtn').disabled = false;
+          return;
+        }
+        ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000, latencyHint: 'interactive' });
+        await ctx.audioWorklet.addModule(workletPath);
+        const src = ctx.createMediaStreamSource(mediaStream);
+        node = new AudioWorkletNode(ctx, 'pitch-worklet', {
+          processorOptions: { sampleRate: ctx.sampleRate, windowSize: 4096, hopSize: 240 }
+        });
+        src.connect(node);
+        node.port.onmessage = onWorkletMsg;
+      }
+
+            function onWorkletMsg(ev) {
+        const { hz, conf, rms, t } = ev.data;
+        lastHz = hz; lastConf = conf; lastRms = rms;
+        const { name, cents } = toNote(hz || NaN, a4);
+        smoothCents = isFinite(smoothCents) ? ema(smoothCents, cents, 0.25) : cents;
+        centsBuf.push(smoothCents);
+        timeBuf.push(t);
+
+        // Maintain a sliding window that matches the spark canvas width (1 sample = 1px).
+        if (spark) {
+          if (centsSeries.length >= spark.width) centsSeries.shift();
+          centsSeries.push(smoothCents);
+        }
+
+        drawDial(smoothCents, conf);
+        drawSpark(centsSeries);
+        const T = timeBuf.values();
+        const recIdx = Math.max(0, T.length - 300);
+        const recCents = centsBuf.values().slice(recIdx);
+        const recTime  = T.slice(recIdx);
+        const M = computeMetrics(recCents, recTime);
+        updateMetricsUI(name, M, rms);
+      }
+      document.getElementById('startBtn').addEventListener('click', start);
+      document.getElementById('a4').addEventListener('change', (e)=>{ a4 = Number(e.target.value); });
+    });
+  </script>
+{% endblock javascript %}
 
 {% block content %}
-000
+  <div id="tuning-page" class="container-fluid p-0">
+    <div id="vf-top" style="height:50vh; width:100%; background:#fff; border-bottom:1px solid #eee;"></div>
+    <div id="bottom-empty" style="min-height:50vh; width:100%;">
+      <div class="app">
+        <div class="row">
+          <button id="startBtn" class="btn">Start mic</button>
+          <div class="small">Tip: play 30–60 cm from mic, slightly off-axis. A4 ref:
+            <select id="a4">
+              <option value="438">438</option>
+              <option value="439">439</option>
+              <option value="440" selected>440</option>
+              <option value="441">441</option>
+              <option value="442">442</option>
+            </select> Hz
+          </div>
+        </div>
+        <div class="row">
+          <canvas id="dial" width="320" height="200" class="card"></canvas>
+          <canvas id="spark" width="520" height="120" class="card"></canvas>
+        </div>
+        <div class="card">
+          <div class="metrics">
+            <div class="metric"><span class="small">Note</span><b id="m-note">–</b></div>
+            <div class="metric"><span class="small">Mean offset</span><b id="m-mean">–</b></div>
+            <div class="metric"><span class="small">σ (steadiness)</span><b id="m-sigma">–</b></div>
+            <div class="metric"><span class="small">Stability ±10¢</span><b id="m-stab">–</b></div>
+            <div class="metric"><span class="small">Vibrato (Hz / extent)</span><b id="m-vib">–</b></div>
+            <div class="metric"><span class="small">Drift (¢/s)</span><b id="m-drift">–</b></div>
+            <div class="metric"><span class="small">Loudness (dBFS)</span><b id="m-rms">–</b></div>
+            <div class="metric"><span class="small">Score</span><b id="m-score">–</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock content %}
