@@ -36,6 +36,7 @@
       <list>
         <option value="$MODULE_DIR$/learnmusic/templates" />
         <option value="$MODULE_DIR$/notes/templates" />
+        <option value="$MODULE_DIR$/tuning/templates" />
       </list>
     </option>
   </component>
