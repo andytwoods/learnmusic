@@ -108,7 +108,7 @@
         return lo===hi ? a[lo] : a[lo] + (a[hi]-a[lo])*(idx-lo);
       };
 
-      // Canvases
+          // Canvases
       const dial = document.getElementById('dial');
       const spark = document.getElementById('spark');
       const dctx = dial ? dial.getContext('2d') : null;
@@ -182,6 +182,7 @@
       }
 
 
+
       // Metrics
       let a4 = 440;
       const centsBuf = ring(2000);   // ~20 s
@@ -214,6 +215,7 @@
         return { mu, sigma, within10, slope, vibRate, extent, score };
       }
       // Cache metric elements once
+
       const METRICS = {
         note: document.getElementById('m-note'),
         mean: document.getElementById('m-mean'),
@@ -224,6 +226,7 @@
         rms: document.getElementById('m-rms'),
         score: document.getElementById('m-score'),
       };
+
       function updateMetricsUI(noteName, M, rms) {
         if (METRICS.note) METRICS.note.textContent = noteName;
         if (METRICS.rms) METRICS.rms.textContent = Number.isFinite(rms) ? rms.toFixed(1) : '–';
@@ -236,7 +239,7 @@
         if (METRICS.score) METRICS.score.textContent = Math.round(M.score);
       }
 
-      // AudioWorklet module moved to external static file
+     // AudioWorklet module moved to external static file
       const workletPath = "{% static 'tuning/js/pitch-worklet.js' %}";
 
       // State & buffers
@@ -244,6 +247,21 @@
       let lastHz=0, lastConf=0, lastRms=-100;
       let smoothCents = 0;
       let ctx, node, mediaStream;
+
+      // Silence threshold (dBFS), persisted in localStorage
+      const thrInput = document.getElementById('thr-db');
+      let silenceThresholdDb = parseFloat(localStorage.getItem('silenceThresholdDb') ?? '-50');
+      if (Number.isNaN(silenceThresholdDb)) silenceThresholdDb = -50;
+      if (thrInput) {
+        thrInput.value = String(silenceThresholdDb);
+        thrInput.addEventListener('change', (e) => {
+          const v = parseFloat(e.target.value);
+          if (!Number.isNaN(v) && v <= 0 && v >= -100) {
+            silenceThresholdDb = v;
+            localStorage.setItem('silenceThresholdDb', String(v));
+          }
+        });
+      }
 
       async function start() {
         document.getElementById('startBtn').disabled = true;
@@ -274,6 +292,16 @@
             function onWorkletMsg(ev) {
         const { hz, conf, rms, t } = ev.data;
         lastHz = hz; lastConf = conf; lastRms = rms;
+
+        // If below the threshold, do not show estimated values (pause updates).
+        if (Number.isFinite(rms) && rms < silenceThresholdDb) {
+          // Clear the dial so no pointer is shown
+          if (dial && dctx) dctx.clearRect(0, 0, dial.width, dial.height);
+          // Keep sparkline as-is (no new points). Update only the RMS metric and placeholders.
+          updateMetricsUI('–', null, rms);
+          return;
+        }
+
         const { name, cents } = toNote(hz || NaN, a4);
         smoothCents = isFinite(smoothCents) ? ema(smoothCents, cents, 0.25) : cents;
         centsBuf.push(smoothCents);
@@ -294,6 +322,7 @@
         const M = computeMetrics(recCents, recTime);
         updateMetricsUI(name, M, rms);
       }
+
       document.getElementById('startBtn').addEventListener('click', start);
       document.getElementById('a4').addEventListener('change', (e)=>{ a4 = Number(e.target.value); });
     });
@@ -315,6 +344,10 @@
               <option value="441">441</option>
               <option value="442">442</option>
             </select> Hz
+            <!-- Silence threshold control -->
+            <span style="margin-left:12px;">Silence threshold:</span>
+            <input id="thr-db" type="number" step="1" min="-100" max="0" value="-50" style="width:72px;" />
+            <span class="small">dBFS</span>
           </div>
         </div>
         <div class="row">
