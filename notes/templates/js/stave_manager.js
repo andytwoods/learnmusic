@@ -42,12 +42,13 @@ const keyAdjust = (function () {
     }
 
     // NB: these two placeholders are replaced by Django in the template
-    const currentFromKey = "{{ key }}";        // e.g. "Bb"
+    const relativeKey = "{{ key }}";        // e.g. "Bb"
     const currentToKey = "{{ absolute_pitch }}"; // e.g. "Bb" or empty
 
     return function (noteStr) {
-        if (!currentToKey || currentFromKey === currentToKey) return noteStr;
-        const shift = getSemitoneShift(currentFromKey, currentToKey);
+        if ("{{ clef }}" === "bass") return noteStr;
+        if (!currentToKey || relativeKey === currentToKey) return noteStr;
+        const shift = getSemitoneShift(relativeKey, currentToKey);
         return adjustNoteString(noteStr, shift);
     };
 })();
