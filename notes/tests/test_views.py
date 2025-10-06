@@ -28,9 +28,9 @@ class TestPagesWork(TestCase):
         self.login_page = reverse('account_login')
 
     def test_practice_try(self):
-        for view in ['practice-sound-try', 'practice-try']:
+        for view in ['practice-sound-try-sigs', 'practice-try-sigs']:
             url = reverse(view, kwargs={'instrument': 'Trumpet', 'clef': 'Treble',
-                                        'key': 'Bb', 'level': 'Beginner', 'octave': 0})
+                                        'key': 'Bb', 'level': 'Beginner', 'octave': 0, 'signatures': '0'})
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
 

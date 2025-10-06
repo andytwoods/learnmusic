@@ -103,7 +103,7 @@
         // Add dynamic manifest link
         const manifestLink = document.createElement('link');
         manifestLink.rel = 'manifest';
-        manifestLink.href = '{% if absolute_pitch_slug %}{% url "practice-try-manifest" instrument=instrument clef=clef key=original_key_slug absolute_pitch=absolute_pitch_slug level=level octave=octave %}{% else %}{% url "practice-try-manifest" instrument=instrument clef=clef key=original_key_slug level=level octave=octave %}{% endif %}';
+        manifestLink.href = '{% if absolute_pitch_slug %}{% url "practice-try-manifest-sigs-abs" instrument=instrument clef=clef key=original_key_slug absolute_pitch=absolute_pitch_slug level=level octave=octave signatures=signatures_slug %}{% else %}{% url "practice-try-manifest-sigs" instrument=instrument clef=clef key=original_key_slug level=level octave=octave signatures=signatures_slug %}{% endif %}';
         document.head.appendChild(manifestLink);
 
         // Register service worker
@@ -518,6 +518,13 @@
                 </button>
               </li>
               <li class="nav-item" role="presentation">
+                <button class="nav-link" id="signatures-tab" data-bs-toggle="tab"
+                        data-bs-target="#signatures" type="button" role="tab"
+                        aria-controls="signatures" aria-selected="false">
+                  Signatures
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
                 <button class="nav-link" id="octave-tab" data-bs-toggle="tab"
                         data-bs-target="#octave" type="button" role="tab"
                         aria-controls="octave" aria-selected="false">
@@ -606,6 +613,27 @@
                 </div>
               </div>
 
+            <!-- Signatures -->
+              <div class="tab-pane fade" id="signatures" role="tabpanel" aria-labelledby="signatures-tab">
+                <div class="d-flex flex-column gap-2 bg-white">
+                  <div class="d-flex flex-wrap gap-3">
+                    {% for signature in signatures %}
+                      <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="signatures"
+                               id="signature-{{ forloop.counter }}"
+                               value="{{ signature }}"
+                               {% if signature in selected_signatures %}checked{% endif %}>
+                        <label class="form-check-label text-dark"
+                               for="signature-{{ forloop.counter }}">
+                          {{ signature }}
+                        </label>
+                      </div>
+                    {% endfor %}
+                  </div>
+                  <small class="text-muted">Selected signatures: {{ selected_signatures|join:", " }}</small>
+                </div>
+              </div>
+
               <!-- Key -->
               <div class="tab-pane fade" id="key" role="tabpanel" aria-labelledby="key-tab">
                 <div class="d-flex flex-wrap gap-3 bg-white">
@@ -661,13 +689,25 @@
             abs_pitch = abs_pitch.replace('#', 'sharp');
             abs_pitch = abs_pitch.replace('b', 'flat');
 
-            const url = "{% url 'practice-try' instrument='INSTRUMENT' clef='CLEF' key='KEY' absolute_pitch='ABSOLUTE_PITCH' level='LEVEL' octave='SHIFTED_OCTAVE' %}"
+            // collect selected signatures (checkboxes)
+            const selectedSigs = formData.getAll('signatures').map(Number).filter(n => Number.isInteger(n));
+            const sigsSlug = (selectedSigs.length ? selectedSigs : [0]).join(',');
+
+            let urlTemplate;
+            if (abs_pitch) {
+              urlTemplate = "{% url 'practice-try-sigs-abs' instrument='INSTRUMENT' clef='CLEF' key='KEY' absolute_pitch='ABSOLUTE_PITCH' level='LEVEL' octave='SHIFTED_OCTAVE' signatures='SIGS' %}";
+            } else {
+              urlTemplate = "{% url 'practice-try-sigs' instrument='INSTRUMENT' clef='CLEF' key='KEY' level='LEVEL' octave='SHIFTED_OCTAVE' signatures='SIGS' %}";
+            }
+
+            const url = urlTemplate
               .replace('INSTRUMENT', instrument)
               .replace('CLEF', clef)
               .replace('KEY', key)
               .replace('ABSOLUTE_PITCH', abs_pitch)
               .replace('LEVEL', level)
-              .replace('SHIFTED_OCTAVE', shifted_octave);
+              .replace('SHIFTED_OCTAVE', shifted_octave)
+              .replace('SIGS', sigsSlug);
 
             window.location.href = url;
           });

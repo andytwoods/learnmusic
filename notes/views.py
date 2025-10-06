@@ -158,16 +158,17 @@ def practice(request, learningscenario_id: int, sound: bool = False):
 
 
 def practice_demo(request):
-    url = reverse('practice-try',
+    url = reverse('practice-try-sigs-abs',
                   kwargs={'instrument': 'trumpet',
                           'clef': 'treble',
                           'key': 'Bb',
                           'absolute_pitch': 'Bb',
                           'level': 'beginner',
-                          'octave': 0})
+                          'octave': 0,
+                          'signatures': '0'})
     return redirect(url)
 
-def practice_try_manifest(request, instrument: str, clef: str, key: str, absolute_pitch: str = "", level: str = "", octave: int = 0):
+def practice_try_manifest(request, instrument: str, clef: str, key: str, absolute_pitch: str = "", level: str = "", octave: int = 0, signatures: str = ""):
     """Generate dynamic PWA manifest for practice-try pages"""
     # Handle key formatting for display
     display_key = key
@@ -212,7 +213,7 @@ def practice_try_manifest(request, instrument: str, clef: str, key: str, absolut
 
     return JsonResponse(manifest_data)
 
-def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: str = "", level: str = "", octave: int = 0, sound: bool = False):
+def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: str = "", level: str = "", octave: int = 0, sound: bool = False, signatures: str = ""):
     # Ensure instrument is properly capitalized
     # Handle POST request with progress data
     if request.method == 'POST':
@@ -228,6 +229,23 @@ def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: 
         absolute_pitch = absolute_pitch.replace('sharp', '#')
     elif 'flat' in absolute_pitch:
         absolute_pitch = absolute_pitch.replace('flat', 'b')
+
+    # Parse signatures from path segment (e.g., "1,0,-2"). If missing, default to [0]
+    raw_sigs = signatures or ''
+    selected_signatures = []
+    if isinstance(raw_sigs, str) and raw_sigs.strip():
+        try:
+            selected_signatures = [int(x) for x in raw_sigs.split(',') if x.strip() != '']
+        except ValueError:
+            selected_signatures = []
+    # Bound to [-7, 7] and unique while preserving order
+    seen = set()
+    filtered_sigs = []
+    for s in selected_signatures:
+        if -7 <= s <= 7 and s not in seen:
+            seen.add(s)
+            filtered_sigs.append(s)
+    selected_signatures = filtered_sigs or [0]
 
     # Slug-safe variants for URLs
     key_slug = key.replace('#', 'sharp').replace('b', 'flat') if key else ''
@@ -264,8 +282,12 @@ def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: 
         'octave': octave,
         # Add original key for manifest URL generation
         'original_key': key,  # already formatted with #/b above
-                'original_key_slug': key_slug,
-                'absolute_pitch_slug': absolute_pitch_slug,
+        'original_key_slug': key_slug,
+        'absolute_pitch_slug': absolute_pitch_slug,
+        # Signatures context
+        'signatures': list(range(-7, 8)),
+        'selected_signatures': selected_signatures,
+        'signatures_slug': ','.join(str(s) for s in selected_signatures),
     }
 
     context.update(common_context(instrument_name=canonical_instrument, clef=clef, sound=sound))
