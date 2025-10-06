@@ -19,7 +19,7 @@ from pushover_complete import PushoverAPI
 from notes import tools
 from notes.forms import LearningScenarioForm
 from notes.instrument_data import instrument_infos, instruments, get_instrument_defaults
-from notes.models import LearningScenario, NoteRecordPackage, NoteRecord, LevelChoices, InstrumentKeys, ClefChoices, BlankAbsolutePitch
+from notes.models import LearningScenario, NoteRecordPackage, NoteRecord, LevelChoices, InstrumentKeys, ClefChoices, BlankAbsolutePitch, FIFTHS_TO_VEXFLOW_MAJOR
 from notes.tools import generate_notes, compile_notes_per_skilllevel, convert_note_slash_to_db, toCamelCase
 
 PRACTICE_TRY = 'practice-try'
@@ -286,6 +286,7 @@ def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: 
         'absolute_pitch_slug': absolute_pitch_slug,
         # Signatures context
         'signatures': list(range(-7, 8)),
+        'signatures_with_names': [(s, FIFTHS_TO_VEXFLOW_MAJOR[s]) for s in range(-7, 8)],
         'selected_signatures': selected_signatures,
         'signatures_slug': ','.join(str(s) for s in selected_signatures),
     }

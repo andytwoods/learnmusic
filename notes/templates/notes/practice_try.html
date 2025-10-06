@@ -617,15 +617,17 @@
               <div class="tab-pane fade" id="signatures" role="tabpanel" aria-labelledby="signatures-tab">
                 <div class="d-flex flex-column gap-2 bg-white">
                   <div class="d-flex flex-wrap gap-3">
-                    {% for signature in signatures %}
-                      <div class="form-check form-check-inline">
+                    {% for sig, keyname in signatures_with_names %}
+                      <div class="form-check form-check-inline align-items-center">
                         <input class="form-check-input" type="checkbox" name="signatures"
                                id="signature-{{ forloop.counter }}"
-                               value="{{ signature }}"
-                               {% if signature in selected_signatures %}checked{% endif %}>
-                        <label class="form-check-label text-dark"
+                               value="{{ sig }}"
+                               {% if sig in selected_signatures %}checked{% endif %}>
+                        <label class="form-check-label text-dark d-flex align-items-center gap-2"
                                for="signature-{{ forloop.counter }}">
-                          {{ signature }}
+                          <span class="badge bg-light text-dark border">{{ sig }}</span>
+                          <img src="{% static 'key_signatures/' %}{{ keyname }}.jpg" alt="{{ keyname }} key signature" style="height: 28px; width: auto;" loading="lazy">
+                          <span class="text-muted">{{ keyname }}</span>
                         </label>
                       </div>
                     {% endfor %}
