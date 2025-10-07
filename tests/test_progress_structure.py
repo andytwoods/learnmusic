@@ -43,7 +43,7 @@ def test_practice_view_embeds_wrapped_progress(client):
     user = UserFactory()
     ls = create_learningscenario(user, signatures=[0])
 
-    client.force_login(user)
+    client.login(username="u2", password="p")
     resp = client.get(reverse("practice", kwargs={"learningscenario_id": ls.id}))
     assert resp.status_code == 200
     # progress is provided to template context

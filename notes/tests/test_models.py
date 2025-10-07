@@ -17,8 +17,8 @@ class TestLearning(TestCase):
         package1, serialised_notes1 = LearningScenario.progress_latest_serialised(scenario_id)
 
         package = NoteRecordPackage.objects.get(id=package1.id)
-        serialised_notes1['notes'][0]['correct'].append(1)
-        serialised_notes1['notes'][0]['reaction_time_log'].append(1000)
+        serialised_notes1[0]['correct'].append(1)
+        serialised_notes1[0]['reaction_time_log'].append(1000)
         package.process_answers(serialised_notes1)
 
         # let's check we get the updated package
@@ -184,7 +184,7 @@ class TestLearningScenarioMethods(TestCase):
         package, progress = LearningScenario.progress_latest_serialised(scenario.id)
 
         # Verify all notes are in the progress
-        self.assertEqual(len(progress['notes']), len(self.note_records))
+        self.assertEqual(len(progress), len(self.note_records))
 
         # Modify the notes in the learning scenario
         modified_notes = self.note_records.copy()
@@ -198,11 +198,11 @@ class TestLearningScenarioMethods(TestCase):
         new_package, new_progress = LearningScenario.progress_latest_serialised(scenario.id)
 
         # Verify the progress has been updated correctly
-        self.assertEqual(len(new_progress['notes']), len(modified_notes))
+        self.assertEqual(len(new_progress), len(modified_notes))
 
         # Check that the new note is in the progress
         new_note_found = False
-        for note in new_progress['notes']:
+        for note in new_progress:
             if note['note'] == 'G' and note['octave'] == '5' and note['alter'] == '0':
                 new_note_found = True
                 break
