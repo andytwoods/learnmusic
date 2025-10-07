@@ -7,7 +7,7 @@
         'Content-Type': 'application/json',
         'X-CSRFToken': "{{ csrf_token }}"
       },
-      body: JSON.stringify(window.progress_data)
+      body: JSON.stringify(window.progress_data.notes)
     })
       .then(res => res.redirected ? window.location.href = res.url : res.text())
       .then(html => {

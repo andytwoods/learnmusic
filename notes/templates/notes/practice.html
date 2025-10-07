@@ -115,16 +115,9 @@
       });
     });
 
-    (function(){
-      const parsed = JSON.parse(document.getElementById('progress-data').textContent || '[]');
-      // Expose full object
-      window.progress = parsed;
-      // Backward compatibility: most scripts expect an array in window.progress_data
-      const notes = Array.isArray(parsed) ? parsed : (parsed && parsed.notes) ? parsed.notes : [];
-      window.progress_data = notes;
-      // Also expose signatures if available
-      window.signatures = (parsed && parsed.signatures) ? parsed.signatures : {fifths: [], vexflow: []};
-    })();
+    window.progress_data = JSON.parse(
+      document.getElementById('progress-data').textContent);
+
   </script>
   {% block load_progress_data_from_cache %}
   {% endblock load_progress_data_from_cache %}

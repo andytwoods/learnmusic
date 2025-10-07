@@ -19,8 +19,11 @@
       const shifted_octave = '{{ octave }}';
       const key = '{{ key }}';
       let absolute_pitch = '{{ absolute_pitch }}';
+      let signatures = '{{ selected_signatures }}';
 
-      window.cache_key = [instrument, level, clef, shifted_octave, key, absolute_pitch].join('_')
+
+
+      window.cache_key = [instrument, level, clef, shifted_octave, key, absolute_pitch, signatures].join('_')
     }());
 
     function saveResult(note, reactionTime, correct) {
