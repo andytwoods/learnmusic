@@ -1,0 +1,353 @@
+{% load static %}
+<!-- Button to trigger modal -->
+<button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="modal" data-bs-target="#settingsModal">
+  <i class="fa-solid fa-edit"></i> {{ instrument }},
+  {{ level }}{% if key != absolute_pitch %}, absolute pitch {{ absolute_pitch }}{% endif %}
+</button>
+
+<!-- Settings Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="settingsModalLabel">Music settings</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form id="musicSettingsForm">
+        <div class="modal-body">
+
+          <!-- Nav tabs -->
+          <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="instrument-tab" data-bs-toggle="tab"
+                      data-bs-target="#instrument" type="button" role="tab"
+                      aria-controls="instrument" aria-selected="true">
+                Instrument
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="key-tab" data-bs-toggle="tab"
+                      data-bs-target="#key" type="button" role="tab"
+                      aria-controls="key" aria-selected="false">
+                Key
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="level-tab" data-bs-toggle="tab"
+                      data-bs-target="#level" type="button" role="tab"
+                      aria-controls="level" aria-selected="false">
+                Level
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="clef-tab" data-bs-toggle="tab"
+                      data-bs-target="#clef" type="button" role="tab"
+                      aria-controls="clef" aria-selected="false">
+                Clef
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="absolute-pitch-tab" data-bs-toggle="tab"
+                      data-bs-target="#absolute-pitch" type="button" role="tab"
+                      aria-controls="absolute-pitch" aria-selected="false">
+                Transpose
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="signatures-tab" data-bs-toggle="tab"
+                      data-bs-target="#signatures" type="button" role="tab"
+                      aria-controls="signatures" aria-selected="false">
+                Signatures
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="octave-tab" data-bs-toggle="tab"
+                      data-bs-target="#octave" type="button" role="tab"
+                      aria-controls="octave" aria-selected="false">
+                Octave shift
+              </button>
+            </li>
+          </ul>
+
+          <!-- Tab panes -->
+          <div class="tab-content bg-white p-3" id="settingsTabContent">
+
+            <!-- Instrument -->
+            <div class="tab-pane fade show active" id="instrument" role="tabpanel"
+                 aria-labelledby="instrument-tab">
+              <div class="d-flex flex-wrap gap-3 bg-white">
+                {% for my_instrument in instruments %}
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="instrument"
+                           id="instrument-{{ forloop.counter }}"
+                           value="{{ my_instrument }}"
+                           {% if my_instrument == instrument %}checked{% endif %}>
+                    <label class="form-check-label text-dark"
+                           for="instrument-{{ forloop.counter }}">
+                      {{ my_instrument }}
+                    </label>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Level -->
+            <div class="tab-pane fade" id="level" role="tabpanel" aria-labelledby="level-tab">
+              <div class="d-flex flex-wrap gap-3 bg-white">
+                {% for my_level in levels %}
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="level"
+                           id="level-{{ forloop.counter }}"
+                           value="{{ my_level }}"
+                           {% if my_level == level %}checked{% endif %}>
+                    <label class="form-check-label text-dark"
+                           for="level-{{ forloop.counter }}">
+                      {{ my_level }}
+                    </label>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Clef -->
+            <div class="tab-pane fade" id="clef" role="tabpanel" aria-labelledby="clef-tab">
+              <div class="d-flex flex-wrap gap-3 bg-white">
+
+                {% for my_clef in clefs %}
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="clef"
+                           id="clef-{{ forloop.counter }}"
+                           value="{{ my_clef }}"
+                           {% if my_clef|lower == clef %}checked{% endif %}>
+                    <label class="form-check-label text-dark"
+                           for="clef-{{ forloop.counter }}">
+                      {{ my_clef }}
+                    </label>
+                  </div>
+                {% endfor %}
+
+                <p class="bg-white text-dark mb-0 pb-0">Shift written notes up or down octaves?</p>
+                {% include 'notes/components/_octaves.html' with suffix_id='_in_octave_menu' %}
+              </div>
+            </div>
+
+            <!-- Absolute pitch -->
+            <div class="tab-pane fade" id="absolute-pitch" role="tabpanel" aria-labelledby="absolute-pitch-tab">
+              <div class="d-flex flex-wrap gap-3 bg-white">
+                {% for my_key in keys %}
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="absolute-pitch"
+                           id="absolute-pitch-{{ forloop.counter }}"
+                           value="{{ my_key }}"
+                           {% if my_key == absolute_pitch %}checked{% endif %}>
+                    <label class="form-check-label text-dark"
+                           for="absolute-pitch-{{ forloop.counter }}">
+                      Absolute pitch: {{ my_key }}
+                    </label>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Signatures -->
+            <div class="tab-pane fade" id="signatures" role="tabpanel" aria-labelledby="signatures-tab">
+              <div class="d-flex flex-column gap-2 bg-white">
+                <div class="d-flex flex-wrap gap-3">
+                  {% for sig, keyname in signatures_with_names %}
+                    <div class="form-check form-check-inline align-items-center">
+                      <input class="form-check-input" type="checkbox" name="signatures"
+                             id="signature-{{ forloop.counter }}"
+                             value="{{ sig }}"
+                             {% if sig in selected_signatures %}checked{% endif %}>
+                      <label class="form-check-label text-dark d-flex align-items-center gap-2"
+                             for="signature-{{ forloop.counter }}">
+                        <span class="badge bg-light text-dark border">{{ sig }}</span>
+                        <img src="{% static 'key_signatures/' %}{{ keyname }}.jpg" alt="{{ keyname }} key signature"
+                             style="height: 28px; width: auto;" loading="lazy">
+                        <span class="text-muted">{{ keyname }}</span>
+                      </label>
+                    </div>
+                  {% endfor %}
+                </div>
+                <small class="text-muted">Selected signatures: {{ selected_signatures|join:", " }}</small>
+              </div>
+            </div>
+
+            <!-- Key -->
+            <div class="tab-pane fade" id="key" role="tabpanel" aria-labelledby="key-tab">
+              <div class="d-flex flex-wrap gap-3 bg-white">
+                {% for my_key in keys %}
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="original_key"
+                           id="original-key-{{ forloop.counter }}"
+                           value="{{ my_key }}"
+                           {% if my_key == key %}checked{% endif %}>
+                    <label class="form-check-label text-dark"
+                           for="original-key-{{ forloop.counter }}">
+                      Key: {{ my_key }}
+                    </label>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Octave -->
+            <div class="tab-pane fade" id="octave" role="tabpanel" aria-labelledby="octave-tab">
+              <div class="d-flex flex-wrap gap-3 bg-white">
+                <p class="bg-white text-dark">Shift written notes up or down octaves?</p>
+                {% include 'notes/components/_octaves.html' %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary">Apply settings</button>
+        </div>
+      </form>
+
+      <script>
+        document.getElementById('musicSettingsForm').addEventListener('submit', function (e) {
+          e.preventDefault();
+
+          const formData = new FormData(this);
+          let instrument = formData.get('instrument') || '{{ instrument }}';
+          instrument = instrument.replace(' ', '-');
+          const level = formData.get('level') || '{{ level }}';
+          const clef = formData.get('clef') || '{{ clef }}';
+          const absolutePitch = formData.get('absolute-pitch') || '{{ absolute_pitch }}';
+          const shifted_octave = formData.get('octave') || '{{ octave }}';
+
+          let key = formData.get('original_key') || '{{ key }}';
+
+          key = key.replace('#', 'sharp');
+          key = key.replace('b', 'flat');
+
+          let abs_pitch = String(absolutePitch || '');
+          abs_pitch = abs_pitch.replace('#', 'sharp');
+          abs_pitch = abs_pitch.replace('b', 'flat');
+
+          // collect selected signatures (checkboxes)
+          const selectedSigs = formData.getAll('signatures').map(Number).filter(n => Number.isInteger(n));
+          const sigsSlug = (selectedSigs.length ? selectedSigs : [0]).join(',');
+
+          let urlTemplate;
+          if (abs_pitch) {
+            urlTemplate = "{% url 'practice-try-sigs-abs' instrument='INSTRUMENT' clef='CLEF' key='KEY' absolute_pitch='ABSOLUTE_PITCH' level='LEVEL' octave='SHIFTED_OCTAVE' signatures='SIGS' %}";
+          } else {
+            urlTemplate = "{% url 'practice-try-sigs' instrument='INSTRUMENT' clef='CLEF' key='KEY' level='LEVEL' octave='SHIFTED_OCTAVE' signatures='SIGS' %}";
+          }
+
+          const url = urlTemplate
+            .replace('INSTRUMENT', instrument)
+            .replace('CLEF', clef)
+            .replace('KEY', key)
+            .replace('ABSOLUTE_PITCH', abs_pitch)
+            .replace('LEVEL', level)
+            .replace('SHIFTED_OCTAVE', shifted_octave)
+            .replace('SIGS', sigsSlug);
+
+          window.location.href = url;
+        });
+      </script>
+      <script>
+        (function () {
+
+          function slugify(name) {
+            return String(name || '')
+              .trim()
+              .toLowerCase()
+              .replace(/[_\s]+/g, '-')
+              .replace(/-+/g, '-');
+          }
+
+          function getInstrumentInfo(instrumentName) {
+            const slug = slugify(instrumentName);
+            const dict = window.instrument_defaults || {};
+            return (
+              dict[slug] ||
+              dict[instrumentName] ||
+              dict[instrumentName?.toLowerCase?.()] ||
+              null
+            );
+          }
+
+          function findFirstMatchingRadio(radioNodeList, preferredValues) {
+            // Try preferred values (case-insensitive) in order
+
+            for (const pref of preferredValues) {
+              const match = Array.from(radioNodeList).find(r =>
+                String(r.value).toLowerCase() === String(pref).toLowerCase()
+              );
+              if (match) return match;
+            }
+            return null;
+          }
+
+          function selectRadioIfDifferent(inputEl) {
+            if (!inputEl || inputEl.checked) return;
+            inputEl.checked = true;
+            inputEl.dispatchEvent(new Event('change', {bubbles: true}));
+          }
+
+          function selectClefForInstrument(instrumentName) {
+            const info = getInstrumentInfo(instrumentName);
+            if (!info || !Array.isArray(info.clefs)) return;
+
+            const clefRadios = document.querySelectorAll('input[name="clef"]');
+            if (!clefRadios.length) return;
+
+            const toSelect = findFirstMatchingRadio(clefRadios, info.clefs);
+            if (toSelect) selectRadioIfDifferent(toSelect);
+          }
+
+          function selectKeyForInstrument(instrumentName) {
+            const info = getInstrumentInfo(instrumentName);
+            if (!info || !Array.isArray(info.keys)) return;
+
+            for (const el_name of ['absolute-pitch', 'original_key']) {
+              const keyRadios = document.querySelectorAll(`input[name="${el_name}"]`);
+              if (!keyRadios.length) continue;
+
+              // Prefer the instrument’s default keys in order; fall back to first available if none match
+              let toSelect = findFirstMatchingRadio(keyRadios, info.keys);
+              if (!toSelect) toSelect = keyRadios[0];
+              if (toSelect) selectRadioIfDifferent(toSelect);
+            }
+          }
+
+          function applyDefaultsForInstrument(instrumentName) {
+            selectClefForInstrument(instrumentName);
+            selectKeyForInstrument(instrumentName);
+          }
+
+          function getCheckedInstrumentValue() {
+            const checked = document.querySelector('input[name="instrument"]:checked');
+            return checked ? checked.value : null;
+          }
+
+          function bindInstrumentListeners() {
+            const instrumentRadios = document.querySelectorAll('input[name="instrument"]');
+            instrumentRadios.forEach(radio => {
+              radio.addEventListener('change', (e) => {
+                if (e.target && e.target.checked) {
+                  applyDefaultsForInstrument(e.target.value);
+                }
+              });
+            });
+          }
+
+          document.addEventListener('DOMContentLoaded', function () {
+            bindInstrumentListeners();
+            const initialInstrument = getCheckedInstrumentValue();
+            if (initialInstrument) {
+              applyDefaultsForInstrument(initialInstrument);
+            }
+          });
+        })();
+      </script>
+    </div>
+  </div>
+</div>
