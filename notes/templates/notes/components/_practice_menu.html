@@ -152,25 +152,73 @@
 
             <!-- Signatures -->
             <div class="tab-pane fade" id="signatures" role="tabpanel" aria-labelledby="signatures-tab">
-              <div class="d-flex flex-column gap-2 bg-white">
-                <div class="d-flex flex-wrap gap-3">
-                  {% for sig, keyname in signatures_with_names %}
-                    <div class="form-check form-check-inline align-items-center">
-                      <input class="form-check-input" type="checkbox" name="signatures"
-                             id="signature-{{ forloop.counter }}"
-                             value="{{ sig }}"
-                             {% if sig in selected_signatures %}checked{% endif %}>
-                      <label class="form-check-label text-dark d-flex align-items-center gap-2"
-                             for="signature-{{ forloop.counter }}">
-                        <span class="badge bg-light text-dark border">{{ sig }}</span>
-                        <img src="{% static 'key_signatures/' %}{{ keyname }}.jpg" alt="{{ keyname }} key signature"
-                             style="height: 28px; width: auto;" loading="lazy">
-                        <span class="text-muted">{{ keyname }}</span>
-                      </label>
-                    </div>
-                  {% endfor %}
+              <div class="d-flex flex-column gap-3 bg-white">
+
+
+
+              <div class="d-flex flex-wrap gap-3">
+                    {% for sig, keyname in signatures_with_names %}
+                      {% if sig == 0 %}
+                        <div class="form-check form-check-inline align-items-center">
+                          <input class="form-check-input" type="checkbox" name="signatures"
+                                 id="signature-sharp-{{ forloop.counter }}"
+                                 value="{{ sig }}"
+                                 {% if sig in selected_signatures %}checked{% endif %}>
+                          <label class="form-check-label text-dark d-flex align-items-center gap-2"
+                                 for="signature-sharp-{{ forloop.counter }}">
+                            <span class="badge {% if sig == 0 %}bg-info{% else %}bg-primary{% endif %} text-white">{{ sig }}</span>
+                            <span class="text-muted">{{ keyname }}</span>
+                          </label>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+
+
+                <!-- Number of Flats -->
+                <div>
+                  <h6 class="text-dark fw-bold mb-2 border-bottom pb-2">Number of Flats</h6>
+                  <div class="d-flex flex-wrap gap-3">
+                    {% for sig, keyname in signatures_with_names %}
+                      {% if sig < 0 %}
+                        <div class="form-check form-check-inline align-items-center">
+                          <input class="form-check-input" type="checkbox" name="signatures"
+                                 id="signature-flat-{{ forloop.counter }}"
+                                 value="{{ sig }}"
+                                 {% if sig in selected_signatures %}checked{% endif %}>
+                          <label class="form-check-label text-dark d-flex align-items-center gap-2"
+                                 for="signature-flat-{{ forloop.counter }}">
+                            <span class="badge bg-secondary text-white">{% widthratio sig 1 -1 %}</span>
+                            <span class="text-muted">{{ keyname }}</span>
+                          </label>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
                 </div>
-                <small class="text-muted">Selected signatures: {{ selected_signatures|join:", " }}</small>
+
+                <!-- Number of Sharps -->
+                <div>
+                  <h6 class="text-dark fw-bold mb-2 border-bottom pb-2">Number of Sharps</h6>
+                  <div class="d-flex flex-wrap gap-3">
+                    {% for sig, keyname in signatures_with_names %}
+                      {% if sig > 0 %}
+                        <div class="form-check form-check-inline align-items-center">
+                          <input class="form-check-input" type="checkbox" name="signatures"
+                                 id="signature-sharp-{{ forloop.counter }}"
+                                 value="{{ sig }}"
+                                 {% if sig in selected_signatures %}checked{% endif %}>
+                          <label class="form-check-label text-dark d-flex align-items-center gap-2"
+                                 for="signature-sharp-{{ forloop.counter }}">
+                            <span class="badge bg-primary text-white">{{ sig }}</span>
+                            <span class="text-muted">{{ keyname }}</span>
+                          </label>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+
               </div>
             </div>
 

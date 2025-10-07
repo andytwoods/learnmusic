@@ -286,7 +286,9 @@ def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: 
         'absolute_pitch_slug': absolute_pitch_slug,
         # Signatures context
         'signatures': list(range(-7, 8)),
-        'signatures_with_names': [(s, FIFTHS_TO_VEXFLOW_MAJOR[s]) for s in range(-7, 8)],
+        'signatures_with_names': [(s, FIFTHS_TO_VEXFLOW_MAJOR[s]) for s in range(0, -8, -1)] +
+                                 [(s, FIFTHS_TO_VEXFLOW_MAJOR[s]) for s in range(1, 8)],
+        # [(s, FIFTHS_TO_VEXFLOW_MAJOR[s]) for s in range(-1, -8, -1)], # This code gives range(-1, -8)
         'selected_signatures': selected_signatures,
         'signatures_slug': ','.join(str(s) for s in selected_signatures),
     }

@@ -79,6 +79,7 @@ class ClefChoices(models.TextChoices):
     BASS = 'Bass'
 
 
+
 class LevelChoices(models.TextChoices):
     BEGINNER = 'Beginner'
     INTERMEDIATE = 'Intermediate'
