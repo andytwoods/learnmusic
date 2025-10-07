@@ -16,6 +16,32 @@ from django.db import models
 from django.core.exceptions import ValidationError
 
 
+class ProgressWrapper(dict):
+    """A dict that behaves like a list of notes for backward compatibility.
+
+    - progress['notes'] -> list of note dicts
+    - progress['signatures'] -> signatures payload
+    - progress[i] -> ith note (list-like)
+    - len(progress) -> len(notes)
+    - iter(progress) -> iterate over notes
+    """
+    def __init__(self, notes, signatures_payload):
+        super().__init__()
+        super().__setitem__('notes', notes)
+        super().__setitem__('signatures', signatures_payload)
+
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return super().__getitem__('notes')[key]
+        return super().__getitem__(key)
+
+    def __len__(self):
+        return len(super().__getitem__('notes'))
+
+    def __iter__(self):
+        return iter(super().__getitem__('notes'))
+
+
 def validate_signatures_array(value):
     # Must be a list of unique integers in [-7, 7]
     if not isinstance(value, list):
@@ -175,6 +201,9 @@ class LearningScenario(TimeStampedModel):
 
         package: NoteRecordPackage = NoteRecordPackage.objects.filter(learningscenario_id=learningscenario_id).last()
         progress_notes = package.log if package else None
+        # If stored progress is a wrapped dict, extract notes list
+        if isinstance(progress_notes, dict):
+            progress_notes = progress_notes.get('notes', [])
 
         freshen_progress = False
 
@@ -190,7 +219,15 @@ class LearningScenario(TimeStampedModel):
         progress_notes = LearningScenario._add_new_notes(learningscenario.notes, progress_notes)
         progress_notes = LearningScenario._remove_deleted_notes(learningscenario.notes, progress_notes)
 
-        return package, progress_notes
+        # Wrap with signatures info for downstream consumers expecting structured payload
+        sigs = learningscenario.signatures_sorted or [0]
+        signatures_payload = {
+            'fifths': sigs,
+            'vexflow': [FIFTHS_TO_VEXFLOW_MAJOR[s] for s in sigs],
+        }
+        progress_wrapped = ProgressWrapper(progress_notes, signatures_payload)
+
+        return package, progress_wrapped
 
     @staticmethod
     def _add_new_notes(note_records: List[str], progress):

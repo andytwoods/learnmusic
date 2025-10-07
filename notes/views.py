@@ -134,7 +134,6 @@ def common_context(instrument_name: str, clef: str, sound: bool):
     }
 
 
-@login_required
 def practice(request, learningscenario_id: int, sound: bool = False):
     package, serialised_notes = LearningScenario.progress_latest_serialised(learningscenario_id)
 
