@@ -264,9 +264,18 @@ def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: 
     my_instruments = instrument_infos.keys()
     levels = instruments.get(canonical_instrument, {}).keys()
 
+    # Build progress wrapper with signatures for practice_try
+    progress_wrapped = {
+        'notes': serialised_notes,
+        'signatures': {
+            'fifths': selected_signatures,
+            'vexflow': [FIFTHS_TO_VEXFLOW_MAJOR[s] for s in selected_signatures],
+        }
+    }
+
     context = {
         'learningscenario_id': PRACTICE_TRY,
-        'progress': serialised_notes,
+        'progress': progress_wrapped,
         'key': key.capitalize() if key else instrument_info['common_keys'][0],
         'absolute_pitch': absolute_pitch.capitalize() if absolute_pitch else '',
         'level': level,
@@ -298,7 +307,7 @@ def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: 
     rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
                                               for n in serialised_notes])
     graph_context = {
-        'progress': serialised_notes,
+        'progress': progress_wrapped,
         'rt_per_sk': rt_per_sl,
     }
     context.update(graph_context)
@@ -327,16 +336,17 @@ def practice_data(request, package_id: int):
 
 @login_required
 def learningscenario_graph(request, learningscenario_id):
-    package, serialised_notes = LearningScenario.progress_latest_serialised(learningscenario_id)
+    package, progress = LearningScenario.progress_latest_serialised(learningscenario_id)
 
+    notes_list = progress.get('notes', []) if isinstance(progress, dict) else progress
     rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
-                                              for n in serialised_notes])
+                                              for n in notes_list])
 
     context = {
         'learningscenario_id': learningscenario_id,
         # 'package_id': package.id,
         'package': package,
-        'progress': serialised_notes,
+        'progress': progress,
         'rt_per_sk': rt_per_sl,
     }
 
@@ -351,15 +361,23 @@ def learningscenario_graph_try(request, instrument: str, level: str):
         raise Http404(f"Instrument not found: {instrument}")
 
     if request.method == 'POST':
-        serialised_notes = json.loads(request.body)
+        notes_list = json.loads(request.body)
     else:
-        serialised_notes = tools.generate_serialised_notes(canonical_instrument, level.capitalize())
+        notes_list = tools.generate_serialised_notes(canonical_instrument, level.capitalize())
+
+    progress_wrapped = {
+        'notes': notes_list,
+        'signatures': {
+            'fifths': [0],
+            'vexflow': ['C'],
+        }
+    }
 
     rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
-                                              for n in serialised_notes])
+                                              for n in notes_list])
     context = {
         'package': None,
-        'progress': serialised_notes,
+        'progress': progress_wrapped,
         'rt_per_sk': rt_per_sl,
     }
 

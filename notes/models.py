@@ -174,7 +174,10 @@ class LearningScenario(TimeStampedModel):
     def progress_latest_serialised(learningscenario_id: int):
 
         package: NoteRecordPackage = NoteRecordPackage.objects.filter(learningscenario_id=learningscenario_id).last()
-        progress = package.log if package else None
+        # Normalize existing stored log; may be list (legacy) or wrapped dict
+        progress_notes = package.log if package else None
+        if isinstance(progress_notes, dict):
+            progress_notes = progress_notes.get("notes", [])
 
         freshen_progress = False
 
@@ -182,19 +185,28 @@ class LearningScenario(TimeStampedModel):
             package = NoteRecordPackage.objects.create(learningscenario_id=learningscenario_id)
             freshen_progress = True
 
-        if progress is None or freshen_progress:
-            progress = []
+        if progress_notes is None or freshen_progress:
+            progress_notes = []
 
         learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
 
-        progress = LearningScenario._add_new_notes(learningscenario.notes, progress)
-        progress = LearningScenario._remove_deleted_notes(learningscenario.notes, progress)
+        progress_notes = LearningScenario._add_new_notes(learningscenario.notes, progress_notes)
+        progress_notes = LearningScenario._remove_deleted_notes(learningscenario.notes, progress_notes)
 
-        return package, progress
+        # Build wrapped progress with signatures
+        signatures = {
+            "fifths": learningscenario.signatures_sorted,
+            "vexflow": learningscenario.vexflow_keys,
+        }
+        wrapped = {
+            "notes": progress_notes,
+            "signatures": signatures,
+        }
+        return package, wrapped
 
     @staticmethod
     def _add_new_notes(note_records: List[str], progress):
-        flattened_progress = [f'{note['note']} {note['alter']} {note['octave']}' for note in progress]
+        flattened_progress = [f"{note['note']} {note['alter']} {note['octave']}" for note in progress]
         for noterecord in note_records:
             if noterecord not in flattened_progress:
                 fresh_noterecord = tools.serialise_note(noterecord)
@@ -432,12 +444,17 @@ class NoteRecordPackage(TimeStampedModel):
         self.log = json_data
         self.save()
 
-        # Only create NoteRecord entries when json_data is a list of dicts
-        if not isinstance(json_data, list):
+        # Normalize to a list of note dicts for record creation
+        notes_list = json_data
+        if isinstance(json_data, dict):
+            notes_list = json_data.get('notes', [])
+
+        # Only create NoteRecord entries when we have a list of dicts
+        if not isinstance(notes_list, list):
             return
 
-        # Also create individual NoteRecord entries for each note in the json_data
-        for note_data in json_data:
+        # Also create individual NoteRecord entries for each note in the data
+        for note_data in notes_list:
             # For each reaction time and correct value pair, create a NoteRecord
             for i in range(len(note_data.get('reaction_time_log', []))):
                 if i < len(note_data.get('correct', [])):  # Ensure we have a corresponding correct value
