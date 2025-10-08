@@ -52,14 +52,13 @@ const keyAdjust = (function () {
     };
 })();
 
-
 // --- stave‑manager.js --------------------------------------------------------
 const stave_manager = (function () {
     const api = {};
     const VF = Vex.Flow;
     const div = document.getElementById("sheet");
     let containerWidth = div.clientWidth;
-    let staveWidth = 200;
+    let staveWidth = 300;
     const baseHeight = 200;
     let scaleFactor = 1.0;
     const minScaleFactor = 0.5;
@@ -125,13 +124,27 @@ const stave_manager = (function () {
     // redraw when the user zooms ----------------------------------------------
     function redraw() {
         freshRenderer();
-        if (api.currentNote) api.drawNote(api.currentNote);
+        if (api.currentNote) api.updateNote(api.currentNote, api.currentSignature);
     }
 
     // public: draw a (black) note ---------------------------------------------
-    api.updateNote = function (noteStr) {
+    api.updateNote = function (noteStr, signature) {
         api.currentNote = noteStr;
+        if (signature) api.currentSignature = signature;
         freshRenderer();
+
+        // Measure note-start before adding signature (clef already applied in freshRenderer)
+        const baseNoteStartX = stave.getNoteStartX();
+
+        // Add key signature (if any), then re-draw stave
+        if (api.currentSignature) {
+            stave.addKeySignature(api.currentSignature);
+        }
+        stave.setContext(context).draw();
+
+        // Measure note-start after signature to compute extra left shift
+        const noteStartWithSigX = stave.getNoteStartX();
+        const signatureLeftShift = Math.max(0, noteStartWithSigX - baseNoteStartX);
 
         let transposed = keyAdjust(noteStr);
         const stemDir = calcStemDirection(transposed);
@@ -163,9 +176,18 @@ const stave_manager = (function () {
         const voice = new VF.Voice({num_beats: 1, beat_value: 4}).addTickables([note]);
         new VF.Formatter().joinVoices([voice]).format([voice], staveWidth / 2);
 
-        // 4. Nudge the whole tickable left so the HEAD, not the group, is centred
+        // 4. Nudge so the HEAD stays visually centred:
+        //    - accidental pushes group right; nudge slightly right (existing behavior)
+        //    - key signature pushes note-start right; nudge left by half of that shift
+        let xShift = 0;
         if (accidentalWidth) {
-            note.setXShift(7);  // negative = move left :contentReference[oaicite:0]{index=0}
+            xShift += 7; // small tweak so head stays centred when an accidental is present
+        }
+        if (signatureLeftShift) {
+            xShift -= signatureLeftShift / 2; // compensate half of signature-imposed left shift
+        }
+        if (xShift !== 0) {
+            note.setXShift(xShift);
         }
 
         voice.draw(context, stave);
@@ -210,6 +232,7 @@ const stave_manager = (function () {
 
     // initial exposure --------------------------------------------------------
     api.currentNote = null;
+    api.currentSignature = null;
     // keep backward‑compat alias
     api.drawNote = api.updateNote;
     freshRenderer(); // draw once so there is a stave even before the first note

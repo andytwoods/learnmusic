@@ -158,6 +158,16 @@ const learning_manager = (function () {
         return LIKELIHOOD_OF_MASTERED_NOTE; // Return for testing
     };
 
+    function getRandomSignature(array) {
+        if(array.length===0) return 'C';
+        return array[Math.floor(Math.random() * array.length)];
+    }
+
+    function add_signature(note) {
+        note['signature'] = getRandomSignature(window.progress_data.signatures.vexflow);
+        return note;
+    }
+
     api.next_note = (function () {
         const recentNotesLog = [];
 
@@ -173,7 +183,8 @@ const learning_manager = (function () {
                 console.log("Added initial notes:", firstBatch);
 
                 // Return the first note from the new batch
-                return windowObj.progress_data.notes[0];
+                let note = windowObj.progress_data.notes[0];
+                return add_signature(note);
             }
 
             // 2) If all current notes are mastered => show SweetAlert
@@ -215,7 +226,8 @@ const learning_manager = (function () {
             if (window.special_condition === 'first_trial') {
                 const maxLength = Math.min(5, window.progress_data.notes.length);
                 const randomIndex = Math.floor(Math.random() * maxLength);
-                return window.progress_data.notes[randomIndex];
+                let note = window.progress_data.notes[randomIndex];
+                return add_signature(note);
             }
 
             const masteredNotes = window.progress_data.notes.filter(isMastered);
@@ -283,7 +295,7 @@ const learning_manager = (function () {
             logMasteryScores();
             */
 
-            return nextNote;
+            return add_signature(nextNote);
         };
     })();
 
@@ -297,7 +309,8 @@ const learning_manager = (function () {
         pickNewNotes,
         lightlyShuffleNotes,
         processNotes,
-        allPossibleNotes
+        allPossibleNotes,
+        add_signature,
     };
 
     return api;
@@ -312,7 +325,7 @@ if (typeof global !== 'undefined' && !global.window) {
 
     // Mock Swal for testing
     global.Swal = {
-        fire: jest.fn().mockResolvedValue({ isConfirmed: true })
+        fire: jest.fn().mockResolvedValue({isConfirmed: true})
     };
 }
 
