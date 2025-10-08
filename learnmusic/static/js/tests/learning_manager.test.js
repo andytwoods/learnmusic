@@ -13,7 +13,7 @@ describe('Learning Manager', () => {
   // Reset mocks and global state before each test
   beforeEach(() => {
     jest.clearAllMocks();
-    global.window.progress_data = [];
+    global.window.progress_data = { notes: [] };
     global.window.special_condition = 'first_trial';
     Math.random.mockReturnValue(0.5); // Default value
   });
@@ -168,10 +168,12 @@ describe('Learning Manager', () => {
 
   describe('pickNewNotes', () => {
     test('picks notes that are not in progress_data', () => {
-      global.window.progress_data = [
-        { note: 'C', octave: '4', alter: '0' },
-        { note: 'D', octave: '4', alter: '0' }
-      ];
+      global.window.progress_data = {
+        notes: [
+          { note: 'C', octave: '4', alter: '0' },
+          { note: 'D', octave: '4', alter: '0' }
+        ]
+      };
 
       const newNotes = learning_manager._testing.pickNewNotes(3);
 
@@ -183,9 +185,11 @@ describe('Learning Manager', () => {
     });
 
     test('respects maxCount parameter', () => {
-      global.window.progress_data = [
-        { note: 'C', octave: '4', alter: '0' }
-      ];
+      global.window.progress_data = {
+        notes: [
+          { note: 'C', octave: '4', alter: '0' }
+        ]
+      };
 
       const newNotes = learning_manager._testing.pickNewNotes(2);
 
@@ -196,7 +200,7 @@ describe('Learning Manager', () => {
     });
 
     test('returns empty array if all notes are already in progress_data', () => {
-      global.window.progress_data = learning_manager._testing.allPossibleNotes;
+      global.window.progress_data = { notes: learning_manager._testing.allPossibleNotes };
 
       const newNotes = learning_manager._testing.pickNewNotes(3);
 
@@ -204,7 +208,7 @@ describe('Learning Manager', () => {
     });
 
     test('handles empty progress_data', () => {
-      global.window.progress_data = [];
+      global.window.progress_data = { notes: [] };
 
       const newNotes = learning_manager._testing.pickNewNotes(3);
 
@@ -324,25 +328,27 @@ describe('Learning Manager', () => {
 
   describe('next_note', () => {
     test('adds initial notes for new user', () => {
-      global.window.progress_data = [];
+      global.window.progress_data = { notes: [] };
 
       const note = learning_manager.next_note();
 
       // Should have added initial notes
-      expect(global.window.progress_data.length).toBeGreaterThan(0);
+      expect(global.window.progress_data.notes.length).toBeGreaterThan(0);
       // Should return the first note
-      expect(note).toEqual(global.window.progress_data[0]);
+      expect(note).toEqual(global.window.progress_data.notes[0]);
     });
 
     test('returns a random note from first 5 notes when special_condition is first_trial', () => {
-      global.window.progress_data = [
-        { note: 'C', octave: '4', alter: '0' },
-        { note: 'D', octave: '4', alter: '0' },
-        { note: 'E', octave: '4', alter: '0' },
-        { note: 'F', octave: '4', alter: '0' },
-        { note: 'G', octave: '4', alter: '0' },
-        { note: 'A', octave: '4', alter: '0' }
-      ];
+      global.window.progress_data = {
+        notes: [
+          { note: 'C', octave: '4', alter: '0' },
+          { note: 'D', octave: '4', alter: '0' },
+          { note: 'E', octave: '4', alter: '0' },
+          { note: 'F', octave: '4', alter: '0' },
+          { note: 'G', octave: '4', alter: '0' },
+          { note: 'A', octave: '4', alter: '0' }
+        ]
+      };
       global.window.special_condition = 'first_trial';
 
       // Mock Math.random to return a value that will select the 3rd note
@@ -355,10 +361,12 @@ describe('Learning Manager', () => {
     });
 
     test('returns a dummy note when all notes are mastered', () => {
-      global.window.progress_data = [
-        { note: 'C', octave: '4', alter: '0', correct: [true, true, true] },
-        { note: 'D', octave: '4', alter: '0', correct: [true, true, true] }
-      ];
+      global.window.progress_data = {
+        notes: [
+          { note: 'C', octave: '4', alter: '0', correct: [true, true, true] },
+          { note: 'D', octave: '4', alter: '0', correct: [true, true, true] }
+        ]
+      };
       global.window.special_condition = 'not_first_trial';
 
       const note = learning_manager.next_note();
@@ -368,10 +376,12 @@ describe('Learning Manager', () => {
     });
 
     test('selects from mastered notes based on likelihood', () => {
-      global.window.progress_data = [
-        { note: 'C', octave: '4', alter: '0', correct: [true, true, true] }, // mastered
-        { note: 'D', octave: '4', alter: '0', correct: [false, false, false] } // not mastered
-      ];
+      global.window.progress_data = {
+        notes: [
+          { note: 'C', octave: '4', alter: '0', correct: [true, true, true] }, // mastered
+          { note: 'D', octave: '4', alter: '0', correct: [false, false, false] } // not mastered
+        ]
+      };
       global.window.special_condition = 'not_first_trial';
 
       const note = learning_manager.next_note();
@@ -384,10 +394,12 @@ describe('Learning Manager', () => {
     });
 
     test('selects from non-mastered notes when no mastered note is available', () => {
-      global.window.progress_data = [
-        { note: 'C', octave: '4', alter: '0', correct: [true, true, true] }, // mastered
-        { note: 'D', octave: '4', alter: '0', correct: [false, false, false] } // not mastered
-      ];
+      global.window.progress_data = {
+        notes: [
+          { note: 'C', octave: '4', alter: '0', correct: [true, true, true] }, // mastered
+          { note: 'D', octave: '4', alter: '0', correct: [false, false, false] } // not mastered
+        ]
+      };
       global.window.special_condition = 'not_first_trial';
 
       const note = learning_manager.next_note();
@@ -411,11 +423,13 @@ describe('Learning Manager', () => {
       // rather than trying to test the runtime behavior, which can be affected by various factors
 
       // Create a simple set of notes
-      global.window.progress_data = [
-        { note: 'C', octave: '4', alter: '0', correct: [true, true, true] },
-        { note: 'D', octave: '4', alter: '0', correct: [true, true, true] },
-        { note: 'E', octave: '4', alter: '0', correct: [true, true, true] }
-      ];
+      global.window.progress_data = {
+        notes: [
+          { note: 'C', octave: '4', alter: '0', correct: [true, true, true] },
+          { note: 'D', octave: '4', alter: '0', correct: [true, true, true] },
+          { note: 'E', octave: '4', alter: '0', correct: [true, true, true] }
+        ]
+      };
 
       // Create some test notes
       const noteC = { note: 'C', octave: '4', alter: '0' };
