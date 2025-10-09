@@ -58,7 +58,7 @@ const stave_manager = (function () {
     const VF = Vex.Flow;
     const div = document.getElementById("sheet");
     let containerWidth = div.clientWidth;
-    let staveWidth = 300;
+    let staveWidth = 200;
     const baseHeight = 200;
     let scaleFactor = 1.0;
     const minScaleFactor = 0.5;
@@ -127,7 +127,6 @@ const stave_manager = (function () {
         if (api.currentNote) api.updateNote(api.currentNote, api.currentSignature);
     }
 
-    // public: draw a (black) note ---------------------------------------------
     api.updateNote = function (noteStr, signature) {
         api.currentNote = noteStr;
         if (signature) api.currentSignature = signature;
@@ -161,38 +160,43 @@ const stave_manager = (function () {
             duration: "q",
             clef: my_clef,
             stem_direction: stemDir,
-            align_center: true,          // keep this
+            align_center: true,
         });
 
-        // 2. optional accidental
-        let accidentalWidth = 0;
-        if (/[#b]/.test(transposed)) {
-            const acc = new VF.Accidental(transposed.includes("#") ? "#" : "b");
-            note.addModifier(acc, 0);
-            accidentalWidth = acc.getWidth();   // glyph width is known immediately
-        }
-
-        // 3. format & centre the tickable as usual
+        // 2. automatic accidentals based on key signature (apply BEFORE formatting)
         const voice = new VF.Voice({num_beats: 1, beat_value: 4}).addTickables([note]);
+        VF.Accidental.applyAccidentals([voice], api.currentSignature || "C");
+
+        // 3. format & centre the tickable as usual (AFTER accidentals are applied)
         new VF.Formatter().joinVoices([voice]).format([voice], staveWidth / 2);
 
-        // 4. Nudge so the HEAD stays visually centred:
-        //    - accidental pushes group right; nudge slightly right (existing behavior)
-        //    - key signature pushes note-start right; nudge left by half of that shift
+        // 4. Find any accidentals that were auto-applied
+        const accMods = note.getModifiers();
+
+        const accidentalWidth = accMods.length > 0 && typeof accMods[0].getWidth === 'function'
+            ? accMods[0].getWidth()
+            : 0;
+
+        // 5. Compute the shift for both note and accidental:
+        //    - if accidental is present, nudge right to keep head centered
+        //    - key signature pushes note-start right; nudge left by half
         let xShift = 0;
-        if (accidentalWidth) {
-            xShift += 7; // small tweak so head stays centred when an accidental is present
+        if (accidentalWidth > 0) {
+            xShift += accidentalWidth * 0.5; // or use a fixed value like 7
         }
         if (signatureLeftShift) {
-            xShift -= signatureLeftShift / 2; // compensate half of signature-imposed left shift
+            xShift -= signatureLeftShift / 4;
         }
+
+        // Apply the shift to BOTH the note and each accidental modifier
         if (xShift !== 0) {
-            note.setXShift(xShift);
+            const tick = note.getTickContext();
+            // Move the whole note cluster (heads, accidentals, dots, etc.)
+            tick.setX(tick.getX() + xShift);
         }
 
         voice.draw(context, stave);
     };
-
 
     // public: draw a red feedback note ----------------------------------------
     api.feedbackNote = function (noteStr) {
