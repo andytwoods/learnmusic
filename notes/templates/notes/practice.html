@@ -115,16 +115,16 @@
       });
     });
 
-
     window.progress_data = JSON.parse(
-      document.getElementById('progress-data').textContent
-    )
+      document.getElementById('progress-data').textContent);
+
   </script>
   {% block load_progress_data_from_cache %}
   {% endblock load_progress_data_from_cache %}
 
   <script>
     {% include 'js/stave_manager.js' %}
+    {% include 'js/signature_manager.js' %}
     {% include 'js/countdown_manager.js' %}
     {% include 'js/trial_manager.js' %}
     {% include 'js/session_manager.js' %}

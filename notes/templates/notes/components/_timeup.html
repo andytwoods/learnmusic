@@ -1,0 +1,46 @@
+<div class="card z-3 shadow text-bg-secondary bg-gradient" id="time-up" style="display: none;">
+    <script>
+      // only do the below if we are in an iframe (frontpage)
+      if (window.top !== window.self) {
+        window.addEventListener('countdown_completed', () => {
+          const card = document.getElementById("time-up");
+          card.style.display = 'block';
+        });
+      }
+    </script>
+
+    <div class="card-body position-relative">
+      <button type="button"
+              class="btn-close btn-close-white position-absolute top-0 end-0 m-2"
+              aria-label="Close"
+              onclick="document.getElementById('time-up').remove()">
+      </button>
+
+      <h5 class="card-title">
+        <i class="fa-regular fa-clock me-2"></i>To continue practising, close this popup. Or...
+      </h5>
+
+      <div class="d-flex flex-column gap-4">
+
+        <div class="option-block">
+          <!-- Loading indicator -->
+          {% with link_css="fw-bold link-light link-underline-opacity-50 link-underline-opacity-100-hover" %}
+
+            To move your practice data to the cloud (see the rest of this page of why this is a good idea!), please
+            <a class='{{ link_css }}' href="{% url 'account_signup' %}">create an account</a> or
+            <a class='{{ link_css }}' href='{% url 'account_login' %}'>sign in</a>. We will then ask for your permission
+            to upload your data.
+
+            </div>
+
+            <div class="option-block">
+              Alternatively you can practice whenever you want, where you left of, by visiting
+              <a class="{{ link_css }}"
+                 target="_blank"
+                 href="{{ request.build_absolute_uri }}">this
+                page</a>.
+
+            </div>
+          {% endwith link_css %}
+      </div>
+    </div>

@@ -1,0 +1,22 @@
+<a id="see-results" class="btn btn-link btn-xs text-start p-0 m-0">Stop and see your results</a>
+<script>
+  document.getElementById('see-results').addEventListener('click', () => {
+    fetch("{% url 'learningscenario_graph_try' instrument level %}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': "{{ csrf_token }}"
+      },
+      body: JSON.stringify(window.progress_data.notes)
+    })
+      .then(res => res.redirected ? window.location.href = res.url : res.text())
+      .then(html => {
+        if (html) {
+          document.open();
+          document.write(html);
+          document.close();
+        }
+      })
+      .catch(err => console.error('Error:', err));
+  });
+</script>

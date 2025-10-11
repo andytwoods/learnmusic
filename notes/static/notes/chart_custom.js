@@ -15,9 +15,10 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function generate_rt_graph() {
-    const progress_data_unsorted = JSON.parse(
+    const raw = JSON.parse(
         document.getElementById("progress-data").textContent
     );
+    const progress_data_unsorted = Array.isArray(raw) ? raw : (raw && raw.notes) ? raw.notes : [];
     const rt_per_sk = JSON.parse(
         document.getElementById("rt_per_sk-data").textContent
     );
@@ -305,9 +306,10 @@ function generate_rt_graph() {
 }
 
 function generate_correct_graph() {
-    const progress_data_unsorted = JSON.parse(
+    const raw = JSON.parse(
         document.getElementById("progress-data").textContent
     );
+    const progress_data_unsorted = Array.isArray(raw) ? raw : (raw && raw.notes) ? raw.notes : [];
 
     // Function to define the order of natural notes
     function getNoteOrder(note) {

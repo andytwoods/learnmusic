@@ -1,0 +1,236 @@
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (window.top !== window.self) {
+      // Don't register PWA logic while embedded in an iframe
+      return;
+    }
+
+    let deferredPrompt;
+    let isInstalled = false;
+
+    function registerPWA() {
+      // Add dynamic manifest link
+      const manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      manifestLink.href = '{% if absolute_pitch_slug %}{% url "practice-try-manifest-sigs-abs" instrument=instrument clef=clef key=original_key_slug absolute_pitch=absolute_pitch_slug level=level octave=octave signatures=signatures_slug %}{% else %}{% url "practice-try-manifest-sigs" instrument=instrument clef=clef key=original_key_slug level=level octave=octave signatures=signatures_slug %}{% endif %}';
+      document.head.appendChild(manifestLink);
+
+      // Register service worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js', {scope: '/'})
+          .then(function (registration) {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          })
+          .catch(function (error) {
+            console.log('ServiceWorker registration failed: ', error);
+          });
+      }
+
+      // Handle PWA install prompt
+      setupInstallPrompt();
+    }
+
+    function setupInstallPrompt() {
+      // Listen for the beforeinstallprompt event
+      window.addEventListener('beforeinstallprompt', function (e) {
+        console.log('beforeinstallprompt event fired');
+        // Prevent the mini-infobar from appearing on mobile
+        e.preventDefault();
+        // Stash the event so it can be triggered later
+        deferredPrompt = e;
+        // Show our custom install button
+        showInstallButton();
+      });
+
+      // Listen for the appinstalled event
+      window.addEventListener('appinstalled', function () {
+        console.log('PWA was installed');
+        isInstalled = true;
+        hideInstallButton();
+        showWelcomeMessage();
+      });
+
+      // Check if already installed
+      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+        isInstalled = true;
+        hideInstallButton();
+      }
+
+      // Setup button click handlers
+      setupButtonHandlers();
+    }
+
+    function showInstallButton() {
+      const installContainer = document.getElementById('install-prompt-container');
+      const homescreenContainer = document.getElementById('add-homescreen-container');
+
+      if (installContainer) {
+        installContainer.style.display = 'block';
+      }
+      if (homescreenContainer) {
+        homescreenContainer.style.display = 'none';
+      }
+      // Also show a small inline banner to make this obvious on desktop browsers
+      ensureInstallBanner();
+    }
+
+    function ensureInstallBanner() {
+      // Use a per-page cache key so dismissal is remembered for this specific practice config
+      const bannerCacheKey = `installBannerDismissed:${location.pathname}`;
+      // Do not show if already in DOM or user previously dismissed
+      if (document.getElementById('install-banner')) return;
+      try {
+        const dismissed = cache.get(bannerCacheKey);
+        if (dismissed === true) return;
+      } catch (e) {
+        // If cache access fails, proceed without persistence
+      }
+
+      const banner = document.createElement('div');
+      banner.id = 'install-banner';
+      banner.style.position = 'fixed';
+      banner.style.bottom = '16px';
+      banner.style.right = '16px';
+      banner.style.zIndex = '1055';
+      banner.style.background = '#0d6efd';
+      banner.style.color = '#fff';
+      banner.style.padding = '10px 14px';
+      banner.style.borderRadius = '8px';
+      banner.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+      banner.style.display = (window.top === window.self) ? 'flex' : 'none';
+      banner.style.alignItems = 'center';
+      banner.style.gap = '10px';
+      banner.innerHTML = '<span><i class="fa-solid fa-download me-1"></i> Install this practice as an app on your device</span>' +
+        '<button id="install-banner-btn" class="btn btn-light btn-sm">Install</button>' +
+        '<button id="install-banner-close" class="btn-close btn-close-white" aria-label="Close"></button>';
+      document.body.appendChild(banner);
+      document.getElementById('install-banner-btn').addEventListener('click', function (e) {
+        e.preventDefault();
+        installPWA();
+      });
+      document.getElementById('install-banner-close').addEventListener('click', function () {
+        try {
+          cache.save(bannerCacheKey, true);
+        } catch (_) {}
+        banner.remove();
+      });
+    }
+
+    function hideInstallButton() {
+      const installContainer = document.getElementById('install-prompt-container');
+      const homescreenContainer = document.getElementById('add-homescreen-container');
+      if (installContainer) {
+        installContainer.style.display = 'none';
+      }
+      if (homescreenContainer) {
+        homescreenContainer.style.display = 'none';
+      }
+    }
+
+    function setupButtonHandlers() {
+      // Install button handler
+      const installBtn = document.getElementById('install-pwa-btn');
+      if (installBtn) {
+        installBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          installPWA();
+        });
+      }
+
+      // Add to homescreen button handler (for iOS and fallback)
+      const homescreenBtn = document.getElementById('add-homescreen-btn');
+      if (homescreenBtn) {
+        homescreenBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          showHomescreenInstructions();
+        });
+      }
+    }
+
+    function installPWA() {
+      if (!deferredPrompt) {
+        console.log('No deferred prompt available');
+        showHomescreenInstructions();
+        return;
+      }
+
+      // Show the install prompt
+      deferredPrompt.prompt();
+
+      // Wait for the user to respond to the prompt
+      deferredPrompt.userChoice.then(function (choiceResult) {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the install prompt');
+        } else {
+          console.log('User dismissed the install prompt');
+        }
+        deferredPrompt = null;
+      });
+    }
+
+    function showWelcomeMessage() {
+      // Show welcome message after installation
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          title: 'Welcome!',
+          html: 'The {{ instrument|title }} Practice app has been installed successfully!<br><br>' +
+            'You can now access it from your home screen even when offline.<br>' +
+            'Your practice progress will be saved locally.',
+          icon: 'success',
+          confirmButtonText: 'Start Practicing',
+          timer: 8000,
+          timerProgressBar: true
+        });
+      }
+    }
+
+    function showHomescreenInstructions() {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isAndroid = /Android/.test(navigator.userAgent);
+      const isMac = /Mac OS X|Macintosh/.test(navigator.userAgent);
+      const isBrave = /Brave/i.test(navigator.userAgent) || (navigator.brave && typeof navigator.brave.isBrave === 'function');
+
+      let instructions = '';
+      let title = 'Add to Home Screen';
+
+      if (isIOS) {
+        title = 'Install on iOS';
+        instructions = 'To install this app on your iOS device:<br><br>' +
+          '1. Tap the <strong>Share</strong> button <i class="fa-solid fa-square-arrow-up"></i><br>' +
+          '2. Scroll down and tap <strong>"Add to Home Screen"</strong> <i class="fa-solid fa-plus-square"></i><br>' +
+          '3. Tap <strong>"Add"</strong> to confirm';
+      } else if (isAndroid) {
+        title = 'Install on Android';
+        instructions = 'To install this app on your Android device:<br><br>' +
+          '1. Tap the <strong>menu</strong> button (⋮)<br>' +
+          '2. Tap <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong><br>' +
+          '3. Tap <strong>"Add"</strong> or <strong>"Install"</strong> to confirm';
+      } else if (isBrave && isMac) {
+        title = 'Install on Brave (macOS)';
+        instructions = 'To install this app in Brave on macOS:<br><br>' +
+          '1. Click the <strong>Install</strong> icon in the address bar (if shown), or<br>' +
+          '2. Open the <strong>Brave menu</strong> (≡) → <strong>Apps</strong> → <strong>Install this site as an app…</strong><br>' +
+          '3. Confirm <strong>Install</strong>';
+      } else {
+        instructions = 'To add this app to your device:<br><br>' +
+          '• Look for an "Install" or "Add to Home Screen" option in your browser menu<br>' +
+          '• The app will then be available from your home screen<br>' +
+          '• You can use it offline and it will remember your progress';
+      }
+
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          title: title,
+          html: instructions,
+          icon: 'info',
+          confirmButtonText: 'Got it!'
+        });
+      } else {
+        alert(title + '\n\n' + instructions.replace(/<[^>]*>/g, ''));
+      }
+    }
+
+    // Initialize
+    registerPWA();
+  });
+</script>

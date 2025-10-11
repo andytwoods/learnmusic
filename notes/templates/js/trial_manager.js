@@ -109,7 +109,7 @@ const trial_manager = (function () {
         const parsed_note = parse_note(next_note);
         document.current_note = parsed_note;
         timer.start();
-        stave_manager.updateNote(parsed_note);
+        stave_manager.updateNote(parsed_note, next_note.signature);
     }
 
     return api;

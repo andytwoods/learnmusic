@@ -27,17 +27,14 @@ class UserFactory(DjangoModelFactory[User]):
             ).evaluate(None, None, extra={"locale": None})
         )
         self.set_password(password)
-
-    @classmethod
-    def _after_postgeneration(cls, instance, create, results=None):
-        """Save again the instance if creating and at least one hook ran."""
-        if create and results and not cls._meta.skip_postgeneration_save:
-            # Some post-generation hooks ran, and may have modified us.
-            instance.save()
+        if create:
+            # Explicitly save the instance to avoid relying on deprecated postgeneration auto-save
+            self.save()
 
     class Meta:
         model = User
         django_get_or_create = ["email"]
+        skip_postgeneration_save = True
 
 
 class LoginCodeRequestFactory(DjangoModelFactory):
