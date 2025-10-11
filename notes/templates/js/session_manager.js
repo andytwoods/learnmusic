@@ -18,7 +18,7 @@ const session_manager = (function () {
     api.next_note = function () {
         const sortedAndRandomized = sortNotesAndRandomize();
         api.current_note = sortedAndRandomized[0];
-        return api.current_note;
+        return signature_manager.add_signature(api.current_note);
     }
 
     api.update_data = function (rt, answer) {
