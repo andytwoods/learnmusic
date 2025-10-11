@@ -6,8 +6,8 @@ const session_manager = (function () {
     api.current_note = undefined;
 
 
-    function sortAndRandomizeByN() {
-        return window.progress_data.slice().sort((a, b) => {
+    function sortNotesAndRandomize() {
+        return window.progress_data.notes.slice().sort((a, b) => {
             if (a.n !== b.n) {
                 return a.n - b.n;
             }
@@ -16,12 +16,8 @@ const session_manager = (function () {
     }
 
     api.next_note = function () {
-        if(window.special_condition==='first_trial'){
-            api.current_note = window.progress_data[0];
-        }
-        else {
-            api.current_note = sortAndRandomizeByN()[0];
-        }
+        const sortedAndRandomized = sortNotesAndRandomize();
+        api.current_note = sortedAndRandomized[0];
         return api.current_note;
     }
 
