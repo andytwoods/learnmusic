@@ -10,23 +10,32 @@
     <div class="option-block">
       <!-- Loading indicator -->
       {% with link_css="fw-bold link-light link-underline-opacity-50 link-underline-opacity-100-hover" %}
-
-
         <ul class="list mb-0">
-        <li class="mb-2">
+          <li class="mb-2">
             Refresh this page to try and beat your record!
           </li>
-          <li class="mb-2">
+          <script>
+            document.addEventListener('DOMContentLoaded', function () {
+
+              var inIframe = window.self !== window.top;
+              if (inIframe) {
+                var el = document.getElementById('practice-reminder');
+                el.style.display = 'block';
+              }
+            });
+          </script>
+
+          <li id="practice-reminder" class="mb-2" style="display:none;">
             You can practice whenever you want, where you left of, by visiting
             <a class="{{ link_css }}"
                target="_blank"
-               href="{{ request.build_absolute_uri }}">this special
-              page</a>. Here, practice data is anonymously stored in your browser cache.
-
+               href="{{ request.build_absolute_uri }}">this page</a>. Here, practice data is anonymously stored in your
+            browser cache.
           </li>
+
           <li>
-            There are lots more tools and features if you sign up.
-            <a class='{{ link_css }}' href="{% url 'account_signup' %}">Create an account</a>.
+            There are lots more tools and features if you
+            <a class='{{ link_css }}' href="{% url 'account_signup' %}">sign up</a>.
           </li>
         </ul>
 
