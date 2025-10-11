@@ -313,10 +313,15 @@ if (typeof global !== 'undefined' && !global.window) {
         special_condition: 'first_trial'
     };
 
-    // Mock Swal for testing
+    // Mock Swal for testing (Jest provides `jest` global)
     global.Swal = {
-        fire: jest.fn().mockResolvedValue({isConfirmed: true})
+        fire: (typeof jest !== 'undefined') ? jest.fn().mockResolvedValue({ isConfirmed: true }) : async () => ({ isConfirmed: false })
     };
+
+    // Mock signature_manager for testing to avoid ReferenceError in Node/Jest
+    const signatureStub = { add_signature: (note) => note };
+    global.signature_manager = signatureStub;
+    global.window.signature_manager = signatureStub;
 }
 
 // Export for Node.js
