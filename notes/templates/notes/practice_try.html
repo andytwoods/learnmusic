@@ -12,19 +12,6 @@
 {% block saveResult %}
 
   <script>
-    (function cache_key() {
-      const instrument = '{{ instrument }}';
-      const level = '{{ level }}';
-      const clef = '{{ clef }}';
-      const shifted_octave = '{{ octave }}';
-      const key = '{{ key }}';
-      let absolute_pitch = '{{ absolute_pitch }}';
-      let signatures = '{{ selected_signatures }}';
-
-
-
-      window.cache_key = [instrument, level, clef, shifted_octave, key, absolute_pitch, signatures].join('_')
-    }());
 
     function saveResult(note, reactionTime, correct) {
       cache.save(window.cache_key, window.progress_data);
@@ -190,17 +177,14 @@
 {% endblock cardbody %}
 
 {% block timeup %}
-  {% include 'notes/components/_timeup.html' %}
-  </div>{% endblock timeup %}
+  {% include 'notes/components/_timeup_try.html' %}
+{% endblock timeup %}
 
 {% block cardheader %}
   {% include 'notes/components/_practice_menu.html' %}
   {% include 'notes/components/practice_dropdown_menu_right.html' %}
 {% endblock cardheader %}
 
-{% block see_results %}
-  {% include 'notes/components/_practice_see_results.html' %}
-{% endblock see_results %}
 
 {% block navbar %}{% endblock navbar %}
 {% block messages %}{% endblock messages %}

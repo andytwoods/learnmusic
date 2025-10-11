@@ -68,7 +68,7 @@ const trial_manager = (function () {
 
 
         // this is NOT RT. Rather top left corner countdown.
-        countdown_manager.start();
+        feedback_manager.answer_given(rt, answer);
 
         if (answer === true) {
             error_message_manager.brief_correct_message();

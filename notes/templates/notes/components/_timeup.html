@@ -1,46 +1,123 @@
 <div class="card z-3 shadow text-bg-secondary bg-gradient" id="time-up" style="display: none;">
-    <script>
-      // only do the below if we are in an iframe (frontpage)
-      if (window.top !== window.self) {
-        window.addEventListener('countdown_completed', () => {
-          const card = document.getElementById("time-up");
-          card.style.display = 'block';
-        });
+  <script>
+    function animateValue(el, start, end, duration) {
+      console.log('animateValue', el, start, end, duration);
+      const range = end - start;
+      if (duration <= 0 || !isFinite(range)) {
+        el.textContent = end;
+        return;
       }
-    </script>
+      const startTime = performance.now();
 
-    <div class="card-body position-relative">
-      <button type="button"
-              class="btn-close btn-close-white position-absolute top-0 end-0 m-2"
-              aria-label="Close"
-              onclick="document.getElementById('time-up').remove()">
-      </button>
+      function step(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const value = Math.round(start + range * progress);
+        el.textContent = value;
+        if (progress < 1) requestAnimationFrame(step);
+      }
 
-      <h5 class="card-title">
-        <i class="fa-regular fa-clock me-2"></i>To continue practising, close this popup. Or...
-      </h5>
+      requestAnimationFrame(step);
+    }
 
-      <div class="d-flex flex-column gap-4">
+    window.addEventListener('countdown_completed', (e) => {
+      const stats = e.detail || {};
+      const card = document.getElementById("time-up");
+      card.style.display = 'block';
 
-        <div class="option-block">
-          <!-- Loading indicator -->
-          {% with link_css="fw-bold link-light link-underline-opacity-50 link-underline-opacity-100-hover" %}
+      // Show congratulations if new high score
+      const banner = document.getElementById('highscore-banner');
+      const isHigh = !!(stats.is_high_score || stats.high_score === true);
+      if (isHigh) {
+        banner.style.display = 'block';
+      }
 
-            To move your practice data to the cloud (see the rest of this page of why this is a good idea!), please
-            <a class='{{ link_css }}' href="{% url 'account_signup' %}">create an account</a> or
-            <a class='{{ link_css }}' href='{% url 'account_login' %}'>sign in</a>. We will then ask for your permission
-            to upload your data.
+      // Resolve high score object from payload (falls back to cache if not provided)
+      let hs = stats.high_score || null;
+      try {
+        if (!hs && typeof cache !== 'undefined' && typeof window !== 'undefined') {
+          hs = cache.get(window.cache_key('highscore'));
+        }
+      } catch (err) { /* ignore */
+      }
 
-            </div>
+      // Populate table values
+      const curPc = document.getElementById('current-pc');
+      const curRt = document.getElementById('current-rt');
+      const curScoreEl = document.getElementById('current-score');
 
-            <div class="option-block">
-              Alternatively you can practice whenever you want, where you left of, by visiting
-              <a class="{{ link_css }}"
-                 target="_blank"
-                 href="{{ request.build_absolute_uri }}">this
-                page</a>.
+      const hsPc = document.getElementById('hs-pc');
+      const hsRt = document.getElementById('hs-rt');
+      const hsScore = document.getElementById('hs-score');
 
-            </div>
-          {% endwith link_css %}
-      </div>
+      const pc = Number(stats.percent_correct || 0);
+      const art = Number(stats.average_rt || stats.average_rt_ms || 0);
+      const score = Number(stats.score || 0);
+
+      curPc.textContent = pc.toFixed(0) + '%';
+      curRt.textContent = Math.round(art) + ' ms';
+      // animate score over 2 seconds
+      const baseDur = 1800;
+      const curDur = baseDur;
+      const hsDur = (Number(hs?.score || 0) > Number(score)) ? baseDur + 600 : baseDur - 300;
+
+      animateValue(curScoreEl, 0, score, curDur);
+
+      if (hs) {
+        const hspc = Number(hs.percent_correct || 0);
+        const hsrt = Number(hs.average_rt || hs.average_rt_ms || 0);
+        const hss = Number(hs.score || 0);
+        hsPc.textContent = hspc.toFixed(0) + '%';
+        hsRt.textContent = Math.round(hsrt) + ' ms';
+        // higher of the two animates slower
+        const finalHsDur = (hss >= score) ? hsDur : Math.max(600, baseDur - 300);
+        animateValue(hsScore, 0, hss, finalHsDur);
+      }
+    });
+  </script>
+
+  <div class="card-body position-relative">
+    <button type="button"
+            class="btn-close btn-close-white position-absolute top-0 end-0 m-2"
+            aria-label="Close"
+            onclick="document.getElementById('time-up').remove()">
+    </button>
+
+    <div id="highscore-banner" class="text-center py-3" style="display:none;">
+      <span class="display-6 fw-bold text-warning">New High Score!</span>
     </div>
+
+    <table class="table table-sm table-borderless align-middle mb-4"
+           style="--bs-table-bg: rgba(255,255,255,0.06); --bs-table-striped-bg: rgba(255,255,255,0.04); --bs-table-color: rgba(255,255,255,0.9);">
+      <thead class="small" style="color: rgba(255,255,255,0.75);">
+      <tr>
+        <th scope="col" class="fw-normal"></th>
+        <th scope="col" class="fw-normal">Current</th>
+        <th scope="col" class="fw-normal">High score</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <th scope="row" class="fw-normal">Percent correct</th>
+        <td id="current-pc">-</td>
+        <td id="hs-pc">-</td>
+      </tr>
+      <tr>
+        <th scope="row" class="fw-normal">Average reaction time</th>
+        <td id="current-rt">-</td>
+        <td id="hs-rt">-</td>
+      </tr>
+      <tr>
+        <th scope="row" class="fw-normal">Score</th>
+        <td id="current-score">0</td>
+        <td id="hs-score">-</td>
+      </tr>
+      </tbody>
+    </table>
+
+    {% block extra %}
+      <h5 class="card-title">
+        <i class="fa-regular fa-clock me-2"></i>To continue practising, close this popup.
+      </h5>
+    {% endblock extra %}
+  </div>
+</div>

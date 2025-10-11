@@ -19,7 +19,8 @@ from pushover_complete import PushoverAPI
 from notes import tools
 from notes.forms import LearningScenarioForm
 from notes.instrument_data import instrument_infos, instruments, get_instrument_defaults
-from notes.models import LearningScenario, NoteRecordPackage, NoteRecord, LevelChoices, InstrumentKeys, ClefChoices, BlankAbsolutePitch, FIFTHS_TO_VEXFLOW_MAJOR
+from notes.models import LearningScenario, NoteRecordPackage, NoteRecord, LevelChoices, InstrumentKeys, ClefChoices, \
+    BlankAbsolutePitch, FIFTHS_TO_VEXFLOW_MAJOR
 from notes.tools import generate_notes, compile_notes_per_skilllevel, convert_note_slash_to_db, toCamelCase
 
 PRACTICE_TRY = 'practice-try'
@@ -131,6 +132,7 @@ def common_context(instrument_name: str, clef: str, sound: bool):
         'clef': clef.lower(),
         'instrument': canonical,
         'score_css': score_css,
+        'response_count': 30,
     }
 
 
@@ -167,7 +169,9 @@ def practice_demo(request):
                           'signatures': '0'})
     return redirect(url)
 
-def practice_try_manifest(request, instrument: str, clef: str, key: str, absolute_pitch: str = "", level: str = "", octave: int = 0, signatures: str = ""):
+
+def practice_try_manifest(request, instrument: str, clef: str, key: str, absolute_pitch: str = "", level: str = "",
+                          octave: int = 0, signatures: str = ""):
     """Generate dynamic PWA manifest for practice-try pages"""
     # Handle key formatting for display
     display_key = key
@@ -212,7 +216,9 @@ def practice_try_manifest(request, instrument: str, clef: str, key: str, absolut
 
     return JsonResponse(manifest_data)
 
-def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: str = "", level: str = "", octave: int = 0, sound: bool = False, signatures: str = ""):
+
+def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: str = "", level: str = "",
+                 octave: int = 0, sound: bool = False, signatures: str = ""):
     # Ensure instrument is properly capitalized
     # Handle POST request with progress data
     if request.method == 'POST':
@@ -381,15 +387,6 @@ def learningscenario_graph_try(request, instrument: str, level: str):
     }
 
     return render(request, 'notes/learningscenario_graph_try.html', context=context)
-
-
-@login_required
-def progress(request, learningscenario_id: int):
-    context = {
-        'learningscenario_id': learningscenario_id,
-        'learningscenario': LearningScenario.objects.get(id=learningscenario_id),
-    }
-    return render(request, 'progress.html', context=context)
 
 
 @login_required
@@ -815,6 +812,7 @@ def reminders(request):
 
     return render(request, 'notes/reminders.html', context)
 
+
 @login_required
 @require_POST
 def cache_to_backend(request):
@@ -825,5 +823,3 @@ def cache_to_backend(request):
     ls, package = LearningScenario.ingest_frontend_cache(user=request.user, info=info, notes_history=notes_history)
 
     return JsonResponse({'learningscenario_id': ls.id, 'package_id': package.id}, status=200)
-
-
