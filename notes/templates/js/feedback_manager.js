@@ -44,8 +44,8 @@ const feedback_manager = (function () {
         // - average_rt_ms: average reaction time in milliseconds
 
         // Tunable half-life for RT: the RT at which the time factor = 50%.
-        // Pick a representative value for your task (e.g., 1500 ms).
-        const RT_HALF = 1500;
+        // Pick a representative value for your task (e.g., 1000 ms).
+        const RT_HALF = 1000; // was 1500; lower to make time more sensitive
 
         // Time factor grows as RT decreases (bounded 0..1)
         const timeFactor = 1 / (1 + (average_rt / RT_HALF));
@@ -53,28 +53,39 @@ const feedback_manager = (function () {
         // Accuracy factor (0..1)
         const accFactor = Math.max(0, Math.min(1, percent_correct / 100));
 
-        // Composite score on a 0..100 scale
-        const score = Math.round(100 * accFactor * timeFactor);
+        // Composite score on a 0..100 scale with one decimal for more granularity
+        const rawScore = 100 * accFactor * timeFactor;
+        const score = Math.round(rawScore * 10) / 10; // keep one decimal place
+
         let results_bundle = {
             percent_correct: percent_correct,
             average_rt: average_rt,
             average_rt_ms: average_rt,
             score: score,
+            score_raw: rawScore, // expose raw for debugging/analytics
             is_high_score: false,
             high_score: null,
         };
 
-
         if (typeof window !== 'undefined' && typeof cache !== 'undefined') {
             const hs_key = 'highscore_' + window.cache_key;
+
+            // High score comparison should use full precision to ensure strictly better faster runs win
             const existing = cache.get(hs_key);
             const currentRecord = {
                 percent_correct: percent_correct,
                 average_rt: average_rt,
                 average_rt_ms: average_rt,
                 score: score,
+                score_raw: rawScore,
             };
-            if (!existing || typeof existing.score !== 'number' || score > existing.score) {
+
+            const isBetter =
+                !existing ||
+                typeof existing.score_raw !== 'number' ||
+                currentRecord.score_raw > existing.score_raw;
+
+            if (isBetter) {
                 cache.save(hs_key, currentRecord);
                 results_bundle.is_high_score = true;
                 results_bundle.high_score = currentRecord;
