@@ -218,9 +218,11 @@ def practice_try_manifest(request, instrument: str, clef: str, key: str, absolut
 
 
 def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: str = "", level: str = "",
-                 octave: int = 0, sound: bool = False, signatures: str = ""):
+                 octave: int = 0, signatures: str = ""):
     # Ensure instrument is properly capitalized
     # Handle POST request with progress data
+    sound = False
+
     if request.method == 'POST':
         data = request.POST.get('save-to-cloud-btn')
         print(request.POST)

@@ -1,5 +1,4 @@
 # ruff: noqa
-from django.contrib.auth.decorators import login_required
 from django.urls import path
 from django.views.generic import TemplateView
 
@@ -29,23 +28,32 @@ urlpatterns = [
     path("practice-graph/<int:learningscenario_id>/", views.learningscenario_graph, name='learningscenario_graph'),
 
     path('practice-demo/', views.practice_demo, name='practice-demo'),
+
     # Routes without absolute_pitch segment
-    path('practice-try/<str:instrument>/<str:clef>/<str:key>/<str:level>/<str:octave>/<str:signatures>/', views.practice_try, name='practice-try-sigs'),
-    path('practice-sound-try/<str:instrument>/<str:clef>/<str:key>/<str:level>/<str:octave>/<str:signatures>/', views.practice_try,
-         kwargs={'sound': True}, name='practice-sound-try-sigs'),
+    path('practice-try/<str:instrument>/<str:clef>/<str:key>/<str:level>/<str:octave>/<str:signatures>/',
+         views.practice_try, name='practice-try-sigs'),
+    path('practice-sound-try/<str:instrument>/<str:clef>/<str:key>/<str:level>/<str:octave>/<str:signatures>/',
+         views.practice_try,
+         name='practice-sound-try-sigs'),
     # Routes including absolute_pitch segment
-    path('practice-try/<str:instrument>/<str:clef>/<str:key>/<str:absolute_pitch>/<str:level>/<str:octave>/<str:signatures>/', views.practice_try, name='practice-try-sigs-abs'),
+    path(
+        'practice-try/<str:instrument>/<str:clef>/<str:key>/<str:absolute_pitch>/<str:level>/<str:octave>/<str:signatures>/',
+        views.practice_try, name='practice-try-sigs-abs'),
     # Manifest routes
-    path('practice-try/<str:instrument>/<str:clef>/<str:key>/<str:level>/<str:octave>/<str:signatures>/manifest.json', views.practice_try_manifest, name='practice-try-manifest-sigs'),
-    path('practice-try/<str:instrument>/<str:clef>/<str:key>/<str:absolute_pitch>/<str:level>/<str:octave>/<str:signatures>/manifest.json', views.practice_try_manifest, name='practice-try-manifest-sigs-abs'),
-    path('practice-sound-try/<str:instrument>/<str:clef>/<str:key>/<str:absolute_pitch>/<str:level>/<str:octave>/<str:signatures>/', views.practice_try,
-         kwargs={'sound': True}, name='practice-sound-try-sigs'),
+    path('practice-try/<str:instrument>/<str:clef>/<str:key>/<str:level>/<str:octave>/<str:signatures>/manifest.json',
+         views.practice_try_manifest, name='practice-try-manifest-sigs'),
+    path(
+        'practice-try/<str:instrument>/<str:clef>/<str:key>/<str:absolute_pitch>/<str:level>/<str:octave>/<str:signatures>/manifest.json',
+        views.practice_try_manifest, name='practice-try-manifest-sigs-abs'),
+    path(
+        'practice-sound-try/<str:instrument>/<str:clef>/<str:key>/<str:absolute_pitch>/<str:level>/<str:octave>/<str:signatures>/',
+        views.practice_try,
+        name='practice-sound-try-sigs'),
     path("learningscenario-graph-try/<str:instrument>/<str:level>/",
          views.learningscenario_graph_try, name='learningscenario_graph_try'),
 
     path("pushover/callback/", views.pushover_callback, name="pushover_callback"),
 
     path("cache-to-backend/", views.cache_to_backend, name="cache-to-backend"),
-
 
 ]
