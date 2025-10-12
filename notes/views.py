@@ -108,7 +108,7 @@ def edit_learningscenario_notes(request, pk: int):
     return render(request, 'notes/learningscenario_edit_vocab.html', context=context)
 
 
-def common_context(instrument_name: str, clef: str, sound: bool):
+def common_context(instrument_name: str, clef: str):
     """Build common context for practice views using a centralized resolver."""
     from notes.instrument_data import resolve_instrument
 
@@ -119,12 +119,8 @@ def common_context(instrument_name: str, clef: str, sound: bool):
 
     instrument_info = instrument_infos[canonical]
 
-    if sound:
-        instrument_template = 'notes/instruments/mic_input.html'
-        score_css = 'justify-content-center'
-    else:
-        instrument_template = 'notes/instruments/' + instrument_info['answer_template']
-        score_css = ''
+    instrument_template = 'notes/instruments/' + instrument_info['answer_template']
+    score_css = ''
 
     return {
         'answers_json': instrument_info['answers'],
@@ -221,42 +217,18 @@ def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: 
                  octave: int = 0, signatures: str = ""):
     # Ensure instrument is properly capitalized
     # Handle POST request with progress data
-    sound = False
 
     if request.method == 'POST':
         data = request.POST.get('save-to-cloud-btn')
         print(request.POST)
 
-    if 'sharp' in key:
-        key = key.replace('sharp', '#')
-    elif 'flat' in key:
-        key = key.replace('flat', 'b')
+    # Normalize and compute slug-safe variants
+    key, key_slug = tools.normalize_and_slug(key)
+    absolute_pitch, absolute_pitch_slug = tools.normalize_and_slug(absolute_pitch)
 
-    if 'sharp' in absolute_pitch:
-        absolute_pitch = absolute_pitch.replace('sharp', '#')
-    elif 'flat' in absolute_pitch:
-        absolute_pitch = absolute_pitch.replace('flat', 'b')
 
-    # Parse signatures from path segment (e.g., "1,0,-2"). If missing, default to [0]
-    raw_sigs = signatures or ''
-    selected_signatures = []
-    if isinstance(raw_sigs, str) and raw_sigs.strip():
-        try:
-            selected_signatures = [int(x) for x in raw_sigs.split(',') if x.strip() != '']
-        except ValueError:
-            selected_signatures = []
-    # Bound to [-7, 7] and unique while preserving order
-    seen = set()
-    filtered_sigs = []
-    for s in selected_signatures:
-        if -7 <= s <= 7 and s not in seen:
-            seen.add(s)
-            filtered_sigs.append(s)
-    selected_signatures = filtered_sigs or [0]
+    selected_signatures = tools.compute_signatures(signatures)
 
-    # Slug-safe variants for URLs
-    key_slug = key.replace('#', 'sharp').replace('b', 'flat') if key else ''
-    absolute_pitch_slug = absolute_pitch.replace('#', 'sharp').replace('b', 'flat') if absolute_pitch else ''
 
     from notes.instrument_data import resolve_instrument
     canonical_instrument = resolve_instrument(instrument)
@@ -264,7 +236,11 @@ def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: 
         from django.http import Http404
         raise Http404(f"Instrument not found: {instrument}")
 
-    serialised_notes = tools.generate_serialised_notes(canonical_instrument, level)
+    try:
+        serialised_notes = tools.generate_serialised_notes(canonical_instrument, level)
+    except KeyError:
+        from django.http import Http404
+        raise Http404
 
     instrument_info = instrument_infos[canonical_instrument]
 
@@ -286,7 +262,6 @@ def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: 
         'key': key.capitalize() if key else instrument_info['common_keys'][0],
         'absolute_pitch': absolute_pitch.capitalize() if absolute_pitch else '',
         'level': level,
-        'sound': sound,
         'instrument': canonical_instrument,  # Canonical instrument name for consistency
         'levels': levels,
         'instruments': my_instruments,
@@ -309,7 +284,7 @@ def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: 
         'signatures_slug': ','.join(str(s) for s in selected_signatures),
     }
 
-    context.update(common_context(instrument_name=canonical_instrument, clef=clef, sound=sound))
+    context.update(common_context(instrument_name=canonical_instrument, clef=clef))
 
     rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
                                               for n in serialised_notes])

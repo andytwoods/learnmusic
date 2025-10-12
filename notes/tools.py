@@ -1,5 +1,4 @@
 import random
-from unittest import case
 
 from notes.instrument_data import instruments, resolve_instrument
 
@@ -149,6 +148,7 @@ def generate_serialised_notes(instrument, level):
     level = level.capitalize() if level else level
 
     instrument_notes_info = instruments[canonical][level]
+
     if 'notes' in instrument_notes_info and instrument_notes_info['notes'] is not None:
         instrument_notes = instrument_notes_info['notes']
         return serialise_notes(instrument_notes)
@@ -208,3 +208,49 @@ def sort_notes(grouped_by_note):
 
     # Output the sorted dictionary
     return sorted_grouped_by_note
+
+
+def compute_signatures(signatures):
+    raw_sigs = signatures or ''
+    selected_signatures = []
+    if isinstance(raw_sigs, str) and raw_sigs.strip():
+        try:
+            selected_signatures = [int(x) for x in raw_sigs.split(',') if x.strip() != '']
+        except ValueError:
+            selected_signatures = []
+    # Bound to [-7, 7] and unique while preserving order
+    seen = set()
+    filtered_sigs = []
+    for s in selected_signatures:
+        if -7 <= s <= 7 and s not in seen:
+            seen.add(s)
+            filtered_sigs.append(s)
+    return filtered_sigs or [0]
+
+
+def normalize_and_slug(value: str):
+    """Normalize accidentals and return slug-safe variant.
+
+    Args:
+        value: A key-like string that may contain 'sharp' or 'flat' tokens or '#'/'b'.
+
+    Returns:
+        tuple[str, str]: (normalized_value, slug_value)
+            - normalized_value uses '#'/'b'
+            - slug_value replaces '#' with 'sharp' and 'b' with 'flat' for URL safety
+    """
+    if not value:
+        return "", ""
+    normalized = normalize_accidentals(value)
+    slug = normalized.replace('#', 'sharp').replace('b', 'flat') if normalized else ""
+    return normalized, slug
+
+def normalize_accidentals(value: str) -> str:
+    """Convert 'sharp'/'flat' tokens to '#'/'b' in a key-like string."""
+    if not isinstance(value, str):
+        return value
+    if 'sharp' in value:
+        return value.replace('sharp', '#')
+    if 'flat' in value:
+        return value.replace('flat', 'b')
+    return value
