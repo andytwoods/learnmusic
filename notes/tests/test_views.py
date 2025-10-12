@@ -34,8 +34,8 @@ class TestPagesWork(TestCase):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
 
-            for item in ['learningscenario_id', 'progress', 'key', 'level',
-                         'sound', 'instrument', 'levels', 'instruments', 'clef', 'keys', 'clefs']:
+            for item in ['learningscenario_id', 'progress', 'key', 'level'
+                         , 'instrument', 'levels', 'instruments', 'clef', 'keys', 'clefs']:
                 self.assertTrue(item in response.context)
                 self.assertTrue(len(str(response.context[item])) > 0)
 

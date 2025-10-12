@@ -108,8 +108,11 @@ def edit_learningscenario_notes(request, pk: int):
     return render(request, 'notes/learningscenario_edit_vocab.html', context=context)
 
 
-def common_context(instrument_name: str, clef: str):
-    """Build common context for practice views using a centralized resolver."""
+def common_context(instrument_name: str, clef: str, sound: bool | None = None):
+    """Build common context for practice views using a centralized resolver.
+
+    The optional `sound` parameter is accepted for backward compatibility with existing callers/tests.
+    """
     from notes.instrument_data import resolve_instrument
 
     canonical = resolve_instrument(instrument_name)
