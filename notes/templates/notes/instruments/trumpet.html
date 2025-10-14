@@ -73,6 +73,11 @@
 </div>
 
 <script>
+  function badge(text) {
+    return `<span class="badge bg-secondary me-1">${text}</span>`;
+  }
+</script>
+<script>
   const orientation_manager = (function () {
     let api = {};
     let placeholder, trumpet_right, trumpet_bottom;
@@ -107,7 +112,7 @@
 {% block constants %}
   <script>
     window.keys = '123'
-    window.nothing_selected = 'all up!'
+    window.nothing_selected = badge('all up!')
     window.error_message = 'You pressed'
   </script>
 {% endblock constants %}
@@ -199,10 +204,6 @@
           }
 
           trial_manager.answer(correct, error_message);
-        }
-
-        function badge(text) {
-          return `<span class="badge bg-secondary me-1">${text}</span>`;
         }
 
         function generate_correct_keys_text(correct_keys) {
