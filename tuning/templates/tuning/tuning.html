@@ -43,7 +43,8 @@
       const fullCtx = fullCanvas?.getContext('2d') || null;
 
       function fitCanvasDPR(c) {
-        const dpr = window.devicePixelRatio || 1;
+        const rawDpr = window.devicePixelRatio || 1;
+        const dpr = Math.min(rawDpr, 1.5); // cap DPR to reduce mobile GPU load
         const cssW = c.clientWidth;
         const cssH = c.clientHeight;
         if (!cssW || !cssH) return;
@@ -125,13 +126,23 @@
         const tEnd = nowT;
         const tStart = tEnd - WINDOW_SEC;
 
-        // Determine Y range for full graph from smoothed data (with margins)
-        const ys = [];
-        for (let i = 0; i < timeSeries.length; i++) if (timeSeries[i] >= tStart) ys.push(freqSmoothSeries[i]);
+        // Determine Y range for full graph from smoothed data (with margins) without extra allocations
+        let haveY = false;
+        let rawMin = Infinity;
+        let rawMax = -Infinity;
+        for (let i = 0; i < timeSeries.length; i++) {
+          const tt = timeSeries[i];
+          if (tt < tStart) continue;
+          const yy = freqSmoothSeries[i];
+          if (!Number.isFinite(yy)) continue;
+          if (yy < rawMin) rawMin = yy;
+          if (yy > rawMax) rawMax = yy;
+          haveY = true;
+        }
         let yMin = 60, yMax = 1200; // sensible defaults for instruments
-        if (ys.length) {
-          yMin = Math.max(20, Math.min(...ys));
-          yMax = Math.max(yMin + 1, Math.max(...ys));
+        if (haveY) {
+          yMin = Math.max(20, rawMin);
+          yMax = Math.max(yMin + 1, rawMax);
           const pad = (yMax - yMin) * 0.1 + 1;
           yMin = Math.max(20, yMin - pad);
           yMax = Math.min(20000, yMax + pad);
@@ -144,16 +155,24 @@
 
       let rafId = 0;
 
+      function trimOld(tCut) {
+        // Find first index within window and remove in one splice to avoid repeated shifts
+        let idx = 0;
+        const len = timeSeries.length;
+        while (idx < len && timeSeries[idx] < tCut) idx++;
+        if (idx > 0) {
+          timeSeries.splice(0, idx);
+          freqSeries.splice(0, idx);
+          freqSmoothSeries.splice(0, idx);
+        }
+      }
+
       function tick() {
         // Continuously advance the window and redraw, even during silence
         if (ctx && ctx.state !== 'closed') {
           const tNow = ctx.currentTime;
           const tCut = tNow - WINDOW_SEC;
-          while (timeSeries.length && timeSeries[0] < tCut) {
-            timeSeries.shift();
-            freqSeries.shift();
-            freqSmoothSeries.shift();
-          }
+          trimOld(tCut);
           redraw(tNow);
         }
         rafId = requestAnimationFrame(tick);
@@ -192,15 +211,10 @@
             const {hz, rms, t, conf} = ev.data || {};
             if (!Number.isFinite(hz) || !Number.isFinite(rms) || !Number.isFinite(t)) return;
             if (window.updateDbMeter) window.updateDbMeter(rms);
-            // Keep charts rolling even when below min dB: trim and redraw without appending a point
+            // Keep charts rolling even when below min dB: just trim window; RAF will redraw
             if (rms < silenceThresholdDb) {
               const tCut = t - WINDOW_SEC;
-              while (timeSeries.length && timeSeries[0] < tCut) {
-                timeSeries.shift();
-                freqSeries.shift();
-                freqSmoothSeries.shift();
-              }
-              redraw(t);
+              trimOld(tCut);
               return;
             }
             if (!Number.isFinite(conf) || conf < 0.6) return; // ignore low-confidence detections
@@ -222,12 +236,7 @@
             freqSmoothSeries.push(sHz);
             // drop older than 10s
             const tCut = t - WINDOW_SEC;
-            while (timeSeries.length && timeSeries[0] < tCut) {
-              timeSeries.shift();
-              freqSeries.shift();
-              freqSmoothSeries.shift();
-            }
-            redraw(t);
+            trimOld(tCut);
           };
 
           // Start animation loop if not already running
