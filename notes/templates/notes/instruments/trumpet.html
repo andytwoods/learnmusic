@@ -73,6 +73,11 @@
 </div>
 
 <script>
+  function badge(text) {
+    return `<span class="badge bg-secondary me-1">${text}</span>`;
+  }
+</script>
+<script>
   const orientation_manager = (function () {
     let api = {};
     let placeholder, trumpet_right, trumpet_bottom;
@@ -107,7 +112,7 @@
 {% block constants %}
   <script>
     window.keys = '123'
-    window.nothing_selected = 'all up!'
+    window.nothing_selected = badge('all up!')
     window.error_message = 'You pressed'
   </script>
 {% endblock constants %}
@@ -189,19 +194,28 @@
             error_message = generate_correct_keys_text(correct_keys);
             if (error_message.length === 0) error_message = window.nothing_selected
             const basic_note = document.current_note.split('/')[0];
-            error_message = "Correct answer for " + basic_note + ": " + error_message + '\n' + window.error_message + ': '
-            if (keys_pressed.length > 0) {
-              error_message += keys_pressed;
-            } else error_message += window.nothing_selected;
+
+            error_message = "Correct answer(s) for " + basic_note + ": " +
+              error_message + '\n' + window.error_message + ': ';
+
+            if (keys_pressed.length > 0) error_message += badge(keys_pressed);
+
+            else error_message += window.nothing_selected;
           }
+
           trial_manager.answer(correct, error_message);
         }
 
         function generate_correct_keys_text(correct_keys) {
-          return correct_keys.map(key => {
-            if(key==="") return "all up!";
-            return key;
-          }).join(", ");
+          const parts = correct_keys.map(key => {
+            if (key === "") return badge("all up!");
+            return badge(key);
+          });
+
+          if (parts.length === 0) return "";
+          if (parts.length === 1) return parts[0];
+
+          return parts.slice(0, -1).join(", ") + " or " + parts[parts.length - 1];
         }
 
         function getCorrectKeysPressed() {

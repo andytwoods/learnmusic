@@ -19,7 +19,8 @@ from pushover_complete import PushoverAPI
 from notes import tools
 from notes.forms import LearningScenarioForm
 from notes.instrument_data import instrument_infos, instruments, get_instrument_defaults
-from notes.models import LearningScenario, NoteRecordPackage, NoteRecord, LevelChoices, InstrumentKeys, ClefChoices, BlankAbsolutePitch
+from notes.models import LearningScenario, NoteRecordPackage, NoteRecord, LevelChoices, InstrumentKeys, ClefChoices, \
+    BlankAbsolutePitch, FIFTHS_TO_VEXFLOW_MAJOR
 from notes.tools import generate_notes, compile_notes_per_skilllevel, convert_note_slash_to_db, toCamelCase
 
 PRACTICE_TRY = 'practice-try'
@@ -107,8 +108,11 @@ def edit_learningscenario_notes(request, pk: int):
     return render(request, 'notes/learningscenario_edit_vocab.html', context=context)
 
 
-def common_context(instrument_name: str, clef: str, sound: bool):
-    """Build common context for practice views using a centralized resolver."""
+def common_context(instrument_name: str, clef: str, sound: bool | None = None):
+    """Build common context for practice views using a centralized resolver.
+
+    The optional `sound` parameter is accepted for backward compatibility with existing callers/tests.
+    """
     from notes.instrument_data import resolve_instrument
 
     canonical = resolve_instrument(instrument_name)
@@ -118,12 +122,8 @@ def common_context(instrument_name: str, clef: str, sound: bool):
 
     instrument_info = instrument_infos[canonical]
 
-    if sound:
-        instrument_template = 'notes/instruments/mic_input.html'
-        score_css = 'justify-content-center'
-    else:
-        instrument_template = 'notes/instruments/' + instrument_info['answer_template']
-        score_css = ''
+    instrument_template = 'notes/instruments/' + instrument_info['answer_template']
+    score_css = ''
 
     return {
         'answers_json': instrument_info['answers'],
@@ -131,10 +131,10 @@ def common_context(instrument_name: str, clef: str, sound: bool):
         'clef': clef.lower(),
         'instrument': canonical,
         'score_css': score_css,
+        'response_count': 30,
     }
 
 
-@login_required
 def practice(request, learningscenario_id: int, sound: bool = False):
     package, serialised_notes = LearningScenario.progress_latest_serialised(learningscenario_id)
 
@@ -158,16 +158,19 @@ def practice(request, learningscenario_id: int, sound: bool = False):
 
 
 def practice_demo(request):
-    url = reverse('practice-try',
+    url = reverse('practice-try-sigs-abs',
                   kwargs={'instrument': 'trumpet',
                           'clef': 'treble',
                           'key': 'Bb',
                           'absolute_pitch': 'Bb',
                           'level': 'beginner',
-                          'octave': 0})
+                          'octave': 0,
+                          'signatures': '0'})
     return redirect(url)
 
-def practice_try_manifest(request, instrument: str, clef: str, key: str, absolute_pitch: str = "", level: str = "", octave: int = 0):
+
+def practice_try_manifest(request, instrument: str, clef: str, key: str, absolute_pitch: str = "", level: str = "",
+                          octave: int = 0, signatures: str = ""):
     """Generate dynamic PWA manifest for practice-try pages"""
     # Handle key formatting for display
     display_key = key
@@ -212,26 +215,23 @@ def practice_try_manifest(request, instrument: str, clef: str, key: str, absolut
 
     return JsonResponse(manifest_data)
 
-def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: str = "", level: str = "", octave: int = 0, sound: bool = False):
+
+def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: str = "", level: str = "",
+                 octave: int = 0, signatures: str = ""):
     # Ensure instrument is properly capitalized
     # Handle POST request with progress data
+
     if request.method == 'POST':
         data = request.POST.get('save-to-cloud-btn')
         print(request.POST)
 
-    if 'sharp' in key:
-        key = key.replace('sharp', '#')
-    elif 'flat' in key:
-        key = key.replace('flat', 'b')
+    # Normalize and compute slug-safe variants
+    key, key_slug = tools.normalize_and_slug(key)
+    absolute_pitch, absolute_pitch_slug = tools.normalize_and_slug(absolute_pitch)
 
-    if 'sharp' in absolute_pitch:
-        absolute_pitch = absolute_pitch.replace('sharp', '#')
-    elif 'flat' in absolute_pitch:
-        absolute_pitch = absolute_pitch.replace('flat', 'b')
 
-    # Slug-safe variants for URLs
-    key_slug = key.replace('#', 'sharp').replace('b', 'flat') if key else ''
-    absolute_pitch_slug = absolute_pitch.replace('#', 'sharp').replace('b', 'flat') if absolute_pitch else ''
+    selected_signatures = tools.compute_signatures(signatures)
+
 
     from notes.instrument_data import resolve_instrument
     canonical_instrument = resolve_instrument(instrument)
@@ -239,20 +239,32 @@ def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: 
         from django.http import Http404
         raise Http404(f"Instrument not found: {instrument}")
 
-    serialised_notes = tools.generate_serialised_notes(canonical_instrument, level)
+    try:
+        serialised_notes = tools.generate_serialised_notes(canonical_instrument, level)
+    except KeyError:
+        from django.http import Http404
+        raise Http404
 
     instrument_info = instrument_infos[canonical_instrument]
 
     my_instruments = instrument_infos.keys()
     levels = instruments.get(canonical_instrument, {}).keys()
 
+    # Build progress wrapper with signatures for practice_try
+    progress_wrapped = {
+        'notes': serialised_notes,
+        'signatures': {
+            'fifths': selected_signatures,
+            'vexflow': [FIFTHS_TO_VEXFLOW_MAJOR[s] for s in selected_signatures],
+        }
+    }
+
     context = {
         'learningscenario_id': PRACTICE_TRY,
-        'progress': serialised_notes,
+        'progress': progress_wrapped,
         'key': key.capitalize() if key else instrument_info['common_keys'][0],
         'absolute_pitch': absolute_pitch.capitalize() if absolute_pitch else '',
         'level': level,
-        'sound': sound,
         'instrument': canonical_instrument,  # Canonical instrument name for consistency
         'levels': levels,
         'instruments': my_instruments,
@@ -264,16 +276,23 @@ def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: 
         'octave': octave,
         # Add original key for manifest URL generation
         'original_key': key,  # already formatted with #/b above
-                'original_key_slug': key_slug,
-                'absolute_pitch_slug': absolute_pitch_slug,
+        'original_key_slug': key_slug,
+        'absolute_pitch_slug': absolute_pitch_slug,
+        # Signatures context
+        'signatures': list(range(-7, 8)),
+        'signatures_with_names': [(s, FIFTHS_TO_VEXFLOW_MAJOR[s]) for s in range(0, -8, -1)] +
+                                 [(s, FIFTHS_TO_VEXFLOW_MAJOR[s]) for s in range(1, 8)],
+        # [(s, FIFTHS_TO_VEXFLOW_MAJOR[s]) for s in range(-1, -8, -1)], # This code gives range(-1, -8)
+        'selected_signatures': selected_signatures,
+        'signatures_slug': ','.join(str(s) for s in selected_signatures),
     }
 
-    context.update(common_context(instrument_name=canonical_instrument, clef=clef, sound=sound))
+    context.update(common_context(instrument_name=canonical_instrument, clef=clef))
 
     rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
                                               for n in serialised_notes])
     graph_context = {
-        'progress': serialised_notes,
+        'progress': progress_wrapped,
         'rt_per_sk': rt_per_sl,
     }
     context.update(graph_context)
@@ -302,16 +321,17 @@ def practice_data(request, package_id: int):
 
 @login_required
 def learningscenario_graph(request, learningscenario_id):
-    package, serialised_notes = LearningScenario.progress_latest_serialised(learningscenario_id)
+    package, progress = LearningScenario.progress_latest_serialised(learningscenario_id)
 
+    notes_list = progress.get('notes', []) if isinstance(progress, dict) else progress
     rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
-                                              for n in serialised_notes])
+                                              for n in notes_list])
 
     context = {
         'learningscenario_id': learningscenario_id,
         # 'package_id': package.id,
         'package': package,
-        'progress': serialised_notes,
+        'progress': progress,
         'rt_per_sk': rt_per_sl,
     }
 
@@ -326,28 +346,27 @@ def learningscenario_graph_try(request, instrument: str, level: str):
         raise Http404(f"Instrument not found: {instrument}")
 
     if request.method == 'POST':
-        serialised_notes = json.loads(request.body)
+        notes_list = json.loads(request.body)
     else:
-        serialised_notes = tools.generate_serialised_notes(canonical_instrument, level.capitalize())
+        notes_list = tools.generate_serialised_notes(canonical_instrument, level.capitalize())
+
+    progress_wrapped = {
+        'notes': notes_list,
+        'signatures': {
+            'fifths': [0],
+            'vexflow': ['C'],
+        }
+    }
 
     rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
-                                              for n in serialised_notes])
+                                              for n in notes_list])
     context = {
         'package': None,
-        'progress': serialised_notes,
+        'progress': progress_wrapped,
         'rt_per_sk': rt_per_sl,
     }
 
     return render(request, 'notes/learningscenario_graph_try.html', context=context)
-
-
-@login_required
-def progress(request, learningscenario_id: int):
-    context = {
-        'learningscenario_id': learningscenario_id,
-        'learningscenario': LearningScenario.objects.get(id=learningscenario_id),
-    }
-    return render(request, 'progress.html', context=context)
 
 
 @login_required
@@ -773,6 +792,7 @@ def reminders(request):
 
     return render(request, 'notes/reminders.html', context)
 
+
 @login_required
 @require_POST
 def cache_to_backend(request):
@@ -783,5 +803,3 @@ def cache_to_backend(request):
     ls, package = LearningScenario.ingest_frontend_cache(user=request.user, info=info, notes_history=notes_history)
 
     return JsonResponse({'learningscenario_id': ls.id, 'package_id': package.id}, status=200)
-
-

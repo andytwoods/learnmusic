@@ -449,6 +449,17 @@ let cache = (() => {
     };
 })();
 
+(function cache_key() {
+    const instrument = '{{ instrument }}';
+    const level = '{{ level }}';
+    const clef = '{{ clef }}';
+    const shifted_octave = '{{ octave }}';
+    const key = '{{ key }}';
+    let absolute_pitch = '{{ absolute_pitch }}';
+    let signatures = '{{ selected_signatures }}';
+
+    window.cache_key = [instrument, level, clef, shifted_octave, key, absolute_pitch, signatures].join('_')
+}());
 
 // Export for testing in Node.js environment
 if (typeof module !== 'undefined' && module.exports) {

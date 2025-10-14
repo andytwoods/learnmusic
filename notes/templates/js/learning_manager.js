@@ -96,7 +96,7 @@ const learning_manager = (function () {
     function pickNewNotes(maxCount) {
         // Use global.window for Node.js compatibility
         const windowObj = typeof global !== 'undefined' && global.window ? global.window : window;
-        const existing = windowObj.progress_data || [];
+        const existing = windowObj.progress_data.notes || [];
         const missing = allPossibleNotes.filter(possibleNote =>
             !existing.some(existingNote => areNotesEqual(existingNote, possibleNote))
         );
@@ -158,6 +158,7 @@ const learning_manager = (function () {
         return LIKELIHOOD_OF_MASTERED_NOTE; // Return for testing
     };
 
+
     api.next_note = (function () {
         const recentNotesLog = [];
 
@@ -166,19 +167,20 @@ const learning_manager = (function () {
             const windowObj = typeof global !== 'undefined' && global.window ? global.window : window;
 
             // 1) If user is brand new and we haven't seeded them yet
-            if (!initialNotesAdded && windowObj.progress_data.length === 0) {
+            if (!initialNotesAdded && windowObj.progress_data.notes.length === 0) {
                 const firstBatch = pickNewNotes(NUMBER_OF_NEW_NOTES_TO_START_LEARNING_INITIALLY);
-                windowObj.progress_data.push(...firstBatch);
+                windowObj.progress_data.notes.push(...firstBatch);
                 initialNotesAdded = true;
                 console.log("Added initial notes:", firstBatch);
 
                 // Return the first note from the new batch
-                return windowObj.progress_data[0];
+                let note = windowObj.progress_data.notes[0];
+                return signature_manager.add_signature(note);
             }
 
             // 2) If all current notes are mastered => show SweetAlert
             //    (You can skip “alreadyAsked” if you want to ask multiple times.)
-            if (allNotesMastered(window.progress_data)) {
+            if (allNotesMastered(window.progress_data.notes)) {
 
                 Swal.fire({
                     title: "Well done!",
@@ -191,7 +193,7 @@ const learning_manager = (function () {
                     if (result.isConfirmed) {
                         const newNotes = pickNewNotes(NUMBER_NEW_NOTES_TO_ADD_SAME_TIME);
                         if (newNotes.length) {
-                            window.progress_data.push(...newNotes);
+                            window.progress_data.notes.push(...newNotes);
                             console.log("Added new notes:", newNotes);
                         } else {
                             console.log("No more notes left to add!");
@@ -213,13 +215,14 @@ const learning_manager = (function () {
 
             // Otherwise do normal flow (partial mastery picking logic)
             if (window.special_condition === 'first_trial') {
-                const maxLength = Math.min(5, window.progress_data.length);
+                const maxLength = Math.min(5, window.progress_data.notes.length);
                 const randomIndex = Math.floor(Math.random() * maxLength);
-                return window.progress_data[randomIndex];
+                let note = window.progress_data.notes[randomIndex];
+                return signature_manager.add_signature(note);
             }
 
-            const masteredNotes = window.progress_data.filter(isMastered);
-            const nonMasteredNotes = window.progress_data.filter(n => !isMastered(n));
+            const masteredNotes = window.progress_data.notes.filter(isMastered);
+            const nonMasteredNotes = window.progress_data.notes.filter(n => !isMastered(n));
 
             let nextNote = null;
             const r = Math.random();
@@ -232,7 +235,7 @@ const learning_manager = (function () {
                 nextNote = processNotes(nonMasteredNotes, recentNotesLog);
             }
             if (!nextNote) {
-                nextNote = processNotes(window.progress_data, recentNotesLog);
+                nextNote = processNotes(window.progress_data.notes, recentNotesLog);
             }
             if (!nextNote) {
                 console.warn("All notes have been recently played. Resetting recentNotesLog.");
@@ -244,9 +247,9 @@ const learning_manager = (function () {
                 recentNotesLog.length = 0;
 
                 // Force a different note than the last one if possible
-                if (lastPlayedNote && window.progress_data.length > 1) {
+                if (lastPlayedNote && window.progress_data.notes.length > 1) {
                     // Find notes that are different from the last played note
-                    const differentNotes = window.progress_data.filter(note =>
+                    const differentNotes = window.progress_data.notes.filter(note =>
                         !areNotesEqual(note, lastPlayedNote));
 
                     if (differentNotes.length > 0) {
@@ -255,11 +258,11 @@ const learning_manager = (function () {
                         nextNote = differentNotes[randomIndex];
                     } else {
                         // Fallback: just pick any note
-                        nextNote = window.progress_data[0];
+                        nextNote = window.progress_data.notes[0];
                     }
                 } else {
                     // If no last played note or only one note available, just pick any note
-                    nextNote = window.progress_data[0];
+                    nextNote = window.progress_data.notes[0];
                 }
             }
 
@@ -283,7 +286,7 @@ const learning_manager = (function () {
             logMasteryScores();
             */
 
-            return nextNote;
+            return signature_manager.add_signature(nextNote);
         };
     })();
 
@@ -297,7 +300,7 @@ const learning_manager = (function () {
         pickNewNotes,
         lightlyShuffleNotes,
         processNotes,
-        allPossibleNotes
+        allPossibleNotes,
     };
 
     return api;
@@ -306,14 +309,19 @@ const learning_manager = (function () {
 // Set up global.window for Node.js environment
 if (typeof global !== 'undefined' && !global.window) {
     global.window = {
-        progress_data: [],
+        progress_data: {notes: []},
         special_condition: 'first_trial'
     };
 
-    // Mock Swal for testing
+    // Mock Swal for testing (Jest provides `jest` global)
     global.Swal = {
-        fire: jest.fn().mockResolvedValue({ isConfirmed: true })
+        fire: (typeof jest !== 'undefined') ? jest.fn().mockResolvedValue({ isConfirmed: true }) : async () => ({ isConfirmed: false })
     };
+
+    // Mock signature_manager for testing to avoid ReferenceError in Node/Jest
+    const signatureStub = { add_signature: (note) => note };
+    global.signature_manager = signatureStub;
+    global.window.signature_manager = signatureStub;
 }
 
 // Export for Node.js

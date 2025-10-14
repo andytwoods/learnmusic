@@ -11,7 +11,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 
 from .instrument_data import instrument_infos
-from .models import LearningScenario
+from .models import LearningScenario, FIFTHS_TO_VEXFLOW_MAJOR
 
 
 class CustomTemplate(LayoutObject):
@@ -67,6 +67,30 @@ class LearningScenarioForm(forms.ModelForm):
             help_text="Set the time you want to be reminded daily. The reminder will occur at this time every day."
         )
 
+        # Prepare signatures field and context for the custom template
+        # Define a form field to capture multiple signatures (rendered via custom template)
+        self.fields['signatures'] = forms.MultipleChoiceField(
+            choices=[(str(i), str(i)) for i in range(-7, 8)],
+            required=False,
+            widget=forms.CheckboxSelectMultiple,
+            label="Key signatures"
+        )
+        # Determine selected signatures from bound data or instance
+        if self.is_bound:
+            try:
+                selected_signatures = [int(x) for x in self.data.getlist('signatures') if x.strip() != ""]
+            except Exception:
+                selected_signatures = []
+        else:
+            selected_signatures = list(self.instance.signatures or []) if self.instance else []
+        if not selected_signatures:
+            selected_signatures = [0]
+        # Compose (sig, keyname) pairs for the partial
+        signatures_with_names = [(s, FIFTHS_TO_VEXFLOW_MAJOR[s]) for s in range(0, -8, -1)] + \
+                                 [(s, FIFTHS_TO_VEXFLOW_MAJOR[s]) for s in range(1, 8)]
+        # Set initial for the field (strings for MultipleChoiceField)
+        self.fields['signatures'].initial = [str(s) for s in selected_signatures]
+
         # Crispy Forms for layout
         self.helper = FormHelper()
         self.helper.form_method = 'post'
@@ -76,6 +100,11 @@ class LearningScenarioForm(forms.ModelForm):
             Field('instrument_name'),
             Field('label'),
             Field('level'),
+            # Insert signatures UI right below 'level'
+            CustomTemplate('notes/components/_signatures_form.html', context={
+                'signatures_with_names': signatures_with_names,
+                'selected_signatures': selected_signatures,
+            }),
             HTML('<div class="mb-3"><button type="button" class="btn btn-secondary" data-bs-toggle="collapse" '
                  'data-bs-target="#advanced-collapse" aria-expanded="false" aria-controls="advanced-collapse">'
                  'Advanced Options</button></div>'),
@@ -112,6 +141,23 @@ class LearningScenarioForm(forms.ModelForm):
             ),
             Submit('submit', 'Submit')
         )
+
+    def clean_signatures(self):
+        raw = self.cleaned_data.get('signatures') or []
+        try:
+            sigs = [int(x) for x in raw]
+        except Exception:
+            sigs = []
+        # Bound and unique preserve order
+        seen = set()
+        filtered = []
+        for s in sigs:
+            if -7 <= s <= 7 and s not in seen:
+                seen.add(s)
+                filtered.append(s)
+        if not filtered:
+            filtered = [0]
+        return filtered
 
     def clean_reminder(self):
         """
@@ -151,6 +197,10 @@ class LearningScenarioForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
+        # Persist signatures from cleaned_data to model instance
+        sigs = self.cleaned_data.get('signatures')
+        if sigs is not None:
+            instance.signatures = sigs
 
         if commit:
             instance.save()

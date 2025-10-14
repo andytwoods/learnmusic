@@ -49,20 +49,16 @@
     <div class="card-body position-relative d-flex flex-column">
       {% block cardbody %}{% endblock %}
 
-      <div id="counter" style="display: none;"
-           class="text-secondary position-absolute top-0 start-0 p-2 m-2 z-1">
-        {% block see_results %}
-          {% if learningscenario_id %}
-            <a href="{% url 'learningscenario_graph' learningscenario_id=learningscenario_id %}"
-               class="btn btn-link text-start p-0 mx-0 text-secondary">Stop and see your results</a>
-          {% endif %}
-        {% endblock see_results %}
-        <br>
-        <span id="counter-value"></span>
+      <div id="counter"
+           class=" position-absolute top-0 start-0 p-2 m-2 z-1">
+        <span id="counter-value">{{ response_count }} notes to be shown</span>
+
         {% block timeup %}
+          {% include 'notes/components/_timeup.html' %}
         {% endblock timeup %}
+
       </div>
-      <div class="mt-5 text-center {{ score_css }}">
+      <div class="text-center {{ score_css }}">
 
         <div class="text-center" id="sheet-container">
           <div class="draggable" id="sheet"></div>
@@ -115,17 +111,18 @@
       });
     });
 
-
     window.progress_data = JSON.parse(
-      document.getElementById('progress-data').textContent
-    )
+      document.getElementById('progress-data').textContent);
+
   </script>
   {% block load_progress_data_from_cache %}
   {% endblock load_progress_data_from_cache %}
 
   <script>
     {% include 'js/stave_manager.js' %}
-    {% include 'js/countdown_manager.js' %}
+    {% include 'js/signature_manager.js' %}
+    {% include 'js/feedback_manager.js' %}
+    feedback_manager.set_response_count({{ response_count }});
     {% include 'js/trial_manager.js' %}
     {% include 'js/session_manager.js' %}
 

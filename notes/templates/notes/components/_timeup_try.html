@@ -1,0 +1,45 @@
+{% extends 'notes/components/_timeup.html' %}
+
+{% block extra %}
+  <h5 class="card-title">
+    <i class="fa-regular fa-clock me-2"></i>To continue practising, close this popup. Or...
+  </h5>
+
+  <div class="d-flex flex-column gap-4">
+
+    <div class="option-block">
+      <!-- Loading indicator -->
+      {% with link_css="fw-bold link-light link-underline-opacity-50 link-underline-opacity-100-hover" %}
+        <ul class="list mb-0">
+          <li class="mb-2">
+            Refresh this page to try and beat your record!
+          </li>
+          <script>
+            document.addEventListener('DOMContentLoaded', function () {
+
+              var inIframe = window.self !== window.top;
+              if (inIframe) {
+                var el = document.getElementById('practice-reminder');
+                el.style.display = '';
+              }
+            });
+          </script>
+
+          <li id="practice-reminder" class="mb-2" style="display:none;">
+            You can practice whenever you want, where you left of, by visiting
+            <a class="{{ link_css }}"
+               target="_blank"
+               href="{{ request.build_absolute_uri }}">this page</a>. Here, practice data is anonymously stored in your
+            browser cache.
+          </li>
+
+          <li>
+            There are lots more tools and features if you
+            <a class='{{ link_css }}' href="{% url 'account_signup' %}">sign up</a>.
+          </li>
+        </ul>
+
+      {% endwith link_css %}
+    </div>
+  </div>
+{% endblock extra %}

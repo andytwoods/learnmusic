@@ -1,0 +1,21 @@
+<div class="mb-3">
+  <button
+    class="btn btn-secondary"
+    type="button"
+    data-bs-toggle="collapse"
+    data-bs-target="#stave-signatures-collapse"
+    aria-expanded="false"
+    aria-controls="stave-signatures-collapse">
+    Signatures you want to practice
+  </button>
+</div>
+
+<div id="stave-signatures-collapse" class="collapse mb-3">
+  <div class="card shadow-sm">
+    <div class="card-header bg-secondary text-white">Stave Signatures</div>
+    <div class="card-body bg-light">
+      {% include 'notes/components/_signatures.html' %}
+    </div>
+  </div>
+</div>
+

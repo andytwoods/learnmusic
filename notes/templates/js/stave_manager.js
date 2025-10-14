@@ -53,7 +53,6 @@ const keyAdjust = (function () {
     };
 })();
 
-
 // --- stave‑manager.js --------------------------------------------------------
 const stave_manager = (function () {
     const api = {};
@@ -126,13 +125,26 @@ const stave_manager = (function () {
     // redraw when the user zooms ----------------------------------------------
     function redraw() {
         freshRenderer();
-        if (api.currentNote) api.drawNote(api.currentNote);
+        if (api.currentNote) api.updateNote(api.currentNote, api.currentSignature);
     }
 
-    // public: draw a (black) note ---------------------------------------------
-    api.updateNote = function (noteStr) {
+    api.updateNote = function (noteStr, signature) {
         api.currentNote = noteStr;
+        if (signature) api.currentSignature = signature;
         freshRenderer();
+
+        // Measure note-start before adding signature (clef already applied in freshRenderer)
+        const baseNoteStartX = stave.getNoteStartX();
+
+        // Add key signature (if any), then re-draw stave
+        if (api.currentSignature) {
+            stave.addKeySignature(api.currentSignature);
+        }
+        stave.setContext(context).draw();
+
+        // Measure note-start after signature to compute extra left shift
+        const noteStartWithSigX = stave.getNoteStartX();
+        const signatureLeftShift = Math.max(0, noteStartWithSigX - baseNoteStartX);
 
         let transposed = keyAdjust(noteStr);
         const stemDir = calcStemDirection(transposed);
@@ -149,29 +161,43 @@ const stave_manager = (function () {
             duration: "q",
             clef: my_clef,
             stem_direction: stemDir,
-            align_center: true,          // keep this
+            align_center: true,
         });
 
-        // 2. optional accidental
-        let accidentalWidth = 0;
-        if (/[#b]/.test(transposed)) {
-            const acc = new VF.Accidental(transposed.includes("#") ? "#" : "b");
-            note.addModifier(acc, 0);
-            accidentalWidth = acc.getWidth();   // glyph width is known immediately
-        }
-
-        // 3. format & centre the tickable as usual
+        // 2. automatic accidentals based on key signature (apply BEFORE formatting)
         const voice = new VF.Voice({num_beats: 1, beat_value: 4}).addTickables([note]);
+        VF.Accidental.applyAccidentals([voice], api.currentSignature || "C");
+
+        // 3. format & centre the tickable as usual (AFTER accidentals are applied)
         new VF.Formatter().joinVoices([voice]).format([voice], staveWidth / 2);
 
-        // 4. Nudge the whole tickable left so the HEAD, not the group, is centred
-        if (accidentalWidth) {
-            note.setXShift(7);  // negative = move left :contentReference[oaicite:0]{index=0}
+        // 4. Find any accidentals that were auto-applied
+        const accMods = note.getModifiers();
+
+        const accidentalWidth = accMods.length > 0 && typeof accMods[0].getWidth === 'function'
+            ? accMods[0].getWidth()
+            : 0;
+
+        // 5. Compute the shift for both note and accidental:
+        //    - if accidental is present, nudge right to keep head centered
+        //    - key signature pushes note-start right; nudge left by half
+        let xShift = 0;
+        if (accidentalWidth > 0) {
+            xShift += accidentalWidth * 0.5; // or use a fixed value like 7
+        }
+        if (signatureLeftShift) {
+            xShift -= signatureLeftShift / 4;
+        }
+
+        // Apply the shift to BOTH the note and each accidental modifier
+        if (xShift !== 0) {
+            const tick = note.getTickContext();
+            // Move the whole note cluster (heads, accidentals, dots, etc.)
+            tick.setX(tick.getX() + xShift);
         }
 
         voice.draw(context, stave);
     };
-
 
     // public: draw a red feedback note ----------------------------------------
     api.feedbackNote = function (noteStr) {
@@ -211,6 +237,7 @@ const stave_manager = (function () {
 
     // initial exposure --------------------------------------------------------
     api.currentNote = null;
+    api.currentSignature = null;
     // keep backward‑compat alias
     api.drawNote = api.updateNote;
     freshRenderer(); // draw once so there is a stave even before the first note

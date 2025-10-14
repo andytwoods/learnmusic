@@ -12,9 +12,17 @@ fake = Faker()
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = User
+        skip_postgeneration_save = True
 
     email = factory.LazyAttribute(lambda _: fake.email())
-    password = factory.PostGenerationMethodCall('set_password', 'password123')  # Default test password
+
+    @factory.post_generation
+    def password(self, create, extracted, **kwargs):
+        # Set a default password or use the provided one
+        pwd = extracted or "password123"
+        self.set_password(pwd)
+        if create:
+            self.save()
 
 
 

@@ -1,9 +1,8 @@
 import copy
 from datetime import timedelta
 from typing import Any, List
+
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, MaxValueValidator
-from django.db import models
 from django.utils import timezone
 from django.utils.timezone import now
 from model_utils.models import TimeStampedModel
@@ -12,6 +11,54 @@ from notes import tools
 from notes.instrument_data import instruments
 
 User = get_user_model()
+
+from django.db import models
+from django.core.exceptions import ValidationError
+
+
+class ProgressWrapper(dict):
+    """A dict that behaves like a list of notes for backward compatibility.
+
+    - progress['notes'] -> list of note dicts
+    - progress['signatures'] -> signatures payload
+    - progress[i] -> ith note (list-like)
+    - len(progress) -> len(notes)
+    - iter(progress) -> iterate over notes
+    """
+    def __init__(self, notes, signatures_payload):
+        super().__init__()
+        super().__setitem__('notes', notes)
+        super().__setitem__('signatures', signatures_payload)
+
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return super().__getitem__('notes')[key]
+        return super().__getitem__(key)
+
+    def __len__(self):
+        return len(super().__getitem__('notes'))
+
+    def __iter__(self):
+        return iter(super().__getitem__('notes'))
+
+
+def validate_signatures_array(value):
+    # Must be a list of unique integers in [-7, 7]
+    if not isinstance(value, list):
+        raise ValidationError("Signatures must be a list.")
+    if any(not isinstance(v, int) for v in value):
+        raise ValidationError("All signatures must be integers.")
+    if any(v < -7 or v > 7 for v in value):
+        raise ValidationError("Signatures must be between -7 and 7.")
+    if len(value) != len(set(value)):
+        raise ValidationError("Signatures must not contain duplicates.")
+
+
+# optional: canonical mapping for rendering in VexFlow (major spelling is fine)
+FIFTHS_TO_VEXFLOW_MAJOR = {
+    0: "C", 1: "G", 2: "D", 3: "A", 4: "E", 5: "B", 6: "F#", 7: "C#",
+    -1: "F", -2: "Bb", -3: "Eb", -4: "Ab", -5: "Db", -6: "Gb", -7: "Cb",
+}
 
 
 class InstrumentKeys(models.TextChoices):
@@ -37,6 +84,7 @@ class InstrumentKeys(models.TextChoices):
 class BlankAbsolutePitch(models.TextChoices):
     BLANK = "BL", "None"
 
+
 absolute_pitch_choices = BlankAbsolutePitch.choices + InstrumentKeys.choices
 
 
@@ -55,6 +103,7 @@ class ClefChoices(models.TextChoices):
     TENOR = 'Tenor'
     ALTO = 'Alto'
     BASS = 'Bass'
+
 
 
 class LevelChoices(models.TextChoices):
@@ -83,14 +132,34 @@ class LearningScenario(TimeStampedModel):
                                             help_text="This is an advanced option. Leave as 0 if unsure. To shift the "
                                                       "octave down one, specify -1. To shift up one, specify 1.")
     absolute_pitch = models.CharField(max_length=2, choices=absolute_pitch_choices,
-                                     default=BlankAbsolutePitch.BLANK ,
-                                     help_text='This is an advanced option. Leave as None if unsure.')
+                                      default=BlankAbsolutePitch.BLANK,
+                                      help_text='This is an advanced option. Leave as None if unsure.')
 
     reminder = models.DateTimeField(null=True, blank=True)
     reminder_type = models.CharField(max_length=2, choices=Reminder.choices, default=Reminder.NONE, null=True,
                                      blank=True, verbose_name="Daily reminder")
 
+
+    # JSON array of ints (e.g. [0, 1, -2]) meaning: natural, 1♯, 2♭
+    signatures = models.JSONField(
+        default=list,
+        blank=True,
+        validators=[validate_signatures_array],
+        help_text="JSON array of integers in [-7..7] – number of sharps (+) or flats (−).",
+    )
+
     ux = models.JSONField(default=dict, blank=True)
+
+    @property
+    def signatures_sorted(self):
+        try:
+            return sorted(self.signatures)
+        except Exception:
+            return []
+
+    @property
+    def vexflow_keys(self):
+        return [FIFTHS_TO_VEXFLOW_MAJOR[i] for i in self.signatures_sorted]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         # instrument can be null as we create a blank instence before user specifies this
@@ -131,7 +200,10 @@ class LearningScenario(TimeStampedModel):
     def progress_latest_serialised(learningscenario_id: int):
 
         package: NoteRecordPackage = NoteRecordPackage.objects.filter(learningscenario_id=learningscenario_id).last()
-        progress = package.log if package else None
+        progress_notes = package.log if package else None
+        # If stored progress is a wrapped dict, extract notes list
+        if isinstance(progress_notes, dict):
+            progress_notes = progress_notes.get('notes', [])
 
         freshen_progress = False
 
@@ -139,18 +211,26 @@ class LearningScenario(TimeStampedModel):
             package = NoteRecordPackage.objects.create(learningscenario_id=learningscenario_id)
             freshen_progress = True
 
-        if progress is None or freshen_progress:
-            progress = []
+        if progress_notes is None or freshen_progress:
+            progress_notes = []
 
         learningscenario: LearningScenario = LearningScenario.objects.get(id=learningscenario_id)
 
-        progress = LearningScenario._add_new_notes(learningscenario.notes, progress)
-        progress = LearningScenario._remove_deleted_notes(learningscenario.notes, progress)
+        progress_notes = LearningScenario._add_new_notes(learningscenario.notes, progress_notes)
+        progress_notes = LearningScenario._remove_deleted_notes(learningscenario.notes, progress_notes)
 
-        return package, progress
+        # Wrap with signatures info for downstream consumers expecting structured payload
+        sigs = learningscenario.signatures_sorted or [0]
+        signatures_payload = {
+            'fifths': sigs,
+            'vexflow': [FIFTHS_TO_VEXFLOW_MAJOR[s] for s in sigs],
+        }
+        progress_wrapped = ProgressWrapper(progress_notes, signatures_payload)
+
+        return package, progress_wrapped
 
     @staticmethod
-    def _add_new_notes(note_records:List[str], progress):
+    def _add_new_notes(note_records: List[str], progress):
         flattened_progress = [f'{note['note']} {note['alter']} {note['octave']}' for note in progress]
         for noterecord in note_records:
             if noterecord not in flattened_progress:
@@ -159,7 +239,7 @@ class LearningScenario(TimeStampedModel):
         return progress
 
     @staticmethod
-    def _remove_deleted_notes(note_records:List[str], progress):
+    def _remove_deleted_notes(note_records: List[str], progress):
         for note_obj in progress:
             flattened_note = f'{note_obj["note"]} {note_obj["alter"]} {note_obj["octave"]}'
             if flattened_note not in note_records:
@@ -189,7 +269,6 @@ class LearningScenario(TimeStampedModel):
         if self.absolute_pitch == BlankAbsolutePitch.BLANK:
             return self.relative_key
         return self.absolute_pitch
-
 
     @classmethod
     def add_history(cls, learningscenarios):
@@ -239,7 +318,6 @@ class LearningScenario(TimeStampedModel):
             scenario.practice_history = sorted_practice_history
             scenario.streak_count = streak_count
 
-
     @classmethod
     def ingest_frontend_cache(cls, user, info, notes_history):
         """
@@ -280,6 +358,7 @@ class LearningScenario(TimeStampedModel):
         package.process_answers(notes_history)
 
         return ls, package
+
 
 class NoteRecord(TimeStampedModel):
     """

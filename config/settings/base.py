@@ -252,7 +252,7 @@ DEFAULT_FROM_EMAIL = env("DJANGO_DEFAULT_FROM_EMAIL", default="noreply@learnmusi
 # ADMIN
 # ------------------------------------------------------------------------------
 # Django Admin URL.
-ADMIN_URL = "admin/"
+ADMIN_URL =  env("DJANGO_ADMIN_URL", default="admin") + '/'
 # https://docs.djangoproject.com/en/dev/ref/settings/#admins
 ADMINS = [("""Andy T. Woods""", "andytwoods@gmail.com")]
 # https://docs.djangoproject.com/en/dev/ref/settings/#managers

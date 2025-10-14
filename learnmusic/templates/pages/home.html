@@ -242,7 +242,7 @@
         <small>
           <ul class="list-unstyled mb-0">
             <li>
-              <i class="fas fa-chevron-right fa-xs me-2"></i>See the <i class="fa-solid fa-edit"></i> menu to change
+              <i class="fas fa-chevron-right fa-xs me-2"></i>See <i class="fa-solid fa-edit"></i> menu to change
               instrument, difficulty, transposition...
             </li>
             <li>
@@ -253,7 +253,62 @@
               <i class="fas fa-chevron-right fa-xs me-2"></i>Do in a <a
               href="{% url 'practice-demo' %}"
               target="_blank">separate browser tab?</a>
+              <i id="progress-info-trigger" class="fas fa-info-circle ms-2 text-muted" role="button" title="How saving works" aria-label="More info about saving"></i>
             </li>
+            <script>
+              (function () {
+                function showProgressInfo() {
+                  if (typeof Swal === 'undefined') {
+                    alert(
+                      "Saving your progress\n\n" +
+                      "• Your progress is saved anonymously in your browser’s cache on this device.\n" +
+                      "• You can bookmark this page’s URL to return and continue later.\n" +
+                      "• Clearing site data (cache/storage) or using a different device/browser may remove this progress."
+                    );
+                    return;
+                  }
+                  Swal.fire({
+                    icon: 'info',
+                    html: `
+                      <div class="text-start">
+                        <ol class="list-group">
+                          <li class="list-group-item border-0 ps-0">
+                            In this tab, your progress is saved anonymously in your browser’s cache on this device.
+                          </li>
+                          <li class="list-group-item border-0 ps-0">
+                            You can bookmark this page’s URL to return and continue later.
+                          </li>
+                          <li class="list-group-item border-0 ps-0">
+                            Clearing site data (cache/storage) or using a different device/browser may remove this
+                            progress. But you can decide to upload your progress to this app to get around this.
+                          </li>
+                        </ol>
+                      </div>
+                    `,
+                    confirmButtonText: 'Got it',
+                    confirmButtonColor: '#0d6efd' // Bootstrap primary color
+                  });
+                }
+
+                document.addEventListener('DOMContentLoaded', function () {
+                  var el = document.getElementById('progress-info-trigger');
+                  if (el) el.addEventListener('click', showProgressInfo);
+                });
+              })();
+            </script>
+            <style>
+              .swal2-progress-info .swal2-title {
+                font-weight: 700;
+              }
+
+              .swal2-progress-info .swal2-html-container {
+                margin: 0.25rem 0 0;
+                font-size: 0.95rem;
+                line-height: 1.35;
+              }
+            </style>
+
+            <!-- Removed Bootstrap modal previously here -->
           </ul>
         </small>
 

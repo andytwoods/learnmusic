@@ -34,7 +34,7 @@ const trial_manager = (function () {
 
         api.start = function (message, _callback) {
             callback = _callback;
-            correct_answer_el.innerText = message;
+            correct_answer_el.innerHTML = message;
             error_message_el.style.display = 'block';
         }
 
@@ -56,7 +56,6 @@ const trial_manager = (function () {
             error_message_manager.stop();
             return;
         }
-
         locked = true;
         const rt = timer.stop();
         if (window.special_condition === 'first_trial') {
@@ -66,9 +65,8 @@ const trial_manager = (function () {
             saveResult(session_manager.current_note, rt, answer);
         }
 
-
         // this is NOT RT. Rather top left corner countdown.
-        countdown_manager.start();
+        feedback_manager.answer_given(rt, answer);
 
         if (answer === true) {
             error_message_manager.brief_correct_message();
@@ -109,7 +107,7 @@ const trial_manager = (function () {
         const parsed_note = parse_note(next_note);
         document.current_note = parsed_note;
         timer.start();
-        stave_manager.updateNote(parsed_note);
+        stave_manager.updateNote(parsed_note, next_note.signature);
     }
 
     return api;

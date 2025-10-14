@@ -11,12 +11,13 @@ from notes.instrument_data import instruments, instrument_infos
 def home(request):
     # I broke the homepage when randomly updating the url to practice-try...
     # I don't want to repeat this mistake
-    practice_url = reverse('practice-try', kwargs={
+    practice_url = reverse('practice-try-sigs', kwargs={
         'instrument': 'dummy',
         'key': 'dummy',
         'clef': 'dummy',
         'level': 'dummy',
-        'octave': 0}).split('/')[1]
+        'octave': 0,
+        'signatures': '0'}).split('/')[1]
 
     instruments_data = {}
     for instrument, instrument_info in instruments.items():
