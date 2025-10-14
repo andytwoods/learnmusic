@@ -189,19 +189,27 @@
             error_message = generate_correct_keys_text(correct_keys);
             if (error_message.length === 0) error_message = window.nothing_selected
             const basic_note = document.current_note.split('/')[0];
-            error_message = "Correct answer for " + basic_note + ": " + error_message + '\n' + window.error_message + ': '
-            if (keys_pressed.length > 0) {
-              error_message += keys_pressed;
-            } else error_message += window.nothing_selected;
+
+            error_message = "Correct answer(s) for " + basic_note + ": " +
+              error_message + '\n' + window.error_message + ': ';
+
+            if (keys_pressed.length > 0) error_message += badge(keys_pressed);
+
+            else error_message += window.nothing_selected;
           }
+
           trial_manager.answer(correct, error_message);
+        }
+
+        function badge(text) {
+          return `<span class="badge bg-secondary me-1">${text}</span>`;
         }
 
         function generate_correct_keys_text(correct_keys) {
           return correct_keys.map(key => {
-            if(key==="") return "all up!";
-            return key;
-          }).join(", ");
+            if (key === "") return badge("all up!");
+            return badge(key);
+          }).join("");
         }
 
         function getCorrectKeysPressed() {

@@ -21,19 +21,13 @@
       element: '#sheet',
       popover: {
         title: "Musical score",
-        description: "We show you a note to play",
+        description: "We show you a note to play.",
       }
     }]
     const end_steps = [{
       popover: {
         title: "Rinse and repeat!",
-        description: "<img style='width:100%' src='{% static 'images/graph.jpg' %}' alt='accuracy'><br>Later, you can see graphs that shows you how quick you are, and your accuracy.",
-      }
-    },
-      {
-      popover: {
-        title: "Get ready!",
-        description: "Spend a minute now practicing some notes. This first note does not count. Subsequent notes we do measure how quickly you answer.",
+        description: "After {{ response_count }} notes, you get a score showing you how well you did. Will you beat your best time?",
       }
     }
     ]
