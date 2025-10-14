@@ -1,4 +1,4 @@
-FROM python:3.13-bookworm
+FROM python:3.13-slim-bookworm
 
 SHELL ["/bin/bash", "-c"]
 
@@ -8,9 +8,8 @@ ENV PIP_NO_CACHE_DIR=off \
     PYTHONDONTWRITEBYTECODE=0
 
 RUN apt-get update \
- && apt-get install -y \
-      nano python3-pip gettext chrpath libssl-dev libxft-dev \
-      libfreetype6 libfreetype6-dev libfontconfig1 libfontconfig1-dev \
+ && apt-get install -y --no-install-recommends \
+      nano gettext \
  && rm -rf /var/lib/apt/lists/*
 
 RUN python -m pip install --upgrade pip setuptools wheel \
@@ -37,7 +36,7 @@ USER code
 RUN source /env/envs_export.sh \
  && if [[ -n "$BUILD_COMMAND" ]]; then eval "$BUILD_COMMAND"; fi
 
-# collectstatic as unprivileged user (package css dir is now writable)
+# collectstatic as unprivileged user
 RUN source /env/envs_export.sh \
  && if [[ -f "manage.py" ]]; then \
         if [[ "$DISABLE_COLLECTSTATIC" == "1" ]]; then \

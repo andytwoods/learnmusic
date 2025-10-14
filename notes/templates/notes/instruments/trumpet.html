@@ -207,10 +207,15 @@
         }
 
         function generate_correct_keys_text(correct_keys) {
-          return correct_keys.map(key => {
+          const parts = correct_keys.map(key => {
             if (key === "") return badge("all up!");
             return badge(key);
-          }).join("");
+          });
+
+          if (parts.length === 0) return "";
+          if (parts.length === 1) return parts[0];
+
+          return parts.slice(0, -1).join(", ") + " or " + parts[parts.length - 1];
         }
 
         function getCorrectKeysPressed() {
