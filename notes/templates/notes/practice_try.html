@@ -47,11 +47,6 @@
   <div id="right-menu-local-options" style="display: none;">
     <li><h6 class="dropdown-header">App related</h6></li>
 
-    <li>
-      <a class="mx-2 btn btn-light btn-sm " href="#" id="move-data-to-cloud-btn">
-        <i class="fa-solid fa-cloud-arrow-up me-2 "></i> Move data to the cloud
-      </a>
-    </li>
     <li id="install-prompt-container" style="display: none;">
       <a class="m-2 btn btn-light btn-sm " href="#" id="install-pwa-btn">
         <i class="fa-solid fa-download me-2"></i> Install App
@@ -84,91 +79,6 @@
         }
       }
 
-      // Attach SweetAlert2 info for moving data to the cloud
-      const moveBtn = document.getElementById("move-data-to-cloud-btn");
-      if (moveBtn) {
-        moveBtn.addEventListener("click", function (e) {
-          e.preventDefault();
-
-          {% if request.user.is_authenticated %}
-
-            function send_json_to_backend(data_bundle, url) {
-
-              fetch(url, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({
-                  data: data_bundle,
-                  source: 'cloud_upload',
-                  timestamp: new Date().toISOString()
-                })
-              })
-                .then(response => {
-                  if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                  }
-                  return response.json();
-                })
-                .then(data => {
-                  // Handle successful response
-                  Swal.fire({
-                    title: 'Success!',
-                    text: 'Your data has been uploaded to the cloud',
-                    icon: 'success'
-                  });
-
-                  // Optional: Clear local data or redirect
-                  // window.localStorage.removeItem('your_local_data_key');
-                  // window.location.href = '/success-page/';
-                })
-                .catch(error => {
-                  console.error('Error:', error);
-
-                  // Show error message
-                  Swal.fire({
-                    title: 'Upload Failed',
-                    text: 'There was a problem uploading your data. Please try again.',
-                    icon: 'error'
-                  });
-                });
-            }
-
-
-
-
-            Swal.fire({
-              title: "Move data to the cloud",
-              html: "This will create a copy in the cloud of your locally stored data. Proceed?",
-              confirmButtonText: "OK"
-            }).then((result) => {
-              if (result.isConfirmed) {
-
-                let data_bundle = {'notes_history': JSON.parse(JSON.stringify(window.progress_data || []))};
-                data_bundle['info'] = {
-                  instrument: '{{ instrument }}',
-                  level: '{{ level }}',
-                  clef: '{{ clef }}',
-                  shifted_octave: '{{ octave }}',
-                  key: '{{ key }}',
-                  absolute_pitch: '{{absolute_pitch }}'
-                }
-                send_json_to_backend(data_bundle, '{% url 'cache-to-backend' %}');
-              }
-            });
-
-          {% else %}
-            Swal.fire({
-              title: "Move data to the cloud",
-              html: "To move your data to the cloud, please <a href={% url 'account_signup' %}>create an account</a> or <a href='{% url 'account_login' %}'>sign in</a>. " +
-                "Once your account is set up, we will ask you if you want to move your cache practice data to the cloud.",
-              confirmButtonText: "OK"
-            });
-          {% endif %}
-        });
-      }
     });
   </script>
 
