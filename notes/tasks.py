@@ -52,7 +52,7 @@ def send_reminders():
         # This ensures reminders are only sent once a day
         reminder__lte=now_utc,
         reminder_type__in=['AL', 'EM', 'PN']  # All notifications, Email, Push notification
-    ).select_related('user').annotate(last_practice=Max("noterecord__created"))
+    ).select_related('user').annotate(last_practice=Max("noterecordpackage__created"))
 
     reminders_sent = 0
 

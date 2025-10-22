@@ -19,7 +19,7 @@ from pushover_complete import PushoverAPI
 from notes import tools
 from notes.forms import LearningScenarioForm
 from notes.instrument_data import instrument_infos, instruments, get_instrument_defaults
-from notes.models import LearningScenario, NoteRecordPackage, NoteRecord, LevelChoices, InstrumentKeys, ClefChoices, \
+from notes.models import LearningScenario, NoteRecordPackage, LevelChoices, InstrumentKeys, ClefChoices, \
     BlankAbsolutePitch, FIFTHS_TO_VEXFLOW_MAJOR
 from notes.tools import generate_notes, compile_notes_per_skilllevel, convert_note_slash_to_db, toCamelCase
 
@@ -305,17 +305,6 @@ def practice_data(request, package_id: int):
     json_data = json.loads(request.body)
     package: NoteRecordPackage = NoteRecordPackage.objects.get(id=package_id)
     package.add_result(json_data)
-
-    noterecord: NoteRecord = NoteRecord(
-        learningscenario=package.learningscenario,
-        note=json_data.get('note', ''),
-        alter=json_data.get('alter', ''),
-        octave=json_data.get('octave', ''),
-        reaction_time=json_data.get('reaction_time', 0),
-        correct=json_data.get('correct', False)
-    )
-    noterecord.save()
-
     return JsonResponse({'success': True})
 
 
@@ -581,8 +570,8 @@ def progress_data_view(request, learningscenario_id):
     # 1. Decide the time window
     earliest_date = now() - timedelta(days=30)  # last 30 days as example
 
-    # 2. Retrieve all NoteRecord items for this learning scenario in that range
-    note_records = NoteRecord.objects.filter(
+    # 2. Retrieve all NoteRecordPackage items for this learning scenario in that range
+    packages = NoteRecordPackage.objects.filter(
         learningscenario__id=learningscenario_id,
         created__gte=earliest_date
     )
@@ -600,43 +589,47 @@ def progress_data_view(request, learningscenario_id):
     grouped_by_date = {}
     grouped_by_note = {}
 
-    for record in note_records:
-        # Format note name
-        note_name = f"{record.note}{record.octave}"
-        if record.alter == '1':
-            note_name += '#'
-        elif record.alter == '-1':
-            note_name += 'b'
-
-        date_key = record.created.strftime("%Y-%m-%d")  # daily grouping example
-
-        # Initialize dictionaries if not present
+    for package in packages:
+        date_key = package.created.strftime("%Y-%m-%d")
+        # Initialize date bucket
         if date_key not in grouped_by_date:
             grouped_by_date[date_key] = {
                 "sum_correct": 0,
                 "sum_total": 0,
-                "reaction_times": []  # store all reaction times here
-            }
-
-        # Update date-based stats
-        grouped_by_date[date_key]["sum_total"] += 1
-        if record.correct:
-            grouped_by_date[date_key]["sum_correct"] += 1
-        grouped_by_date[date_key]["reaction_times"].append(record.reaction_time)
-
-        # Initialize note-based stats if needed
-        if note_name not in grouped_by_note:
-            grouped_by_note[note_name] = {
-                "sum_correct": 0,
-                "sum_total": 0,
                 "reaction_times": []
             }
+        # Skip if no log
+        if not isinstance(package.log, list):
+            continue
+        # Iterate over each note item in the package log
+        for item in package.log:
+            note_name = f"{item.get('note', '')}{item.get('octave', '')}"
+            alter = item.get('alter')
+            if alter == '1':
+                note_name += '#'
+            elif alter == '-1':
+                note_name += 'b'
+            # Ensure note bucket exists
+            if note_name not in grouped_by_note:
+                grouped_by_note[note_name] = {
+                    "sum_correct": 0,
+                    "sum_total": 0,
+                    "reaction_times": []
+                }
+            correct_list = item.get('correct', []) or []
+            rt_list = item.get('reaction_time_log', []) or []
+            # Use paired data points only
+            n = min(len(correct_list), len(rt_list)) if (correct_list and rt_list) else len(rt_list)
+            for i in range(n):
+                grouped_by_date[date_key]["sum_total"] += 1
+                if i < len(correct_list) and correct_list[i]:
+                    grouped_by_date[date_key]["sum_correct"] += 1
+                grouped_by_date[date_key]["reaction_times"].append(int(rt_list[i]) if rt_list[i] is not None else 0)
 
-        # Update note-based stats
-        grouped_by_note[note_name]["sum_total"] += 1
-        if record.correct:
-            grouped_by_note[note_name]["sum_correct"] += 1
-        grouped_by_note[note_name]["reaction_times"].append(record.reaction_time)
+                grouped_by_note[note_name]["sum_total"] += 1
+                if i < len(correct_list) and correct_list[i]:
+                    grouped_by_note[note_name]["sum_correct"] += 1
+                grouped_by_note[note_name]["reaction_times"].append(int(rt_list[i]) if rt_list[i] is not None else 0)
 
     # Optionally, if you need a custom-sorted approach to notes
     grouped_by_note_sorted = tools.sort_notes(grouped_by_note)

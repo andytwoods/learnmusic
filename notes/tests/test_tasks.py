@@ -22,9 +22,8 @@ from django.utils import timezone
 from notes.factories import (
     UserFactory,
     LearningScenarioFactory,
-    NoteRecordFactory,
 )
-from notes.models import LearningScenario
+from notes.models import LearningScenario, NoteRecordPackage
 from notes.tasks import send_reminders
 
 
@@ -144,10 +143,9 @@ class TestSendReminders(TestCase):
             reminder_type=LearningScenario.Reminder.ALL,
         )
         # Practice 12 h ago → should suppress the reminder
-        NoteRecordFactory(
-            learningscenario=scenario,
-            created=self.now - timedelta(hours=12),
-        )
+        pkg = NoteRecordPackage.objects.create(learningscenario=scenario)
+        pkg.created = self.now - timedelta(hours=12)
+        pkg.save(update_fields=['created'])
 
         send_reminders()
 
@@ -252,10 +250,9 @@ class TestSendReminders(TestCase):
             reminder_type=LearningScenario.Reminder.EMAIL,
             user=UserFactory(pushover_key="k"),
         )
-        NoteRecordFactory(
-            learningscenario=scenario,
-            created=self.now - timedelta(hours=24),
-        )
+        pkg = NoteRecordPackage.objects.create(learningscenario=scenario)
+        pkg.created = self.now - timedelta(hours=24)
+        pkg.save(update_fields=['created'])
 
         send_reminders()
 

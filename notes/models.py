@@ -320,34 +320,6 @@ class LearningScenario(TimeStampedModel):
 
 
 
-class NoteRecord(TimeStampedModel):
-    """
-    Model to store individual note practice results.
-    Each record represents a single note practice attempt.
-    """
-    learningscenario = models.ForeignKey(LearningScenario, on_delete=models.CASCADE)
-    note = models.CharField(max_length=1)  # e.g., 'A', 'B', 'C', etc.
-    alter = models.CharField(max_length=2, blank=True)  # e.g., '1' for sharp, '-1' for flat
-    octave = models.CharField(max_length=1)  # e.g., '3', '4', etc.
-    reaction_time = models.IntegerField()  # in milliseconds
-    correct = models.BooleanField()  # True if the answer was correct, False otherwise
-
-    def __str__(self):
-        note_str = f"{self.note}"
-        if self.alter == '1':
-            note_str += '#'
-        elif self.alter == '-1':
-            note_str += 'b'
-        note_str += f"/{self.octave}"
-        return f"{note_str} - {self.correct} - {self.reaction_time}ms"
-
-    @property
-    def user(self):
-        return self.learningscenario.user
-
-    @property
-    def instrument(self):
-        return self.learningscenario.instrument_name
 
 
 class NoteRecordPackage(TimeStampedModel):
@@ -433,16 +405,3 @@ class NoteRecordPackage(TimeStampedModel):
         if not isinstance(json_data, list):
             return
 
-        # Also create individual NoteRecord entries for each note in the json_data
-        for note_data in json_data:
-            # For each reaction time and correct value pair, create a NoteRecord
-            for i in range(len(note_data.get('reaction_time_log', []))):
-                if i < len(note_data.get('correct', [])):  # Ensure we have a corresponding correct value
-                    NoteRecord.objects.create(
-                        learningscenario=self.learningscenario,
-                        note=note_data.get('note', ''),
-                        alter=note_data.get('alter', ''),
-                        octave=note_data.get('octave', ''),
-                        reaction_time=note_data.get('reaction_time_log', [])[i],
-                        correct=note_data.get('correct', [])[i]
-                    )
