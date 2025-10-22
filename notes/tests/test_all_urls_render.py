@@ -205,24 +205,3 @@ class TestAllNotesUrlsRender(TestCase):
         resp = self.client.post(reverse("reminder-settings-submit"), data=payload)
         self.assertEqual(resp.status_code, 200)
 
-    def test_cache_to_backend_post(self):
-        payload = {
-            "data": {
-                "notes_history": [],
-                "info": {
-                    "instrument": "Trumpet",
-                    "level": "Beginner",
-                    "clef": "treble",
-                    "relative_key": "C",
-                    "shifted_octave": "0",
-                    "absolute_pitch": "BL",  # BlankAbsolutePitch sentinel value in system
-                },
-            }
-        }
-        resp = self.client.post(
-            reverse("cache-to-backend"), data=json.dumps(payload), content_type="application/json"
-        )
-        self.assertEqual(resp.status_code, 200)
-        data = resp.json()
-        self.assertIn("learningscenario_id", data)
-        self.assertIn("package_id", data)

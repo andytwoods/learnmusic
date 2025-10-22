@@ -54,6 +54,5 @@ urlpatterns = [
 
     path("pushover/callback/", views.pushover_callback, name="pushover_callback"),
 
-    path("cache-to-backend/", views.cache_to_backend, name="cache-to-backend"),
 
 ]

@@ -793,13 +793,3 @@ def reminders(request):
     return render(request, 'notes/reminders.html', context)
 
 
-@login_required
-@require_POST
-def cache_to_backend(request):
-    frontend_data = json.loads(request.body).get('data', {})
-    notes_history = frontend_data.get('notes_history')
-    info = frontend_data.get('info')
-
-    ls, package = LearningScenario.ingest_frontend_cache(user=request.user, info=info, notes_history=notes_history)
-
-    return JsonResponse({'learningscenario_id': ls.id, 'package_id': package.id}, status=200)

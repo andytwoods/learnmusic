@@ -318,46 +318,6 @@ class LearningScenario(TimeStampedModel):
             scenario.practice_history = sorted_practice_history
             scenario.streak_count = streak_count
 
-    @classmethod
-    def ingest_frontend_cache(cls, user, info, notes_history):
-        """
-        Create or find a LearningScenario for the given user based on the provided info dict,
-        and persist the provided notes_history into a new NoteRecordPackage.
-
-        Args:
-            user: Django user
-            info: dict with keys like instrument, level, clef, relative_key, shifted_octave, absolute_key
-            notes_history: list of note progress dicts from the frontend
-
-        Returns:
-            (LearningScenario, NoteRecordPackage)
-        """
-
-        ls_defaults = {
-            'label': None,
-            'notes': None,
-            'ux': {},
-        }
-        # Accept only new keys (legacy 'key' supported for relative only)
-        rel_key = info.get('relative_key', info.get('key'))
-        # Accept both new 'absolute_pitch' and legacy 'absolute_key'; default to blank sentinel if missing
-        abs_pitch = info.get('absolute_pitch', info.get('absolute_key', BlankAbsolutePitch.BLANK))
-
-        ls, created = cls.objects.get_or_create(
-            user=user,
-            instrument_name=info.get('instrument', ''),
-            level=info.get('level'),
-            clef=info.get('clef'),
-            relative_key=rel_key,
-            octave_shift=int(info.get('shifted_octave')),
-            absolute_pitch=abs_pitch,
-            defaults=ls_defaults,
-        )
-
-        package = NoteRecordPackage.objects.create(learningscenario=ls)
-        package.process_answers(notes_history)
-
-        return ls, package
 
 
 class NoteRecord(TimeStampedModel):
