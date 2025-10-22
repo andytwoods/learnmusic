@@ -130,3 +130,6 @@ svg {
   transform: scale(1.05);
 }
 
+.alt-bg {
+  background: rgba(13, 110, 253, 0.08)!important;
+}

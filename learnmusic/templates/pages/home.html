@@ -175,7 +175,7 @@
 
   </section>
 
-  <section class="py-5" style="background: rgba(13, 110, 253, 0.08);">
+  <section class="py-5 alt-bg">
     <div class="overlay"></div>
     <div class="container position-relative">
       <h2 class="text-center mb-4">How It Works</h2>
@@ -280,7 +280,7 @@
                           </li>
                           <li class="list-group-item border-0 ps-0">
                             Clearing site data (cache/storage) or using a different device/browser may remove this
-                            progress. But you can decide to upload your progress to this app to get around this.
+                            progress.
                           </li>
                         </ol>
                       </div>
@@ -351,124 +351,8 @@
   </section>
 
 
-
-  <!-- Features Section -->
-  <section id="features" class="py-5 position-relative">
-
-    <div class="container">
-      <div class="text-center">
-        <h2><a href="{% url 'account_signup' %}">Sign-up</a> for advanced features</h2>
-      </div>
-
-      <div id="featuresCarousel" class="carousel slide" data-bs-ride="carousel">
-        <div class="carousel-indicators">
-          <button type="button" data-bs-target="#featuresCarousel" data-bs-slide-to="0" class="active"
-                  aria-current="true" aria-label="Slide 1"></button>
-          <button type="button" data-bs-target="#featuresCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-        </div>
-
-
-        <div class="carousel-inner">
-          <!-- First slide -->
-          <div class="carousel-item active" data-bs-interval="2200">
-            <div class="row g-3 justify-content-center">
-              <div class="col-md-4">
-                <div class="card feature-card h-100 shadow-sm border-0 bg-light">
-                  <div class="card-body text-center">
-                    <h5 class="card-title mb-2"><i class="fas fa-chart-bar me-2 text-primary"></i>Compare</h5>
-                    <p class="card-text text-muted mb-0">Where do you stand compared to others?</p>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="card feature-card h-100 shadow-sm border-0 bg-light">
-                  <div class="card-body text-center">
-                    <h5 class="card-title mb-2"><i class="fas fa-chart-line me-2 text-success"></i>Track</h5>
-                    <p class="card-text text-muted mb-0">Detailed insights and analytics on where to focus</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Second slide -->
-          <div class="carousel-item" data-bs-interval="4000">
-            <div class="row g-3 justify-content-center">
-              <div class="col-md-4">
-                <div class="card feature-card h-100 shadow-sm border-0 bg-light">
-                  <div class="card-body text-center">
-                    <h5 class="card-title mb-2"><i class="fas fa-cloud-upload-alt me-2 text-info"></i>Backup</h5>
-                    <p class="card-text text-muted mb-0">Data stored securely and not in your browser's cache</p>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-4">
-                <div class="card feature-card h-100 shadow-sm border-0 bg-light">
-                  <div class="card-body text-center">
-                    <h5 class="card-title mb-2"><i class="fas fa-flask me-2 text-warning"></i>Science</h5>
-                    <p class="card-text text-muted mb-0">Your anonymous data can be used to benefit all</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Controls -->
-        <button class="carousel-control-prev" type="button" data-bs-target="#featuresCarousel" data-bs-slide="prev"
-                aria-label="Previous">
-          <span class="control-pill" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#featuresCarousel" data-bs-slide="next"
-                aria-label="Next">
-          <span class="control-pill" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
-        </button>
-
-        <!-- Free usage message -->
-        <div class="text-center mt-4">
-          <p class="mb-0">
-            Unless costs mount, will remain free.
-          <p>{% include 'phrase.html' %}
-            <a class="ms-2"
-               href="https://github.com/andytwoods/learnmusic"
-               target="_blank"
-               data-bs-toggle="tooltip"
-               data-bs-placement="bottom"
-               title="MIT with Commons Clause License">
-              <i class="fab fa-github me-2"></i>MIT-CC
-            </a>
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <script>
-    // Bootstrap 5: faster auto-slide + nice defaults
-    document.addEventListener('DOMContentLoaded', function () {
-      new bootstrap.Carousel(document.getElementById('featuresCarousel'), {
-        interval: 10000, // faster cycling
-        ride: 'carousel',
-        touch: true,
-        pause: true     // keep it moving unless user interacts
-      });
-    });
-  </script>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      // Initialize the carousel with custom settings
-      const carousel = new bootstrap.Carousel(document.getElementById('featuresCarousel'), {
-        interval: 5000, // Change slides every 5 seconds
-        touch: true,    // Enable touch swiping on mobile
-        pause: 'hover'  // Pause on mouse hover
-      });
-    });
-  </script>
-
-
   <!-- Testimonials Section -->
-  <section id="testimonials" class="bg-light py-5">
+  <section id="testimonials" class="py-5 alt-bg">
     <div class="container">
       <div class="text-center mb-4">
         <h2>What Users Say</h2>
