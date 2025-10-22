@@ -308,54 +308,6 @@ def practice_data(request, package_id: int):
     return JsonResponse({'success': True})
 
 
-@login_required
-def learningscenario_graph(request, learningscenario_id):
-    package, progress = LearningScenario.progress_latest_serialised(learningscenario_id)
-
-    notes_list = progress.get('notes', []) if isinstance(progress, dict) else progress
-    rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
-                                              for n in notes_list])
-
-    context = {
-        'learningscenario_id': learningscenario_id,
-        # 'package_id': package.id,
-        'package': package,
-        'progress': progress,
-        'rt_per_sk': rt_per_sl,
-    }
-
-    return render(request, 'notes/learningscenario_graph.html', context=context)
-
-
-def learningscenario_graph_try(request, instrument: str, level: str):
-    from notes.instrument_data import resolve_instrument
-    canonical_instrument = resolve_instrument(instrument)
-    if not canonical_instrument:
-        from django.http import Http404
-        raise Http404(f"Instrument not found: {instrument}")
-
-    if request.method == 'POST':
-        notes_list = json.loads(request.body)
-    else:
-        notes_list = tools.generate_serialised_notes(canonical_instrument, level.capitalize())
-
-    progress_wrapped = {
-        'notes': notes_list,
-        'signatures': {
-            'fifths': [0],
-            'vexflow': ['C'],
-        }
-    }
-
-    rt_per_sl = compile_notes_per_skilllevel([{'note': n['note'], 'alter': n['alter'], 'octave': n['octave']}
-                                              for n in notes_list])
-    context = {
-        'package': None,
-        'progress': progress_wrapped,
-        'rt_per_sk': rt_per_sl,
-    }
-
-    return render(request, 'notes/learningscenario_graph_try.html', context=context)
 
 
 @login_required

@@ -66,12 +66,6 @@ class TestAllNotesUrlsRender(TestCase):
         resp = self.client.get(reverse("practice-sound", kwargs={"learningscenario_id": ls.id}))
         self.assertEqual(resp.status_code, 200)
 
-    def test_practice_graph_renders(self):
-        ls = LearningScenarioFactory(user=self.user)
-        resp = self.client.get(reverse("learningscenario_graph", kwargs={"learningscenario_id": ls.id}))
-        self.assertEqual(resp.status_code, 200)
-        self.assertIn("progress", resp.context)
-        self.assertIn("rt_per_sk", resp.context)
 
     def test_practice_data_post(self):
         ls = LearningScenarioFactory(user=self.user)
@@ -168,10 +162,6 @@ class TestAllNotesUrlsRender(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertIn("name", resp.json())
 
-    def test_learningscenario_graph_try_renders(self):
-        url = reverse("learningscenario_graph_try", kwargs={"instrument": "Trumpet", "level": "Beginner"})
-        resp = self.client.get(url)
-        self.assertEqual(resp.status_code, 200)
 
     def test_pushover_callback_redirects(self):
         self.client.logout()

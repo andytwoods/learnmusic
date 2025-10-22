@@ -25,7 +25,6 @@ urlpatterns = [
 
     path("practice-data/<int:package_id>/", views.practice_data, name='practice-data'),
 
-    path("practice-graph/<int:learningscenario_id>/", views.learningscenario_graph, name='learningscenario_graph'),
 
     path('practice-demo/', views.practice_demo, name='practice-demo'),
 
@@ -49,8 +48,6 @@ urlpatterns = [
         'practice-sound-try/<str:instrument>/<str:clef>/<str:key>/<str:absolute_pitch>/<str:level>/<str:octave>/<str:signatures>/',
         views.practice_try,
         name='practice-sound-try-sigs'),
-    path("learningscenario-graph-try/<str:instrument>/<str:level>/",
-         views.learningscenario_graph_try, name='learningscenario_graph_try'),
 
     path("pushover/callback/", views.pushover_callback, name="pushover_callback"),
 

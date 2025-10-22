@@ -39,16 +39,6 @@ class TestPagesWork(TestCase):
                 self.assertTrue(item in response.context)
                 self.assertTrue(len(str(response.context[item])) > 0)
 
-    def test_learningscenario_graph_try(self):
-        url = reverse('learningscenario_graph_try',
-                      kwargs={'instrument': 'Trumpet',
-                              'level': 'Beginner'})
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-
-        for item in ['progress', 'rt_per_sk']:
-            self.assertTrue(item in response.context)
-            self.assertTrue(len(str(response.context[item])) > 0)
 
     def test_learning_home(self):
         url = reverse('notes-home')
