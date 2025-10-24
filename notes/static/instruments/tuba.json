@@ -1,6 +1,6 @@
 {
   "name": "Tuba (Treble Clef)",
-  "ui_template": "trumpet.html",
+  "ui_template": "4-valve-brass.html",
   "clefs": ["TREBLE", "BASS"],
   "common_keys": ["Eb", "Bb"],
   "skill_levels": {

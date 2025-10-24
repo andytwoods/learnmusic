@@ -195,7 +195,7 @@
             if (error_message.length === 0) error_message = window.nothing_selected
             const basic_note = document.current_note.split('/')[0];
 
-            error_message = "Correct answer(s) for " + basic_note + ": " +
+            error_message = "Correct answer(s): " +
               error_message + '\n' + window.error_message + ': ';
 
             if (keys_pressed.length > 0) error_message += badge(keys_pressed);
