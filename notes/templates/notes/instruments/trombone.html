@@ -4,21 +4,22 @@
 {% block keys %}
   <style>
     .valve {
-      border-radius: 15px!important;
-      width: 80px!important;
-      height: 55px!important;
+      border-radius: 15px !important;
+      width: 80px !important;
+      height: 55px !important;
     }
 
   </style>
-  {% for i in '1234567'|make_list  reversed%}
-  <button class="valve input-button my-1  trumpet-b{{ i }} draggable" id='valve{{ i }}' data-valve="{{ i }}">{{ i }}</button>
+  {% for i in '1234567'|make_list reversed %}
+    <button class="valve input-button my-1  trumpet-b{{ i }} draggable" id='valve{{ i }}'
+            data-valve="{{ i }}">{{ i }}</button>
   {% endfor %}
 
 {% endblock keys %}
 
 {% block constants %}
+  {{ block.super }}
   <script>
-    window.keys = '1234567';
     window.nothing_selected = '1';
     window.error_message = 'You selected: ';
   </script>
