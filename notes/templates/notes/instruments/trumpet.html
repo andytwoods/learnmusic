@@ -66,9 +66,11 @@
 
 <div id='valves-right' class="position-absolute fs-6">
   {% block keys %}
-    <button class="valve rounded-pill input-button p-2 trumpet-b3 draggable" id='valve3' data-valve="3">3</button>
-    <button class="valve rounded-pill input-button p-2 trumpet-b2 draggable" id='valve2' data-valve="2">2</button>
-    <button class="valve rounded-pill input-button p-2 trumpet-b1 draggable" id='valve1' data-valve="1">1</button>
+
+    {% for i in '123'|make_list reversed %}
+      {% include 'notes/components/_valve.html' %}
+    {% endfor %}
+
   {% endblock keys %}
 </div>
 
@@ -111,7 +113,13 @@
 
 {% block constants %}
   <script>
-    window.keys = '123'
+    window.keys = (function () {
+      const maxValve = Math.max(
+        ...Array.from(document.querySelectorAll('.valve[data-valve]'))
+          .map(el => parseInt(el.getAttribute('data-valve'), 10))
+      );
+      return Array.from({length: maxValve}, (_, i) => i + 1).join('');
+    })();
     window.nothing_selected = badge('all up!')
     window.error_message = 'You pressed'
   </script>
@@ -195,7 +203,7 @@
             if (error_message.length === 0) error_message = window.nothing_selected
             const basic_note = document.current_note.split('/')[0];
 
-            error_message = "Correct answer(s) for " + basic_note + ": " +
+            error_message = "Correct answer(s): " +
               error_message + '\n' + window.error_message + ': ';
 
             if (keys_pressed.length > 0) error_message += badge(keys_pressed);

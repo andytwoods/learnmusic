@@ -1,6 +1,6 @@
 {
   "name": "Piccolo Trumpet",
-  "ui_template": "piccolo-trumpet.html",
+  "ui_template": "4-valve-brass.html",
   "clefs": ["TREBLE"],
   "common_keys": ["Bb", "A"],
   "skill_levels": {

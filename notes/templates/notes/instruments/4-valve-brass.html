@@ -1,0 +1,8 @@
+{% extends 'notes/instruments/trumpet.html' %}
+{% load static %}
+
+{% block keys %}
+    {% for i in '1234'|make_list reversed %}
+      {% include 'notes/components/_valve.html' %}
+    {% endfor %}
+{% endblock keys %}

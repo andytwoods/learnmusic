@@ -26,8 +26,70 @@ const trial_manager = (function () {
 
         const correct_message_el = document.getElementById('correct-message');
 
+        // Elements for optional note guessing UI (note letters only, ignore octave)
+        const guessUI = document.getElementById('note-guess-ui');
+        const guessButtonsContainer = document.getElementById('note-guess-buttons');
+        const guessSubmit = document.getElementById('note-guess-submit');
+        const guessFeedback = document.getElementById('note-guess-feedback');
+        const NOTE_BUTTON_SELECTOR = '.note-guess-btn';
+        let selectedLetter = null;
+
+        function getCurrentShownLetter() {
+            const shown = (typeof keyAdjust === 'function') ? keyAdjust(document.current_note) : document.current_note;
+            // shown like "C#/4" -> take first char (A-G)
+            return (shown || '').charAt(0).toUpperCase();
+        }
+
+        function clearButtonStates() {
+            if (!guessButtonsContainer) return;
+            const btns = guessButtonsContainer.querySelectorAll(NOTE_BUTTON_SELECTOR);
+            btns.forEach(btn => btn.classList.remove('active'));
+        }
+
+        function setupGuessButtons() {
+            if (!guessButtonsContainer) return;
+            // Bind click handlers once
+            if (!guessButtonsContainer.dataset.bound) {
+                guessButtonsContainer.addEventListener('click', function (e) {
+                    const btn = e.target.closest(NOTE_BUTTON_SELECTOR);
+                    if (!btn) return;
+                    selectedLetter = btn.dataset.note;
+                    clearButtonStates();
+                    btn.classList.add('active');
+                });
+                guessButtonsContainer.dataset.bound = '1';
+            }
+            // Do not preselect any letter; wait for user choice
+            selectedLetter = null;
+            clearButtonStates();
+        }
+
+        function resetGuessUI() {
+            if (!guessUI) return;
+            guessUI.style.display = 'none';
+            if (guessFeedback) { guessFeedback.textContent = ''; guessFeedback.className = 'mt-2'; }
+            selectedLetter = null;
+            clearButtonStates();
+        }
+
+        if (guessSubmit) {
+            guessSubmit.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (!selectedLetter) return;
+                const currentLetter = getCurrentShownLetter();
+                const correct = selectedLetter === currentLetter;
+                if (guessFeedback) {
+                    const shown = (typeof keyAdjust === 'function') ? keyAdjust(document.current_note) : document.current_note;
+                    const shownLetter = currentLetter;
+                    guessFeedback.textContent = correct ? 'Correct!' : `Not quite. The note is ${shownLetter}.`;
+                    guessFeedback.className = 'mt-2 text-white fw-bold';
+                }
+            });
+        }
+
         api.stop = function () {
             error_message_el.style.display = 'none';
+            resetGuessUI();
             if (callback) callback();
             callback = undefined;
         }
@@ -36,6 +98,11 @@ const trial_manager = (function () {
             callback = _callback;
             correct_answer_el.innerHTML = message;
             error_message_el.style.display = 'block';
+            // Show optional guessing UI only when enabled (e.g., practice_try page)
+            if (window.enable_note_guess && guessUI) {
+                setupGuessButtons();
+                guessUI.style.display = 'block';
+            }
         }
 
         api.brief_correct_message = function () {
