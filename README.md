@@ -195,40 +195,13 @@ We welcome contributions of all kinds — issues, docs, bug fixes, and especiall
 
 Instruction sheets power the practice experience for each instrument. They live as JSON files in:
 
-- notes/static/instruments/
+- [notes/static/instruments/](https://github.com/andytwoods/learnmusic/blob/master/notes/static/instruments/)
 
-A good example to follow is notes/static/instruments/trumpet.json.
+A good example to follow is [notes/static/instruments/trumpet.json](https://github.com/andytwoods/learnmusic/blob/master/notes/static/instruments/trumpet.json).
 
 #### What is an instruction sheet?
 
-It’s a JSON file that describes an instrument’s metadata and playable range at different skill levels, along with any fingering charts (when applicable). Here’s a minimal template you can copy:
-
-```json
-{
-  "name": "Instrument Name",
-  "ui_template": "instrument.html",  
-  "clefs": ["TREBLE"],              
-  "common_keys": ["C"],            
-  "skill_levels": {
-    "Beginner": {
-      "notes": "C 0 4;D 0 4;E 0 4"  
-    },
-    "Intermediate": {
-      "lowest_note": "C 0 3",
-      "highest_note": "C 0 5"
-    },
-    "Advanced": {
-      "lowest_note": "C 0 3",
-      "highest_note": "C 0 6"
-    }
-  },
-  "fingerings": {
-    "C/4": [""],
-    "D/4": ["1"],
-    "Eb/4": ["2"]
-  }
-}
-```
+It’s a JSON file that describes an instrument’s metadata and playable range at different skill levels, along with any fingering charts (when applicable).
 
 Notes on fields:
 - name: Display name of the instrument (e.g., "Trumpet").
