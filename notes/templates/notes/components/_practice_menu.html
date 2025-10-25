@@ -104,7 +104,7 @@
           </ul>
 
           <!-- Tab panes -->
-          <div class="tab-content bg-white p-3" id="settingsTabContent">
+          <div class="tab-content bg-white p-3 pb-0" id="settingsTabContent">
 
             <!-- Instrument -->
             <div class="tab-pane fade show active" id="instrument" role="tabpanel"
@@ -122,6 +122,15 @@
                     </label>
                   </div>
                 {% endfor %}
+                <p class="my-1 text-muted bg-white">
+                  <small>
+                    Can’t find your instrument? Adding one is simple – just visit
+                    <a href="/instruments/contribute/" target="_blank" rel="noopener">this page</a>
+                    for details on how to contribute. This app is open-source and built for the community,
+                    so your help is greatly appreciated.
+                  </small>
+                </p>
+
               </div>
             </div>
 
@@ -218,7 +227,7 @@
           </div>
         </div>
 
-        <div class="modal-footer">
+        <div class="modal-footer mt-0">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           <button type="submit" class="btn btn-primary">Apply settings</button>
         </div>

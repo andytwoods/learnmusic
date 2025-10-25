@@ -22,6 +22,8 @@
   - [Python Tests](#python-tests)
   - [JavaScript Tests](#javascript-tests)
 - [Project Settings](#project-settings)
+- [Contributing](#contributing)
+  - [Contributing Instruction Sheets](#contributing-instruction-sheets)
 - [License](#license)
 
 ## 🔍 Overview
@@ -184,6 +186,94 @@ python manage.py runserver
 By default, `local_sqlite` stores the database file at `BASE_DIR / "local_db.sqlite3"`. If you prefer the default `db.sqlite3` from base settings, you can continue using `config.settings.local` instead.
 
 For detailed information about Cookiecutter Django settings, refer to the official docs: https://cookiecutter-django.readthedocs.io/en/latest/1-getting-started/settings.html
+
+## 🤝 Contributing
+
+We welcome contributions of all kinds — issues, docs, bug fixes, and especially help expanding our instrument instruction sheets. Any help is sincerely appreciated. If you're unsure about anything, please reach out to the project maintainers — opening a GitHub issue is perfect and we’re happy to guide you.
+
+### Contributing Instruction Sheets
+
+Instruction sheets power the practice experience for each instrument. They live as JSON files in:
+
+- notes/static/instruments/
+
+A good example to follow is notes/static/instruments/trumpet.json.
+
+#### What is an instruction sheet?
+
+It’s a JSON file that describes an instrument’s metadata and playable range at different skill levels, along with any fingering charts (when applicable). Here’s a minimal template you can copy:
+
+```json
+{
+  "name": "Instrument Name",
+  "ui_template": "instrument.html",  
+  "clefs": ["TREBLE"],              
+  "common_keys": ["C"],            
+  "skill_levels": {
+    "Beginner": {
+      "notes": "C 0 4;D 0 4;E 0 4"  
+    },
+    "Intermediate": {
+      "lowest_note": "C 0 3",
+      "highest_note": "C 0 5"
+    },
+    "Advanced": {
+      "lowest_note": "C 0 3",
+      "highest_note": "C 0 6"
+    }
+  },
+  "fingerings": {
+    "C/4": [""],
+    "D/4": ["1"],
+    "Eb/4": ["2"]
+  }
+}
+```
+
+Notes on fields:
+- name: Display name of the instrument (e.g., "Trumpet").
+- ui_template: The name of a UI template for the instrument if a custom layout is needed (existing templates can be reused).
+- clefs: One or more clefs this instrument commonly uses (e.g., ["TREBLE"]).
+- common_keys: A shortlist of keys the instrument commonly plays in (e.g., ["Bb", "C"]).
+- skill_levels:
+  - Beginner: Either a semicolon-separated list of notes in the format "NOTE ALTER OCTAVE" (e.g., "C 0 4").
+  - Intermediate/Advanced: Use lowest_note and highest_note to define range (same note format).
+- fingerings: Optional per-note fingering references, especially helpful for brass/woodwinds (keys like "C/4"). Empty string ("") can indicate "open" or no valves/keys pressed.
+
+Tip: See trumpet.json for a fuller example, including alternate fingerings and references.
+
+#### Naming and formatting
+- File name: lowercase, hyphen-free JSON file matching the instrument (e.g., flute.json, alto_sax.json). If unsure, just pick something sensible — we can rename during review.
+- Use valid JSON (double quotes, commas, etc.).
+- Keep lines under ~120 characters when possible.
+
+#### Validate your JSON
+- Use any JSON linter/formatter (e.g., jsonlint.com or your editor’s formatter).
+- Run the project locally to ensure the instrument loads:
+  ```bash
+  python manage.py runserver
+  ```
+
+#### Try it in the app
+Open a practice page using one of these URLs (adjust instrument, clef, key, level as needed):
+- Without absolute pitch:
+  /notes/practice-try/Trumpet/Treble/Bb/Beginner/0/0/
+- With absolute pitch:
+  /notes/practice-try/Trumpet/Treble/Bb/Bb/Beginner/0/0/
+
+If your instrument is named differently, substitute the path segment accordingly (e.g., Flute/Treble/C/Beginner/0/0/).
+
+#### How to submit
+1) Fork the repository and create a branch.
+2) Add your JSON file to notes/static/instruments/ and commit.
+3) Optionally, add a short note in the README proposing any special considerations for your instrument.
+4) Open a Pull Request. We’ll review promptly and help with any tweaks.
+
+#### Not sure or have questions?
+- Create a feature request or question on GitHub: https://github.com/andythomaswoods/learnmusic/issues/new
+- Or open a draft PR with your work-in-progress; we’ll jump in and help.
+
+Thank you — any help is appreciated and makes LearnMusic better for everyone!
 
 ## 📄 License
 
