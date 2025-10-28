@@ -1,0 +1,591 @@
+<!-- Modal: Practice Notes -->
+<div class="modal fade" id="practice-notes-modal" tabindex="-1" aria-labelledby="practice-notes-modal-label"
+     aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="practice-notes-modal-label">Practice notes</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="small text-muted mb-2">Click notes to toggle selection. You can scroll down.</div>
+        <div id="practice-notes-output" class="w-100"></div>
+      </div>
+      <div class="modal-footer d-flex justify-content-between">
+        <div class="text-muted small" id="practice-notes-selected-count" aria-live="polite"></div>
+        <div>
+          <button type="button" class="btn btn-primary me-2" id="apply-practice-notes-btn">Apply selection</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="practice-notes-menu-items" style="display: none;" aria-hidden="true">
+  <li><h6 class="dropdown-header">Music</h6></li>
+  <li class="px-2 py-1">
+    <button type="button" class="btn btn-light btn-sm w-100" data-bs-toggle="modal"
+            data-bs-target="#practice-notes-modal">
+      <i class="fa-solid fa-music me-2"></i>Show practice notes
+    </button>
+  </li>
+  <li>
+    <hr class="dropdown-divider">
+  </li>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.top !== window.self) {
+      // Don't register PWA logic while embedded in an iframe
+      return;
+    }
+    const toggleBtn = document.getElementById('dropdownMenuButton');
+    const closeBtn = document.getElementById('dropdown-close-btn');
+    if (toggleBtn && closeBtn && window.bootstrap?.Dropdown) {
+      const dd = bootstrap.Dropdown.getOrCreateInstance(toggleBtn);
+      closeBtn.addEventListener('click', function () {
+        dd.hide();
+      });
+    }
+
+    // Insert practice notes menu items at placeholder (#add-notes-menu-here); fallback to bottom of right dropdown
+    try {
+      const dropdownMenu = document.getElementById('right-menu');
+      const placeholder = document.getElementById('add-notes-menu-here');
+      const itemsContainer = document.getElementById('practice-notes-menu-items');
+      if (itemsContainer) {
+        if (placeholder && placeholder.parentNode) {
+          // Move each <li> before the placeholder, then remove the placeholder
+          while (itemsContainer.firstElementChild) {
+            placeholder.parentNode.insertBefore(itemsContainer.firstElementChild, placeholder);
+          }
+          placeholder.remove();
+          itemsContainer.remove();
+        } else if (dropdownMenu) {
+          // Fallback: append to bottom
+          while (itemsContainer.firstElementChild) {
+            dropdownMenu.appendChild(itemsContainer.firstElementChild);
+          }
+          itemsContainer.remove();
+        }
+      }
+    } catch (err) {
+      console.warn('Could not inject practice notes items into menu:', err);
+    }
+
+    // ---------- Practice Notes Modal Rendering ----------
+    const VF = window.Vex?.Flow;
+    const modalEl = document.getElementById('practice-notes-modal');
+    const outputEl = document.getElementById('practice-notes-output');
+
+    let current = {notes: [], selected: [], renderer: null, context: null};
+
+    function parseToVexKey(noteObj) {
+      // Convert {note:'C', alter:'1', octave:'4'} to "C#/4"
+      let k = (noteObj.note || '').toUpperCase();
+      switch (String(noteObj.alter)) {
+        case '1':
+          k += '#';
+          break;
+        case '-1':
+          k += 'b';
+          break;
+        case '2':
+          k += '##';
+          break;
+        case '-2':
+          k += 'bb';
+          break;
+      }
+      k += '/' + String(noteObj.octave);
+      return k;
+    }
+
+    function fetchPracticeNotes() {
+      try {
+        const pd = (typeof cache !== 'undefined' && window.cache_key) ? (cache.get(window.cache_key) || window.progress_data) : window.progress_data;
+        const arr = (pd && pd.notes) ? pd.notes : [];
+        // Map to VexFlow keys and de-duplicate while keeping order
+        const keys = [];
+        const seen = new Set();
+        for (const n of arr) {
+          const key = parseToVexKey(n);
+          if (!seen.has(key)) {
+            seen.add(key);
+            keys.push(key);
+          }
+        }
+        return keys;
+      } catch (e) {
+        console.error('Unable to fetch practice notes:', e);
+        return [];
+      }
+    }
+
+    // ---------- Build full range from instrument JSON ----------
+    function noteTripletToMidi(letter, alter, octave) {
+      // letter like 'C', alter like '-1' or '1' (string or number), octave string/number
+      const base = {'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11};
+      const semi = base[String(letter).toUpperCase()] ?? 0;
+      const alt = parseInt(alter || '0', 10) || 0;
+      const oct = parseInt(octave, 10);
+      return (oct + 1) * 12 + semi + alt; // MIDI number
+    }
+
+    function vexKeyToMidi(vk) {
+      // e.g., "C#/4" or "Bb/5"
+      const m = String(vk).match(/^([A-Ga-g])([#b]*?)\/(\d+)$/);
+      if (!m) return null;
+      const letter = m[1].toUpperCase();
+      const acc = m[2] || '';
+      const octave = parseInt(m[3], 10);
+      const base = {'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11}[letter];
+      let alt = 0;
+      for (const ch of acc) alt += (ch === '#') ? 1 : -1;
+      return (octave + 1) * 12 + base + alt;
+    }
+
+    function midiToSharpKey(midi) {
+      // default sharp spelling
+      const pitchClass = ((midi % 12) + 12) % 12;
+      const octave = Math.floor(midi / 12) - 1;
+      const map = {
+        0: 'C', 1: 'C#', 2: 'D', 3: 'D#', 4: 'E', 5: 'F', 6: 'F#', 7: 'G', 8: 'G#', 9: 'A', 10: 'A#', 11: 'B'
+      };
+      return map[pitchClass] + '/' + octave;
+    }
+
+    function buildFingeringsMidiIndex() {
+      const full = window.document?.instrument_full_data;
+      const fingerings = full && full.fingerings ? full.fingerings : (window.document?.instrument_data || {});
+      const index = new Map();
+      try {
+        for (const key of Object.keys(fingerings || {})) {
+          const midi = vexKeyToMidi(key);
+          if (midi != null && !index.has(midi)) index.set(midi, key);
+        }
+      } catch (_) { /* ignore */
+      }
+      return index;
+    }
+
+    function fetchFullRangeKeys() {
+      const full = window.document?.instrument_full_data;
+      const fingerIdx = buildFingeringsMidiIndex();
+
+      // Helper: build continuous range between two MIDI numbers using preferred spelling
+      function buildRange(start, end) {
+        const s = Math.min(start, end);
+        const e = Math.max(start, end);
+        const keys = [];
+        for (let m = s; m <= e; m++) {
+          const key = fingerIdx.get(m) || midiToSharpKey(m);
+          keys.push(key);
+        }
+        return keys;
+      }
+
+      // Primary path: use explicit Advanced skill level bounds when available
+      if (full && full.skill_levels) {
+        const sl = full.skill_levels;
+        const adv = sl['Advanced'] || sl['advanced'] || sl['ADVANCED'];
+        if (adv) {
+          const lowStr = adv.lowest_note || adv.lowest || adv.lowestNote;
+          const highStr = adv.highest_note || adv.highest || adv.highestNote;
+          if (lowStr && highStr) {
+            const [lLetter, lAlter, lOct] = String(lowStr).split(/\s+/);
+            const [hLetter, hAlter, hOct] = String(highStr).split(/\s+/);
+            const lowMidi = noteTripletToMidi(lLetter, lAlter, lOct);
+            const highMidi = noteTripletToMidi(hLetter, hAlter, hOct);
+            if (isFinite(lowMidi) && isFinite(highMidi)) {
+              return buildRange(lowMidi, highMidi);
+            }
+          }
+        }
+      }
+
+      // Fallback: derive range from available fingering keys (min/max MIDI)
+      try {
+        const fing = (full && full.fingerings) ? full.fingerings : (window.document?.instrument_data || {});
+        const keys = Object.keys(fing || {});
+        if (keys.length) {
+          let min = Infinity, max = -Infinity;
+          for (const k of keys) {
+            const m = vexKeyToMidi(k);
+            if (m != null) {
+              if (m < min) min = m;
+              if (m > max) max = m;
+            }
+          }
+          if (isFinite(min) && isFinite(max)) {
+            return buildRange(min, max);
+          }
+        }
+      } catch (_) { /* ignore */
+      }
+
+      return [];
+    }
+
+    function ensureRenderer(width, height) {
+      if (!VF) return null;
+      if (current.renderer) return current.renderer;
+      const renderer = new VF.Renderer(outputEl, VF.Renderer.Backends.SVG);
+      renderer.resize(width, height);
+      current.renderer = renderer;
+      current.context = renderer.getContext();
+      return renderer;
+    }
+
+    function clearOutput() {
+      if (current.context) current.context.clear();
+      outputEl.innerHTML = '';
+      current.renderer = null;
+      current.context = null;
+    }
+
+    function updateSelectedCount() {
+      const countEl = document.getElementById('practice-notes-selected-count');
+      if (!countEl) return;
+      const total = (current.notes && current.notes.length) || 0;
+      const selectedCount = (current.selected || []).slice(0, total).filter(Boolean).length;
+      countEl.textContent = total ? `${selectedCount} of ${total} selected` : '';
+    }
+
+    function addNoteInteractivity(notes) {
+      if (!current.context) return;
+      const noteHeads = current.context.svg.querySelectorAll('.vf-notehead');
+      noteHeads.forEach((noteHead, index) => {
+        const associatedNote = notes[index];
+        noteHead.setAttribute('data-note', associatedNote);
+        noteHead.style.cursor = 'pointer';
+        noteHead.addEventListener('click', () => {
+          current.selected[index] = !current.selected[index];
+          noteHead.style.fill = current.selected[index] ? 'black' : 'lightgray';
+          updateSelectedCount();
+        });
+      });
+    }
+
+    function noteObjToVexKey(n) {
+      try {
+        const letter = String(n.note || n.letter || '').toUpperCase().charAt(0);
+        let alt = n.alter;
+        if (alt === undefined || alt === null || alt === '') alt = '0';
+        alt = String(alt);
+        const octave = String(n.octave);
+        let acc = '';
+        if (alt === '1') acc = '#';
+        else if (alt === '-1') acc = 'b';
+        else if (alt === '2') acc = '##';
+        else if (alt === '-2') acc = 'bb';
+        return letter + acc + '/' + octave;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function vexKeyToTriplet(vk) {
+      const m = String(vk).match(/^([A-Ga-g])([#b]*?)\/(\d+)$/);
+      if (!m) return null;
+      const letter = m[1].toUpperCase();
+      const acc = m[2] || '';
+      const octave = m[3];
+      let alter = 0;
+      for (const ch of acc) alter += (ch === '#') ? 1 : -1;
+      return {note: letter, alter: String(alter), octave: String(octave)};
+    }
+
+    function applySelectionUpdate() {
+      try {
+        const notes = current.notes || [];
+        const selected = (current.selected || []).slice(0, notes.length).map(Boolean);
+        const selectedKeys = [];
+        for (let i = 0; i < notes.length; i++) {
+          if (selected[i]) selectedKeys.push(notes[i]);
+        }
+        if (!selectedKeys.length) {
+          alert('Please select at least one note.');
+          return;
+        }
+
+        // Ensure progress_data structure exists
+        if (!window.progress_data) window.progress_data = {};
+        if (!Array.isArray(window.progress_data.notes)) window.progress_data.notes = [];
+
+        // Map existing notes by Vex key to preserve history
+        const existingMap = new Map();
+        for (const n of window.progress_data.notes) {
+          const key = noteObjToVexKey(n);
+          if (key) existingMap.set(key, n);
+        }
+
+        // Build new notes array based on selection
+        const newNotes = [];
+        for (const key of selectedKeys) {
+          const existing = existingMap.get(key);
+          if (existing) {
+            newNotes.push(existing);
+          } else {
+            const trip = vexKeyToTriplet(key);
+            if (trip) {
+              newNotes.push({
+                note: trip.note,
+                alter: trip.alter,
+                octave: trip.octave,
+                n: 0,
+                correct: [],
+                reaction_time_log: []
+              });
+            }
+          }
+        }
+
+        // Apply
+        window.progress_data.notes = newNotes;
+
+        // Persist to cache if available
+        if (typeof cache !== 'undefined' && window.cache_key) {
+          try {
+            cache.save(window.cache_key, window.progress_data);
+          } catch (_) {
+          }
+        }
+
+        // Update UI counter
+        const counter = document.getElementById('counter-value');
+        if (counter) {
+          const count = newNotes.length;
+          counter.textContent = `${count} notes to be shown`;
+        }
+
+        // Provide subtle feedback
+        const applyBtn = document.getElementById('apply-practice-notes-btn');
+        if (applyBtn) {
+          const original = applyBtn.textContent;
+          applyBtn.disabled = true;
+          applyBtn.textContent = 'Applied';
+          setTimeout(() => {
+            applyBtn.textContent = original;
+            applyBtn.disabled = false;
+          }, 800);
+        }
+      } catch (e) {
+        console.error('Failed to apply selection update', e);
+      }
+    }
+
+    function renderNotes() {
+      if (!VF) return;
+      const parentWidth = outputEl.offsetWidth || outputEl.parentElement.offsetWidth || 900;
+
+      // Helper: sort VexFlow keys (e.g., C#/4) from lowest to highest pitch
+      function sortNotesAscending(arr) {
+        return arr.slice().sort((a, b) => {
+          const ma = vexKeyToMidi(a);
+          const mb = vexKeyToMidi(b);
+          if (ma == null && mb == null) return a.localeCompare(b);
+          if (ma == null) return 1;
+          if (mb == null) return -1;
+          if (ma !== mb) return ma - mb;
+          // Stable tie-breaker for enharmonics
+          return a.localeCompare(b);
+        });
+      }
+
+      // Combine current practice notes with full instrument range
+      const fullRange = fetchFullRangeKeys();
+      const practiceOnly = fetchPracticeNotes();
+      const combined = [];
+      const seen = new Set();
+      for (const k of fullRange) {
+        if (!seen.has(k)) {
+          seen.add(k);
+          combined.push(k);
+        }
+      }
+      for (const k of practiceOnly) {
+        if (!seen.has(k)) {
+          seen.add(k);
+          combined.push(k);
+        }
+      }
+
+      // Always present notes from lowest to highest
+      const previousNotes = Array.isArray(current.notes) ? current.notes.slice() : [];
+      const previousSelected = Array.isArray(current.selected) ? current.selected.slice() : [];
+
+      let notes = (previousNotes.length ? previousNotes : combined);
+      notes = sortNotesAscending(notes);
+
+      if (!notes.length) {
+        outputEl.innerHTML = '<div class="text-muted">No notes available.</div>';
+        return;
+      }
+
+      // Build existing selection set from progress_data to reflect current session selection
+      const existingSet = (() => {
+        try {
+          const arr = (window.progress_data && Array.isArray(window.progress_data.notes)) ? window.progress_data.notes : [];
+          const s = new Set();
+          for (const n of arr) {
+            const k = noteObjToVexKey(n);
+            if (k) s.add(k);
+          }
+          return s;
+        } catch (_) {
+          return new Set();
+        }
+      })();
+
+      // Remap current.selected to the sorted notes order preserving identity by note key
+      const prevSelectedSet = (() => {
+        const s = new Set();
+        for (let i = 0; i < previousNotes.length; i++) {
+          if (previousSelected[i]) s.add(previousNotes[i]);
+        }
+        return s;
+      })();
+      current.selected = notes.map((n) => {
+        if (prevSelectedSet.size) return prevSelectedSet.has(n);
+        return existingSet.size ? existingSet.has(n) : true;
+      });
+
+      clearOutput();
+      ensureRenderer(parentWidth, 1000);
+      const context = current.context;
+
+      const notesPerStave = parentWidth < 800 ? 6 : 10;
+      let yPosition = 40;
+
+      for (let i = 0; i < notes.length; i += notesPerStave) {
+        const stave = new VF.Stave(10, yPosition, parentWidth - 20);
+        stave.addClef('treble').setContext(context).draw();
+
+        const staveNotes = notes.slice(i, i + notesPerStave).map((note, idx) => {
+          const staveNote = new VF.StaveNote({keys: [note], duration: '1'});
+          // accidentals
+          if (note.includes('b')) {
+            staveNote.addModifier(new VF.Accidental('b'), 0);
+          } else if (note.includes('#')) {
+            staveNote.addModifier(new VF.Accidental('#'), 0);
+          }
+
+          const selected = !!current.selected[i + idx];
+          staveNote.setStyle({fillStyle: selected ? 'black' : 'lightgray'});
+
+          // Add label above note (pitch + octave)
+          const [pitch, octave] = note.split('/');
+          const label = pitch.replace('b', '♭').replace('#', '♯') + ' ' + octave;
+          const annotation = new VF.Annotation(label)
+            .setFont('Arial', 12)
+            .setVerticalJustification(VF.Annotation.VerticalJustify.TOP);
+          staveNote.addModifier(annotation, 0);
+
+          return staveNote;
+        });
+
+        const voice = new VF.Voice({num_beats: staveNotes.length, beat_value: 1}).addTickables(staveNotes);
+        new VF.Formatter().joinVoices([voice]).format([voice], parentWidth - 40);
+        voice.draw(context, stave);
+
+        yPosition += 140;
+      }
+
+      addNoteInteractivity(notes);
+      current.notes = notes;
+      updateSelectedCount();
+    }
+
+    function waitForInstrumentData(timeoutMs = 2000) {
+      return new Promise((resolve) => {
+        const start = Date.now();
+
+        function isReady() {
+          return !!(window.document && window.document.instrument_full_data);
+        }
+
+        if (isReady()) return resolve(true);
+        const onReady = () => {
+          cleanup();
+          resolve(true);
+        };
+        const onTimeout = () => {
+          cleanup();
+          resolve(false);
+        };
+
+        function cleanup() {
+          try {
+            document.removeEventListener('instrumentdata:ready', onReady);
+          } catch (_) {
+          }
+          if (tid) clearInterval(tid);
+          if (to) clearTimeout(to);
+        }
+
+        document.addEventListener('instrumentdata:ready', onReady, {once: true});
+        const tid = setInterval(() => {
+          if (isReady()) onReady();
+          else if (Date.now() - start > timeoutMs) onTimeout();
+        }, 50);
+        const to = setTimeout(onTimeout, timeoutMs + 50);
+      });
+    }
+
+    function onShown() {
+      // Do NOT force all selected on open; let renderNotes derive from progress_data
+      // Clear any previous ad-hoc selection so defaults are recomputed from session state
+      current.selected = [];
+      // Force recomputation of the note list on open (avoid stale partial lists)
+      current.notes = [];
+      // Ensure instrument data is loaded before rendering full range
+      waitForInstrumentData().then(() => setTimeout(() => {
+        renderNotes();
+        updateSelectedCount();
+      }, 50));
+      // Wire apply button
+      setTimeout(() => {
+        const btn = document.getElementById('apply-practice-notes-btn');
+        if (btn && !btn.dataset.bound) {
+          btn.addEventListener('click', applySelectionUpdate);
+          btn.dataset.bound = '1';
+        }
+      }, 0);
+    }
+
+    if (modalEl) {
+      modalEl.addEventListener('shown.bs.modal', onShown);
+      // If instrument data arrives while modal is open, re-render to include full range
+      document.addEventListener('instrumentdata:ready', function () {
+        if (modalEl.classList.contains('show')) {
+          // Clear cached notes so renderNotes rebuilds from full instrument range
+          current.notes = [];
+          renderNotes();
+        }
+      });
+    }
+
+    // Expose getter similar to learningscenario page for potential use
+    window.practice_notes_selection = function () {
+      const notes = current.notes.length ? current.notes : fetchPracticeNotes();
+      const selected = current.selected.slice(0, notes.length).map(Boolean);
+      const added = [];
+      const removed = [];
+      // All selected by default; track removed for unselected
+      for (let i = 0; i < notes.length; i++) {
+        if (!selected[i]) removed.push(notes[i]);
+      }
+      return {selected, removed, notes};
+    }
+
+    // Re-render on resize while modal visible
+    window.addEventListener('resize', function () {
+      if (modalEl && modalEl.classList.contains('show')) {
+        renderNotes();
+      }
+    });
+  });
+</script>
