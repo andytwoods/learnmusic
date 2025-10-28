@@ -21,6 +21,23 @@ function getInstrumentData(instrument, callback) {
         });
 }
 
+// New: fetch the full instrument definition JSON (including skill_levels, ranges, etc.)
+function getInstrumentFullData(instrument, callback) {
+    fetch('/static/instruments/' + instrument)
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then((data) => {
+            callback(data);
+        })
+        .catch((error) => {
+            console.error('Error fetching instrument JSON:', error);
+        });
+}
+
 function fade_in(element, duration) {
     // Apply the fade-in effect
     element.style.opacity = '0'; // Start with opacity 0

@@ -125,9 +125,22 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      getInstrumentData('{{ answers_json }}', function (_instrument_data) {
-        document.instrument_data = _instrument_data;
-      });
+      // Load full instrument definition (ranges, clefs, fingerings)
+      if (typeof getInstrumentFullData === "function") {
+        getInstrumentFullData('{{ answers_json }}', function (_instrument_full_data) {
+          document.instrument_full_data = _instrument_full_data;
+          // Maintain backward compatibility: instrument_data holds fingerings map
+          document.instrument_data = _instrument_full_data.fingerings || _instrument_full_data;
+          try { document.dispatchEvent(new Event('instrumentdata:ready')); } catch (_) {}
+        });
+      } else if (typeof getInstrumentData === "function") {
+        // Fallback for older cached JS: fetch fingerings only and synthesize minimal full data
+        getInstrumentData('{{ answers_json }}', function (_instrument_data) {
+          document.instrument_data = _instrument_data || {};
+          document.instrument_full_data = { fingerings: document.instrument_data };
+          try { document.dispatchEvent(new Event('instrumentdata:ready')); } catch (_) {}
+        });
+      }
     });
 
     window.progress_data = JSON.parse(

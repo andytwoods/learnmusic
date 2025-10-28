@@ -23,10 +23,24 @@
 {% block load_progress_data_from_cache %}
   <script>
     (function () {
-      let progress_data_exists = cache.get(window.cache_key, []) || [];
-      if (progress_data_exists.length > 0) {
-        window.progress_data = progress_data_exists;
-        console.log('Progress data loaded from cache');
+      try {
+        const cached = cache.get(window.cache_key);
+        if (!cached) return;
+        // Support legacy array shape and current object shape with notes array
+        if (Array.isArray(cached)) {
+          if (cached.length > 0) {
+            window.progress_data = cached;
+            console.log('Progress data (legacy array) loaded from cache');
+          }
+        } else if (typeof cached === 'object' && Array.isArray(cached.notes)) {
+          window.progress_data = cached;
+          console.log(`Progress data loaded from cache: ${cached.notes.length} notes`);
+          // Update counter UI if present
+          const counter = document.getElementById('counter-value');
+          if (counter) counter.textContent = `${cached.notes.length} notes to be shown`;
+        }
+      } catch (e) {
+        console.error('Failed to load progress data from cache', e);
       }
     }());
 
