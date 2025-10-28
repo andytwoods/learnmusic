@@ -15,27 +15,29 @@
 
 {% block body %}
 
-  <div id='error-message'
-       class="position-fixed start-50 translate-middle-x text-center bg-danger text-white p-2 rounded shadow"
-       style="z-index: 1050; top: 5%; display: none;">
-    <h2>o o p s</h2>
-    <p id="correct-answer"></p>
-    <div id="note-guess-ui" style="display:none;" class="mt-2">
-      <div class="fw-bold">Identify the note letter (optional)</div>
-      <div class="d-flex justify-content-center align-items-center gap-2 mt-2 flex-wrap">
-        <div id="note-guess-buttons" class="d-flex flex-row flex-wrap align-items-center gap-2" aria-label="Note letters">
-          <button type="button" class="btn btn-light btn-sm note-guess-btn" data-note="C">C</button>
-          <button type="button" class="btn btn-light btn-sm note-guess-btn" data-note="D">D</button>
-          <button type="button" class="btn btn-light btn-sm note-guess-btn" data-note="E">E</button>
-          <button type="button" class="btn btn-light btn-sm note-guess-btn" data-note="F">F</button>
-          <button type="button" class="btn btn-light btn-sm note-guess-btn" data-note="G">G</button>
-          <button type="button" class="btn btn-light btn-sm note-guess-btn" data-note="A">A</button>
-          <button type="button" class="btn btn-light btn-sm note-guess-btn" data-note="B">B</button>
+  <div class="position-fixed top-0 start-0 end-0 text-center" style="z-index: 1050; top: 5%; pointer-events: none; display: none;">
+    <div id="error-message"
+         class="draggable d-inline-block text-center text-white p-2 rounded shadow"
+         style="display: none; pointer-events: auto; background-color: rgba(220, 53, 69, 0.85)!important;">
+      <h2>o o p s</h2>
+      <p id="correct-answer"></p>
+      <div id="note-guess-ui" style="display:none;" class="mt-2">
+        <div class="fw-bold">Identify the note letter (optional)</div>
+        <div class="d-flex justify-content-center align-items-center gap-2 mt-2 flex-wrap">
+          <div id="note-guess-buttons" class="d-flex flex-row flex-wrap align-items-center gap-2" aria-label="Note letters">
+            <button type="button" class="btn btn-light btn-sm note-guess-btn" data-note="C">C</button>
+            <button type="button" class="btn btn-light btn-sm note-guess-btn" data-note="D">D</button>
+            <button type="button" class="btn btn-light btn-sm note-guess-btn" data-note="E">E</button>
+            <button type="button" class="btn btn-light btn-sm note-guess-btn" data-note="F">F</button>
+            <button type="button" class="btn btn-light btn-sm note-guess-btn" data-note="G">G</button>
+            <button type="button" class="btn btn-light btn-sm note-guess-btn" data-note="A">A</button>
+            <button type="button" class="btn btn-light btn-sm note-guess-btn" data-note="B">B</button>
+          </div>
+          <button id="note-guess-submit" class="btn btn-light btn-sm ms-2">Check</button>
         </div>
-        <button id="note-guess-submit" class="btn btn-light btn-sm ms-2">Check</button>
+        <div id="note-guess-feedback" class="mt-2"></div>
+        <div class="small mt-1">Press Space to skip</div>
       </div>
-      <div id="note-guess-feedback" class="mt-2"></div>
-      <div class="small mt-1">Press Space to skip</div>
     </div>
   </div>
 

@@ -88,7 +88,7 @@ const trial_manager = (function () {
         }
 
         api.stop = function () {
-            error_message_el.style.display = 'none';
+            error_message_el.parentElement.style.display = 'none';
             resetGuessUI();
             if (callback) callback();
             callback = undefined;
@@ -97,7 +97,7 @@ const trial_manager = (function () {
         api.start = function (message, _callback) {
             callback = _callback;
             correct_answer_el.innerHTML = message;
-            error_message_el.style.display = 'block';
+            error_message_el.parentElement.style.display = 'block';
             // Show optional guessing UI only when enabled (e.g., practice_try page)
             if (window.enable_note_guess && guessUI) {
                 setupGuessButtons();
