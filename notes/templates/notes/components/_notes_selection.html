@@ -41,14 +41,6 @@
       // Don't register PWA logic while embedded in an iframe
       return;
     }
-    const toggleBtn = document.getElementById('dropdownMenuButton');
-    const closeBtn = document.getElementById('dropdown-close-btn');
-    if (toggleBtn && closeBtn && window.bootstrap?.Dropdown) {
-      const dd = bootstrap.Dropdown.getOrCreateInstance(toggleBtn);
-      closeBtn.addEventListener('click', function () {
-        dd.hide();
-      });
-    }
 
     // Insert practice notes menu items at placeholder (#add-notes-menu-here); fallback to bottom of right dropdown
     try {
