@@ -67,7 +67,10 @@ const trial_manager = (function () {
         function resetGuessUI() {
             if (!guessUI) return;
             guessUI.style.display = 'none';
-            if (guessFeedback) { guessFeedback.textContent = ''; guessFeedback.className = 'mt-2'; }
+            if (guessFeedback) {
+                guessFeedback.textContent = '';
+                guessFeedback.className = 'mt-2';
+            }
             selectedLetter = null;
             clearButtonStates();
         }
@@ -87,8 +90,14 @@ const trial_manager = (function () {
             });
         }
 
-        api.stop = function () {
+        function hideErrorMessage() {
             error_message_el.parentElement.style.display = 'none';
+        }
+
+        document.getElementById('close-error-message-btn').onclick = hideErrorMessage;
+
+        api.stop = function () {
+            hideErrorMessage();
             resetGuessUI();
             if (callback) callback();
             callback = undefined;

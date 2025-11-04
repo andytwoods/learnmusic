@@ -23,7 +23,7 @@ const feedback_manager = (function () {
             finish();
             return;
         }
-// Assume these variables are available in scope:
+        // Assume these variables are available in scope:
         // response_count, response_i, correct_count, wrong_count
         const remaining = Math.max(0, Number(response_count) - Number(response_i));
         const wrong_count = Math.max(0, Number(response_i) - Number(correct_count));
