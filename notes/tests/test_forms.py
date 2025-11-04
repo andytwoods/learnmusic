@@ -83,16 +83,19 @@ class TestLearningScenarioForm(TestCase):
         instance = form.save()
 
         # The reminder should be stored in UTC
-        # 2:30 PM Eastern is 6:30 PM UTC (assuming standard time, not daylight saving)
         self.assertTrue(timezone.is_aware(instance.reminder))
         utc_reminder = instance.reminder.astimezone(ZoneInfo("UTC"))
 
-        # Check if the hour is as expected (accounting for timezone difference)
-        # This may need adjustment based on daylight saving time
-        eastern_offset = 4  # Hours behind UTC (standard time)
-        expected_utc_hour = (14 + eastern_offset) % 24
-        self.assertEqual(utc_reminder.hour, expected_utc_hour)
-        self.assertEqual(utc_reminder.minute, 30)
+        # Compute expected UTC dynamically to handle DST correctly year-round
+        # Using today's date in the user's timezone at 14:30
+        expected_utc = datetime.combine(
+            timezone.localdate(),
+            time(14, 30),
+            tzinfo=ZoneInfo("America/New_York"),
+        ).astimezone(ZoneInfo("UTC"))
+
+        self.assertEqual(utc_reminder.hour, expected_utc.hour)
+        self.assertEqual(utc_reminder.minute, expected_utc.minute)
 
         # Now check that it displays correctly in the user's timezone
         form = LearningScenarioForm(instance=instance, request=self.request)
