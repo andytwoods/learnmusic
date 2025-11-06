@@ -98,6 +98,13 @@ const feedback_manager = (function () {
         return results_bundle;
     }
 
+    api.reset_highscore = function () {
+        if (typeof window !== 'undefined' && typeof cache !== 'undefined') {
+            const hs_key = 'hs_key' + window.cache_key;
+            cache.save(hs_key, 0);
+        }
+    }
+
     function finish() {
         counterSpan.style.display = 'none';
         const stats = calc_stats();
