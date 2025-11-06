@@ -100,8 +100,8 @@ const feedback_manager = (function () {
 
     api.reset_highscore = function () {
         if (typeof window !== 'undefined' && typeof cache !== 'undefined') {
-            const hs_key = 'hs_key' + window.cache_key;
-            cache.save(hs_key, 0);
+            const hs_key = 'highscore_' + window.cache_key;
+            cache.save(hs_key, null);
         }
     }
 
