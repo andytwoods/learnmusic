@@ -10,6 +10,7 @@ Highlights
 *   A lightweight query-count check guards the bulk-update optimisation.
 """
 from datetime import timedelta
+import unittest
 from unittest.mock import patch, MagicMock
 
 from zoneinfo import ZoneInfo
@@ -24,9 +25,9 @@ from notes.factories import (
     LearningScenarioFactory,
 )
 from notes.models import LearningScenario, NoteRecordPackage
-from notes.tasks import send_reminders
 
 
+@unittest.skip("Reminders feature has been retired; background task is disabled.")
 class TestSendReminders(TestCase):
     """Behavioural and edge-case tests for `send_reminders()`."""
 

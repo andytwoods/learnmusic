@@ -26,6 +26,10 @@
     (function () {
       try {
         const cached = cache.get(window.cache_key);
+
+        //below only runs when we are on the homepage in an iframe. We dont want to store progress there
+        if (window.self !== window.top) return;
+
         if (!cached) return;
         // Support legacy array shape and current object shape with notes array
         if (Array.isArray(cached)) {
