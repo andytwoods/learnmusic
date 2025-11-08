@@ -38,7 +38,7 @@
           console.log(`Progress data loaded from cache: ${cached.notes.length} notes`);
           // Update counter UI if present
           const counter = document.getElementById('counter-value');
-          if (counter) counter.textContent = `${cached.notes.length} notes to be shown`;
+          if (counter) counter.textContent = `{{ response_count }} notes to be shown`;
         }
       } catch (e) {
         console.error('Failed to load progress data from cache', e);

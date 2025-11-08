@@ -37,7 +37,35 @@
             There are lots more tools and features if you
             <a class='{{ link_css }}' href="{% url 'account_signup' %}">sign up</a>.
           </li>
+          <li class="mb-2">
+            Want to keep your progress and practice daily?
+            <button type="button" id="install-pwa-btn-timeup" class="btn btn-success btn-sm">
+              <i class="fa-solid fa-download me-1"></i> Install
+            </button>
+            this app on your phone and use apps like HabitNow in the
+            <a href="https://apps.apple.com/app/habitnow" target="_blank" rel="noopener noreferrer" class="text-white">
+              <i class="fa-brands fa-app-store me-1"></i>App Store</a> and
+            <a href="https://play.google.com/store/apps/details?id=com.habitnow" target="_blank"
+               rel="noopener noreferrer" class="ms-2 text-white"><i class="fa-brands fa-google-play me-1"></i>Google
+              Play</a> to help to remember to practice.
+          </li>
         </ul>
+        <script>
+          document.addEventListener("DOMContentLoaded", function () {
+            const proxy = document.getElementById("install-pwa-btn-timeup");
+            if (!proxy) return
+            const original = document.getElementById("install-pwa-btn");
+            if (!original) {
+              // Hide the proxy button if the install button is not available in this context
+              proxy.style.display = "none";
+              return;
+            }
+            proxy.addEventListener("click", function (e) {
+              e.preventDefault();
+              original.click();
+            });
+          });
+        </script>
 
       {% endwith link_css %}
     </div>
