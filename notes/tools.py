@@ -33,6 +33,60 @@ def convert_note_slash_to_db(slash_note):
         note = note[0]
     return f'{note} {alter} {octave}'
 
+def order_notes_around_central_location(notes):
+    """Order notes by proximity to the midpoint of the given range.
+
+    Input notes are strings in the format "<NOTE> <ALTER> <OCTAVE>", e.g., "C 0 4", "F 1 3", "B -1 5".
+    The function computes a linear pitch value for each note (in semitones), finds the midpoint between the
+    lowest and highest note in the provided list, and returns the notes ordered by their absolute distance
+    to that midpoint (closest first).
+
+    When two notes are at the same distance to the midpoint, their relative order is randomized to avoid bias.
+    """
+    if not notes or len(notes) <= 2:
+        # Nothing to reorder (or ambiguous midpoint), return as-is
+        return notes
+
+    base_map = {
+        "C": 0,
+        "D": 2,
+        "E": 4,
+        "F": 5,
+        "G": 7,
+        "A": 9,
+        "B": 11,
+    }
+
+    def note_value(note_str: str) -> int:
+        note, alter_str, octave_str = note_str.split(" ")
+        base = base_map[note]
+        alter = int(alter_str)
+        octave = int(octave_str)
+        return octave * 12 + base + alter
+
+    # Compute numeric values and the midpoint
+    values = [note_value(n) for n in notes]
+    lo, hi = min(values), max(values)
+    midpoint = (lo + hi) / 2.0
+
+    # Build list of (note, distance, is_above) and shuffle to randomize tie breaks
+    indexed = list(notes)
+    random.shuffle(indexed)
+
+    def sort_key(n: str):
+        v = note_value(n)
+        # Primary: absolute distance to midpoint
+        dist = abs(v - midpoint)
+        # Secondary: prefer slightly above the midpoint over below when equal distances? The
+        # spec says randomize on clashes; since we shuffled, ties will be randomized already.
+        # Keep secondary stable to numeric to avoid TypeError; use 0 for all.
+        return (dist, 0)
+
+    # Sort by the key; because we shuffled first and Python's sort is stable,
+    # equal-distance items will keep their randomized order
+    ordered = sorted(indexed, key=sort_key)
+    return ordered
+
 def generate_notes(lowest_note, highest_note, include_crazy_notes=False):
     start_note, start_alter_str, start_octave_str = lowest_note.split(' ')
     end_note, end_alter_str, end_octave_str = highest_note.split(' ')
@@ -149,12 +203,15 @@ def generate_serialised_notes(instrument, level):
 
     instrument_notes_info = instruments[canonical][level]
 
+    # this is for beginner levels where we have a specified list of ordered notes
     if 'notes' in instrument_notes_info and instrument_notes_info['notes'] is not None:
         instrument_notes = instrument_notes_info['notes']
         return serialise_notes(instrument_notes)
 
     notes_list = generate_notes(lowest_note=instrument_notes_info['lowest_note'],
                                 highest_note=instrument_notes_info['highest_note'])
+
+    notes_list = order_notes_around_central_location(notes_list)
 
     return [serialise_note(note) for note in notes_list]
 

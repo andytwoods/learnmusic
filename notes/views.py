@@ -229,9 +229,7 @@ def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: 
     key, key_slug = tools.normalize_and_slug(key)
     absolute_pitch, absolute_pitch_slug = tools.normalize_and_slug(absolute_pitch)
 
-
     selected_signatures = tools.compute_signatures(signatures)
-
 
     from notes.instrument_data import resolve_instrument
     canonical_instrument = resolve_instrument(instrument)

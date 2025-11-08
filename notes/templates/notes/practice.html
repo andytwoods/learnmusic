@@ -24,11 +24,9 @@
               class="btn-close btn-close-white position-absolute top-0 end-0 m-2" aria-label="Close"></button>
       <div class="position-absolute top-0 start-0 m-2 d-flex gap-2 align-items-center">
         <i id='reposition-error-message' class="fa-solid fa-grip-vertical" style="cursor: grab;"></i>
-
         <script>
           document.addEventListener("DOMContentLoaded", function () {
             const repositionIcon = document.getElementById('reposition-error-message');
-
             if (repositionIcon) {
               repositionIcon.addEventListener('click', function () {
                 Swal.fire({
