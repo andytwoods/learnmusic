@@ -8,13 +8,8 @@ urlpatterns = [
     # Test JS URL
     path('test-js/', TemplateView.as_view(template_name='notes/test_js.html'), name='test-js'),
 
-    # Reminder settings HTMX endpoints
-    path("reminder-settings-button/", views.reminder_settings_button, name="reminder-settings-button"),
-    path("reminder-settings-form/", views.reminder_settings_form, name="reminder-settings-form"),
-    path("reminder-settings-submit/", views.reminder_settings_submit, name="reminder-settings-submit"),
     path('progress-data/<int:learningscenario_id>/', views.progress_data_view, name='progress_data'),
     path("practice/", views.notes_home, name="notes-home"),
-    path("reminders/", views.reminders, name="reminders"),
     path("new-learning-scenario/", views.new_learningscenario, name='new-learning-scenario'),
     path("edit-learning-scenario/<int:pk>/", views.edit_learningscenario, name='edit-learning-scenario'),
     path("edit-learning-scenario-notes/<int:pk>/", views.edit_learningscenario_notes,

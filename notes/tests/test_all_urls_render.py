@@ -26,13 +26,6 @@ class TestAllNotesUrlsRender(TestCase):
         resp = self.client.get(reverse("notes-home"))
         self.assertEqual(resp.status_code, 200)
 
-    def test_reminders_requires_login_then_renders(self):
-        self.client.logout()
-        resp = self.client.get(reverse("reminders"))
-        self.assertEqual(resp.status_code, 302)
-        self.client.force_login(self.user)
-        resp = self.client.get(reverse("reminders"))
-        self.assertEqual(resp.status_code, 200)
 
     def test_new_and_edit_learningscenario_flow(self):
         # new -> redirect to edit (already covered elsewhere but keep simple check here)
@@ -172,26 +165,4 @@ class TestAllNotesUrlsRender(TestCase):
         self.assertEqual(resp.status_code, 302)
         self.assertIn(reverse("notes-home"), resp["Location"])
 
-    def test_reminder_settings_htmx_endpoints(self):
-        # button
-        self.client.logout()
-        login_url = reverse("account_login")
-        resp = self.client.get(reverse("reminder-settings-button"))
-        self.assertEqual(resp.status_code, 302)
-        self.assertIn(login_url, resp["Location"])
-        self.client.force_login(self.user)
-        resp = self.client.get(reverse("reminder-settings-button"))
-        self.assertEqual(resp.status_code, 200)
-
-        # form
-        resp = self.client.get(reverse("reminder-settings-form"))
-        self.assertEqual(resp.status_code, 200)
-
-        # submit (POST)
-        payload = {
-            "reminder_time": "18:30",
-            "timezone": "UTC",
-        }
-        resp = self.client.post(reverse("reminder-settings-submit"), data=payload)
-        self.assertEqual(resp.status_code, 200)
 
