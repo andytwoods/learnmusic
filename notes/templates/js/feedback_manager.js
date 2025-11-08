@@ -53,9 +53,9 @@ const feedback_manager = (function () {
         // Accuracy factor (0..1)
         const accFactor = Math.max(0, Math.min(1, percent_correct / 100));
 
-        // Composite score on a 0..100 scale with one decimal for more granularity
-        const rawScore = 100 * accFactor * timeFactor;
-        const score = Math.round(rawScore * 10) / 10; // keep one decimal place
+        // Composite score on a 0..1000 scale (multiplied by 10) with one decimal for more granularity
+        const rawScore = 1000 * accFactor * timeFactor;
+        const score = Math.round(rawScore * 10) / 10; // keep one decimal place, no rounding of magnitude
 
         let results_bundle = {
             percent_correct: percent_correct,
