@@ -1,56 +1,75 @@
 # Django Guidelines
 
-You are an expert in Python, Django, and scalable web application development. You write secure, maintainable, and performant code following Django and Python best practices.
+You are an expert in Python, Django, and scalable web apps. Write secure, maintainable, performant code.
 
-## Python Best Practices
-- Follow PEP 8 with 120 character line limit
-- Use double quotes for Python strings
-- Sort imports with `isort`
-- Use f-strings for string formatting
+## Python
+- Follow PEP 8 (120 char limit), double quotes, `isort`, f-strings.
 
-## Django Best Practices
-- Follow Django's "batteries included" philosophy - use built-in features before third-party packages
-- Prioritize security and follow Django's security best practices
-- Use Django's ORM effectively and avoid raw SQL unless absolutely necessary
-- Use Django signals sparingly and document them well.
+### Exception handling
+- **Never use catch-all exceptions**:
+  - Do not use bare `except:` or `except Exception:` anywhere in the codebase.
+  - Always catch the **most specific** exception you can genuinely handle.
+  - If meaningful recovery is not possible, let the exception propagate so it fails loudly.
+  - Use logging instead of `print()` when reporting errors.
+- **Static analysis**
+  - Configure linting (e.g. Ruff/flake8) to *error on*:
+    - bare `except:`
+    - `except Exception:`
+    - unused exception variables
+
+## Django
+- Use built-ins before third-party.
+- Prioritise security; use ORM over raw SQL.
+- Use signals sparingly.
 
 ## Models
-- Add `__str__` methods to all models for a better admin interface
-- Use `related_name` for foreign keys when needed
-- Define `Meta` class with appropriate options (ordering, verbose_name, etc.)
-- Use `blank=True` for optional form fields, `null=True` for optional database fields
+- Always add `__str__`.
+- Use `related_name` when helpful.
+- `blank=True` for forms, `null=True` for DB.
 
 ## Views
-- Always validate and sanitize user input
-- Handle exceptions gracefully with try/except blocks
-- Use `get_object_or_404` instead of manual exception handling
-- Implement proper pagination for list views
+- Validate/sanitise input.
+- Prefer `get_object_or_404`.
+- Paginate lists.
 
 ## URLs
-- Use descriptive URL names for reverse URL lookups
-- Always end URL patterns with a trailing slash
+- Descriptive names, end with `/`.
 
 ## Forms
-- Use ModelForms when working with model instances
-- Use crispy forms or similar for better form rendering
+- Prefer ModelForms.
+- Use crispy-forms (or similar).
 
 ## Templates
-- Use template inheritance with base templates
-- Use template tags and filters for common operations
-- Avoid complex logic in templates - move it to views or template tags
-- Use static files properly with `{% load static %}`
-- Implement CSRF protection in all forms
+- Use inheritance.
+- Keep logic minimal.
+- Always `{% load static %}`, enable CSRF.
 
 ## Settings
-- Use environment variables in a single `settings.py` file
-- Never commit secrets to version control
+- Use env vars, never commit secrets.
 
 ## Database
-- Use migrations for all database changes
-- Optimize queries with `select_related` and `prefetch_related`
-- Use database indexes for frequently queried fields
-- Avoid N+1 query problems
+- Always use migrations.
+- Optimise queries (`select_related`, `prefetch_related`).
+- Index frequent lookups.
+
+## Tasks (Framework-Agnostic)
+
+### Task layout
+- Each app’s `tasks.py` must **only** contain task-decorated functions for the chosen task-queue system.
+- No business logic, utility functions, or classes should be placed in `tasks.py`.
+- Task functions should:
+  - accept and validate raw input;
+  - call helper functions that contain the actual business logic;
+  - handle only queue-specific concerns such as scheduling, retries, or metadata.
+
+### Task helpers
+- Create a dedicated module for task-related logic, e.g. `helpers/task_helpers.py` (project-wide or per-app).
+- All business/domain logic used by tasks must live in `task_helpers.py`, not in `tasks.py`.
+- Helper functions should be:
+  - reusable by views, management commands, and tasks;
+  - clear about side-effects;
+  - written to be as idempotent as reasonably possible (safe for retries).
 
 ## Testing
-- Always write unit tests and check that they pass for new features
-- Test both positive and negative scenarios
+- Write unit tests for new features.
+- Cover both success and failure paths.
