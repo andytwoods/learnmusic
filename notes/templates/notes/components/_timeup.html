@@ -1,4 +1,4 @@
-<div class="card z-3 shadow text-bg-secondary bg-gradient" id="time-up" style="display: none;">
+<div class="card z-3 shadow text-bg-secondary bg-gradient" id="time-up" style="display: _none;">
   <script>
     function animateValue(el, start, end, duration) {
       console.log('animateValue', el, start, end, duration);
@@ -17,6 +17,36 @@
       }
 
       requestAnimationFrame(step);
+    }
+
+    // Expose a small helper to reset the stored high score and update UI
+    function resetHighScore() {
+      try {
+        // Remove from custom cache if available
+        if (typeof cache !== "undefined" && typeof window !== "undefined" && typeof window.cache_key === "function") {
+          cache.remove(window.cache_key("highscore"));
+        }
+      } catch (err) { /* ignore */
+      }
+
+      try {
+        // Also attempt localStorage fallback
+        if (typeof window !== "undefined" && window.localStorage) {
+          window.localStorage.removeItem("highscore");
+        }
+      } catch (err) { /* ignore */
+      }
+
+      // Clear UI fields
+      const hsPc = document.getElementById("hs-pc");
+      const hsRt = document.getElementById("hs-rt");
+      const hsScore = document.getElementById("hs-score");
+      if (hsPc) hsPc.textContent = "-";
+      if (hsRt) hsRt.textContent = "-";
+      if (hsScore) hsScore.textContent = "-";
+
+      const banner = document.getElementById("highscore-banner");
+      if (banner) banner.style.display = "none";
     }
 
     window.addEventListener('countdown_completed', (e) => {
@@ -86,11 +116,12 @@
       <span class="display-6 fw-bold text-warning">New High Score!</span>
     </div>
 
-    <table class="table table-sm table-borderless align-middle mb-4"
+    <table class="table table-sm table-borderless align-middle mb-0"
            style="--bs-table-bg: rgba(255,255,255,0.06); --bs-table-striped-bg: rgba(255,255,255,0.04); --bs-table-color: rgba(255,255,255,0.9);">
       <thead class="small" style="color: rgba(255,255,255,0.75);">
       <tr>
-        <th scope="col" class="fw-normal"></th>
+        <th scope="col" class="fw-normal">
+        </th>
         <th scope="col" class="fw-normal">Current</th>
         <th scope="col" class="fw-normal">High score</th>
       </tr>
@@ -113,7 +144,14 @@
       </tr>
       </tbody>
     </table>
-
+    <button type="button"
+            class="btn btn-sm btn-link text-light py-0 mb-2 float-end"
+            title="Reset high score"
+            aria-label="Reset high score"
+            onclick="resetHighScore()"
+            style="text-decoration: none; line-height: 1.1;">
+      Reset high score
+    </button>
     {% block extra %}
       <h5 class="card-title">
         <i class="fa-regular fa-clock me-2"></i>To continue practising, close this popup.
