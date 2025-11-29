@@ -183,15 +183,22 @@ def practice_try_manifest(request, instrument: str, clef: str, key: str, absolut
     if display_key and display_key != instrument.capitalize():
         app_name += f" ({display_key})"
 
-    # Generate start URL for this specific configuration (remove /manifest.json from the end)
-    start_url = request.build_absolute_uri().replace('/manifest.json', '/')
+    # Generate a stable app identity and start URL for this specific configuration
+    # Use path-relative values to avoid treating different hosts as different apps
+    base_path = request.path.replace('/manifest.json', '/')
+    # Per Web App Manifest spec, set a stable id so Android doesn't treat updates as a new app
+    app_id = base_path  # path-scoped id is stable per practice configuration
+    # Start URL should be within scope and preferably relative
+    start_url = base_path
 
     manifest_data = {
         "name": app_name,
         "short_name": f"{instrument.capitalize()} {level}",
         "description": f"Practice {instrument} reading in {clef} clef at {level} level",
+        "id": app_id,
         "start_url": start_url,
-        "scope": "/",
+        # Restrict scope to this practice configuration so the app identity remains stable
+        "scope": base_path,
         "display": "standalone",
         "orientation": "any",
         "background_color": "#ffffff",

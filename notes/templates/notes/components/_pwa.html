@@ -17,7 +17,15 @@
 
       // Register service worker
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js', {scope: '/'})
+        // Align service worker scope with this specific practice configuration to keep installs stable
+        let swScope = location.pathname;
+        try {
+          const manifestURL = new URL(manifestLink.href, location.href);
+          swScope = manifestURL.pathname.replace(/manifest\.json$/, '');
+        } catch (e) {
+          // fallback to current path
+        }
+        navigator.serviceWorker.register('/service-worker.js', {scope: swScope})
           .then(function (registration) {
             console.log('ServiceWorker registration successful with scope: ', registration.scope);
           })
