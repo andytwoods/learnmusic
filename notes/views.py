@@ -183,13 +183,22 @@ def practice_try_manifest(request, instrument: str, clef: str, key: str, absolut
     if display_key and display_key != instrument.capitalize():
         app_name += f" ({display_key})"
 
-    # Generate a stable app identity and start URL for this specific configuration
-    # Use path-relative values to avoid treating different hosts as different apps
-    base_path = request.path.replace('/manifest.json', '/')
-    # Per Web App Manifest spec, set a stable id so Android doesn't treat updates as a new app
-    app_id = base_path  # path-scoped id is stable per practice configuration
-    # Start URL should be within scope and preferably relative
-    start_url = base_path
+    # CRITICAL: Use STABLE, ABSOLUTE paths to prevent Android from treating updates as new apps
+    # Android PWA stability requires that id, start_url, and scope remain constant across sessions
+    # Using request.build_absolute_uri() ensures full URL with scheme and domain
+
+    # Build the base path without /manifest.json
+    base_path = request.path.replace('/manifest.json', '')
+    if not base_path.endswith('/'):
+        base_path += '/'
+
+    # Create absolute URLs for stability
+    start_url = request.build_absolute_uri(base_path)
+    scope = request.build_absolute_uri(base_path)
+
+    # The id should be a unique, stable identifier for this specific practice configuration
+    # Using the absolute URL ensures Android recognizes it as the same app across sessions
+    app_id = start_url
 
     manifest_data = {
         "name": app_name,
@@ -197,8 +206,7 @@ def practice_try_manifest(request, instrument: str, clef: str, key: str, absolut
         "description": f"Practice {instrument} reading in {clef} clef at {level} level",
         "id": app_id,
         "start_url": start_url,
-        # Restrict scope to this practice configuration so the app identity remains stable
-        "scope": base_path,
+        "scope": scope,
         "display": "standalone",
         "orientation": "any",
         "background_color": "#ffffff",
