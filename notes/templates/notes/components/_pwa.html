@@ -213,9 +213,9 @@
           '1. Tap the <strong>menu</strong> button (⋮)<br>' +
           '2. Tap <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong><br>' +
           '3. Tap <strong>"Add"</strong> or <strong>"Install"</strong> to confirm';
-      } else if (isBrave && isMac) {
-        title = 'Install on Brave (macOS)';
-        instructions = 'To install this app in Brave on macOS:<br><br>' +
+      } else if (isBrave && !isAndroid && !isIOS) {
+        title = 'Install on Brave';
+        instructions = 'To install this app in Brave:<br><br>' +
           '1. Click the <strong>Install</strong> icon in the address bar (if shown), or<br>' +
           '2. Open the <strong>Brave menu</strong> (≡) → <strong>Apps</strong> → <strong>Install this site as an app…</strong><br>' +
           '3. Confirm <strong>Install</strong>';
