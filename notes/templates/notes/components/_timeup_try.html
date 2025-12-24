@@ -32,7 +32,7 @@
                href="{{ request.build_absolute_uri }}">this page</a>. Here, practice data is anonymously stored in your
             browser cache.
           </li>
-          <li class="mb-2">
+          <li class="mb-2" id="install-prompt-li">
             Want to keep your progress and practice daily?
             <button type="button" id="install-pwa-btn-timeup" class="btn btn-success btn-sm">
               <i class="fa-solid fa-download me-1"></i> Install
@@ -47,6 +47,13 @@
         </ul>
         <script>
           document.addEventListener("DOMContentLoaded", function () {
+            // Hide install prompt if running as PWA
+            const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+            if (isPWA) {
+              const installLi = document.getElementById("install-prompt-li");
+              if (installLi) installLi.style.display = "none";
+            }
+
             const proxy = document.getElementById("install-pwa-btn-timeup");
             if (!proxy) return
             const original = document.getElementById("install-pwa-btn");
