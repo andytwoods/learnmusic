@@ -290,7 +290,7 @@ REDIS_SSL = REDIS_URL.startswith("rediss://")
 # django-allauth  (≥ v65.8)
 # --------------------------------------------------------------------------
 
-ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", True)
+ACCOUNT_ALLOW_REGISTRATION = False
 
 # --- NEW, replaces ACCOUNT_AUTHENTICATION_METHOD ---------------------------
 ACCOUNT_LOGIN_METHODS = {'email', }  # users enter an email to log in
@@ -353,4 +353,3 @@ PUSHOVER_SUBSCRIPTION_URL = env.str("PUSHOVER_SUBSCRIPTION_URL",
 
 CAPTCHA_CHALLENGE_FUNCT = 'captcha.helpers.word_challenge'
 CAPTCHA_WORDS_DICTIONARY = 'config/captcha_dictionary.txt'
-

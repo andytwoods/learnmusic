@@ -16,6 +16,15 @@
   <meta name="theme-color" content="#ffffff"/>
   <meta name="author"
         content="Andy T. Woods"/>
+
+  <!-- Open Graph / Social Media Meta Tags -->
+  <meta property="og:title" content="{% block og_title %}Tootology - Master Your Notes{% endblock og_title %}">
+  <meta property="og:description" content="{% block og_description %}Free online music practice tool for brass and wind instruments. Improve note recognition and fingering skills.{% endblock og_description %}">
+  <meta property="og:image" content="{% block og_image %}{% static 'images/social_share.jpg' %}{% endblock og_image %}">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
   <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
   <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
   {% block css %}
