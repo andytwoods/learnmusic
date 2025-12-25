@@ -471,7 +471,3 @@ def pushover_callback(request):
         messages.success(request, 'You have been unsubscribed from push notifications.')
 
     return redirect(reverse('notes-home'))
-
-
-
-

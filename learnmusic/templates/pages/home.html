@@ -281,7 +281,7 @@
                   <div class="accordion-body">
                     <div class="d-flex flex-wrap gap-2 justify-content-center">
                       {% for level in data.levels %}
-                        <a href="{% url 'practice-try-sigs' instrument=instrument key='C' clef=data.clefs.0 level=level octave=0 signatures='0' %}"
+                        <a href="{% url 'practice-try-sigs' instrument=instrument key=data.keys.0 clef=data.clefs.0 level=level octave=0 signatures='0' %}"
                            class="btn btn-outline-secondary btn-sm">
                           Level {{ level }}
                         </a>

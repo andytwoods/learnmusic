@@ -2,7 +2,7 @@
 <!-- Button to trigger modal -->
 <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="modal" data-bs-target="#settingsModal">
   <i class="fa-solid fa-edit"></i> {{ instrument }},
-  {{ level }}{% if key != absolute_pitch %}, absolute pitch {{ absolute_pitch }}{% endif %}
+  {{ level }}{% if absolute_pitch %}, absolute pitch {{ absolute_pitch }}{% endif %}
 </button>
 
 <!-- Settings Modal -->
