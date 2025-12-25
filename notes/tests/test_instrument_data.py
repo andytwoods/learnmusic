@@ -115,11 +115,38 @@ class TestInstrumentJSONFormat(TestCase):
                         if 'notes' in level_data:
                             self.assertIsInstance(level_data['notes'], str,
                                                 f"'notes' is not a string in {level_name} level in {filename}")
+
+                            # Validate note format in 'notes' string
+                            notes_list = level_data['notes'].split(';')
+                            for note in notes_list:
+                                parts = note.split(' ')
+                                self.assertEqual(len(parts), 3, f"Invalid note format '{note}' in {filename} (expected 'NOTE ALTER OCTAVE')")
+                                self.assertEqual(len(parts[0]), 1, f"Note name '{parts[0]}' must be single letter in {filename}")
+                                self.assertTrue(parts[0] in 'ABCDEFG', f"Invalid note name '{parts[0]}' in {filename}")
+                                try:
+                                    int(parts[1])
+                                    int(parts[2])
+                                except ValueError:
+                                    self.fail(f"Alter or Octave not an integer in '{note}' in {filename}")
+
                         else:
                             self.assertIn('lowest_note', level_data,
                                         f"Missing 'lowest_note' in {level_name} level in {filename}")
                             self.assertIn('highest_note', level_data,
                                         f"Missing 'highest_note' in {level_name} level in {filename}")
+
+                            # Validate lowest/highest note format
+                            for key in ['lowest_note', 'highest_note']:
+                                note = level_data[key]
+                                parts = note.split(' ')
+                                self.assertEqual(len(parts), 3, f"Invalid {key} format '{note}' in {filename} (expected 'NOTE ALTER OCTAVE')")
+                                self.assertEqual(len(parts[0]), 1, f"Note name '{parts[0]}' must be single letter in {filename}")
+                                self.assertTrue(parts[0] in 'ABCDEFG', f"Invalid note name '{parts[0]}' in {filename}")
+                                try:
+                                    int(parts[1])
+                                    int(parts[2])
+                                except ValueError:
+                                    self.fail(f"Alter or Octave not an integer in '{note}' in {filename}")
 
     def test_fingerings_format(self):
         """Test that fingerings have the correct format."""

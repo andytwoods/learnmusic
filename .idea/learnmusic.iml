@@ -18,7 +18,7 @@
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/VENV" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.13 (learnmusic)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="uv (learnmusic)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PackageRequirementsSettings">

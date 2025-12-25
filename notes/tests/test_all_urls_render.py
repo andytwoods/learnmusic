@@ -164,5 +164,3 @@ class TestAllNotesUrlsRender(TestCase):
         resp = self.client.get(reverse("pushover_callback"))
         self.assertEqual(resp.status_code, 302)
         self.assertIn(reverse("notes-home"), resp["Location"])
-
-

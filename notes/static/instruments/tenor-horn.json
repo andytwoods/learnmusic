@@ -5,7 +5,7 @@
   "common_keys": ["Eb", "F", "C", "Bb"],
   "skill_levels": {
     "Beginner": {
-        "notes": "C 0 4;D 0 4;E 0 4;F 0 4;G 0 4;A 0 4;Bb 0 4;C 0 5;B 0 3;A 0 3;G 0 3;F 0 3;D 0 5;E 0 5"
+        "notes": "C 0 4;D 0 4;E 0 4;F 0 4;G 0 4;A 0 4;B -1 4;C 0 5;B 0 3;A 0 3;G 0 3;F 0 3;D 0 5;E 0 5"
     },
     "Intermediate": {
       "lowest_note": "A 0 3",
