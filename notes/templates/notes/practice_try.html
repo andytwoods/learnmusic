@@ -79,6 +79,88 @@
         device's home screen
       </a>
     </li>
+
+    <!-- Reset progress button (uses htmx:confirm -> SweetAlert in project.js) -->
+    <li class="px-2 py-1">
+      <button
+        type="button"
+        class="btn btn-light btn-sm"
+        onclick="resetPracticeProgress()"
+      >
+        <i class="fa-solid fa-rotate-left me-2"></i>Reset progress
+      </button>
+
+      <script>
+        // Reset practice progress to initial state defined in progress-data JSON
+        function resetPracticeProgress() {
+          Swal.fire({
+            title: "Are you sure?",
+            text: "This will reset your progress!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, reset it!",
+            cancelButtonText: "Cancel"
+          }).then((result) => {
+            if (result.isConfirmed) {
+              const el = document.getElementById("progress-data");
+              if (el) {
+                window.progress_data = JSON.parse(el.textContent);
+              } else {
+                // Fallback: clear progress to an empty structure if progress-data is unavailable
+                window.progress_data = Array.isArray(window.progress_data) ? [] : {notes: []};
+              }
+              // Persist the reset in cache for this practice key
+              cache.save(window.cache_key, window.progress_data);
+
+              Swal.fire({
+                title: "Progress reset",
+                icon: "success",
+                timer: 1200,
+                showConfirmButton: false
+              });
+            }
+          });
+        }
+      </script>
+    </li>
+
+    <li class="px-2 py-1">
+      <button
+        type="button"
+        class="btn btn-light btn-sm"
+        onclick="resetHighscore()"
+      >
+        <i class="fa-solid fa-rotate-left me-2"></i>Reset highscore
+      </button>
+
+      <script>
+        // Reset practice progress to initial state defined in progress-data JSON
+        function resetHighscore() {
+          Swal.fire({
+            title: "Are you sure?",
+            text: "This will reset your highscore!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, reset it!",
+            cancelButtonText: "Cancel"
+          }).then((result) => {
+            if (result.isConfirmed) {
+              feedback_manager.reset_highscore();
+              Swal.fire({
+                title: "Highscore reset",
+                icon: "success",
+                timer: 1200,
+                showConfirmButton: false
+              });
+            }
+          });
+        }
+      </script>
+    </li>
     <li>
       <hr class="dropdown-divider">
     </li>
