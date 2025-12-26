@@ -140,7 +140,9 @@
       <h1 class="display-4">Master Your Notes, Master the Stage</h1>
       <p class="lead">A practice tool for musicians <b>at any stage</b> to improve their note recognition and playing
         skills—quickly and effectively.</p>
-      <button type="button" class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#practiceModal" style="text-shadow: none !important;">Get Started</button>
+      <button type="button" class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#practiceModal"
+              style="text-shadow: none !important;">Get Started
+      </button>
       <div class="pt-3" style="z-index: 10;">
         {% include 'phrase.html' %}
       </div>
@@ -183,7 +185,8 @@
 
       <div class="row justify-content-center mb-5">
         <div class="col-6 text-center">
-          <img style="max-height:500px;" src="{% static 'images/phone.png' %}" class="img-fluid rounded shadow-sm" alt="How LearnMusic works">
+          <img style="max-height:500px;" src="{% static 'images/phone.png' %}" class="img-fluid rounded"
+               alt="How LearnMusic works">
         </div>
         <div class="col-6 d-flex flex-column justify-content-center text-start ps-lg-5">
           <h3 class="fw-bold mb-3">Train Your Muscle Memory</h3>
@@ -257,17 +260,20 @@
     <div class="container">
       <div class="text-center mb-5">
         <h2 class="mb-4">Ready to Practice?</h2>
-        <button type="button" class="btn btn-primary btn-lg px-5 py-3 fs-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#practiceModal">
+        <button type="button" class="btn btn-primary btn-lg px-5 py-3 fs-4 shadow-sm" data-bs-toggle="modal"
+                data-bs-target="#practiceModal">
           <i class="fas fa-play me-2"></i> Start Practicing Now
         </button>
 
         <div class="mt-4">
           <small class="text-muted">
             <p class="mb-2">
-              <i class="fas fa-mobile-alt me-1"></i> <strong>Tip:</strong> Install as a PWA (Add to Home Screen) to practice offline!
+              <i class="fas fa-mobile-alt me-1"></i> <strong>Tip:</strong> Install as a PWA (Add to Home Screen) to
+              practice offline!
             </p>
             <p class="mb-0">
-              <i class="fas fa-sliders-h me-1"></i> <strong>Tip:</strong> Once in, use the menu to adapt the challenge (keys, notes, etc).
+              <i class="fas fa-sliders-h me-1"></i> <strong>Tip:</strong> Once in, use the menu to adapt the challenge
+              (keys, notes, etc).
             </p>
           </small>
         </div>
@@ -313,13 +319,34 @@
         <div class="col-lg-8 mx-auto text-muted">
           <h3 class="h5">About Tootology</h3>
           <p>
-            Tootology is a free online music practice tool designed to help musicians master note recognition and fingering.
+            Tootology is a free online music practice tool designed to help musicians master note recognition and
+            fingering.
             Whether you play trumpet, trombone, french horn, tuba, euphonium, or other brass and wind instruments,
             our progressive exercises help build muscle memory and sight-reading speed.
           </p>
           <p>
-            Practice scales, intervals, and random notes in various key signatures and clefs (Treble, Bass, Alto, Tenor).
+            Practice scales, intervals, and random notes in various key signatures and clefs (Treble, Bass, Alto,
+            Tenor).
             No signup required, no ads, and works offline as a Progressive Web App (PWA).
+          </p>
+          <hr class="my-4">
+          <h4 class="h6">Privacy &amp; Origin Story</h4>
+          <p class="small">
+            This app was originally created to help my 12-year-old son, who has dyslexia, learn his trumpet notes when
+            he was struggling.
+            It is now shared entirely for the community. We store <strong>no personal information</strong> and use
+            <strong>no tracking cookies</strong>.
+            Your practice is private and safe. Contributions to this opensource app always welcome!
+
+            <a
+              href="https://github.com/andytwoods/learnmusic"
+              target="_blank"
+              data-bs-toggle="tooltip"
+              data-bs-placement="bottom"
+              title="MIT with Commons Clause License">
+              <i class="fab fa-github me-2"></i>MIT-CC
+            </a>.
+
           </p>
         </div>
       </div>
@@ -368,7 +395,7 @@
 
 {% block inline_javascript %}
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       const instrumentsData = {{ instruments|safe }}; // Assuming instruments is passed as JSON-serializable dict
       // If instruments is not JSON serializable directly in template, we might need to construct a JS object manually or use a filter.
       // However, usually in Django templates, we can't just dump a dict to JS without a filter or tag if it's complex.
@@ -396,33 +423,35 @@
       const backToStep1 = document.getElementById('backToStep1');
 
       document.querySelectorAll('.instrument-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
           selectedInstrument = this.dataset.instrument;
           selectedClef = this.dataset.clef;
           selectedKey = this.dataset.key;
 
           // Populate levels
           levelButtonsContainer.innerHTML = '';
-          const levels = instrumentsConfig[selectedInstrument].levels;
-          levels.forEach(level => {
-            const levelBtn = document.createElement('button');
-            levelBtn.className = 'btn btn-outline-secondary level-btn';
-            levelBtn.textContent = 'Level ' + level;
-            levelBtn.addEventListener('click', function() {
-              // Redirect to practice URL
-              // URL pattern: /practice-try/<instrument>/<clef>/<key>/<level>/0/0/
-              const url = `/practice-try/${selectedInstrument}/${selectedClef}/${selectedKey}/${level}/0/0/`;
-              window.location.href = url;
+          const instruments = instrumentsConfig[selectedInstrument];
+          if (instruments && instruments.levels) {
+            instruments.levels.forEach(level => {
+              const levelBtn = document.createElement('button');
+              levelBtn.className = 'btn btn-outline-secondary level-btn';
+              levelBtn.textContent = 'Level ' + level;
+              levelBtn.addEventListener('click', function () {
+                // Redirect to practice URL
+                // URL pattern: /practice-try/<instrument>/<clef>/<key>/<level>/0/0/
+                const url = `/practice-try/${selectedInstrument}/${selectedClef}/${selectedKey}/${level}/0/0/`;
+                window.location.href = url;
+              });
+              levelButtonsContainer.appendChild(levelBtn);
             });
-            levelButtonsContainer.appendChild(levelBtn);
-          });
+          }
 
           step1.classList.add('d-none');
           step2.classList.remove('d-none');
         });
       });
 
-      backToStep1.addEventListener('click', function() {
+      backToStep1.addEventListener('click', function () {
         step2.classList.add('d-none');
         step1.classList.remove('d-none');
       });
