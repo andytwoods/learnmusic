@@ -140,7 +140,7 @@
       <h1 class="display-4">Master Your Notes, Master the Stage</h1>
       <p class="lead">A practice tool for musicians <b>at any stage</b> to improve their note recognition and playing
         skills—quickly and effectively.</p>
-      <a href="{% url 'practice-demo' %}" class="btn btn-light btn-lg" style="text-shadow: none !important;">Get Started</a>
+      <button type="button" class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#practiceModal" style="text-shadow: none !important;">Get Started</button>
       <div class="pt-3" style="z-index: 10;">
         {% include 'phrase.html' %}
       </div>
@@ -257,9 +257,9 @@
     <div class="container">
       <div class="text-center mb-5">
         <h2 class="mb-4">Ready to Practice?</h2>
-        <a href="{% url 'practice-demo' %}" class="btn btn-primary btn-lg px-5 py-3 fs-4 shadow-sm">
+        <button type="button" class="btn btn-primary btn-lg px-5 py-3 fs-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#practiceModal">
           <i class="fas fa-play me-2"></i> Start Practicing Now
-        </a>
+        </button>
 
         <div class="mt-4">
           <small class="text-muted">
@@ -270,38 +270,6 @@
               <i class="fas fa-sliders-h me-1"></i> <strong>Tip:</strong> Once in, use the menu to adapt the challenge (keys, notes, etc).
             </p>
           </small>
-        </div>
-      </div>
-
-      <div class="row justify-content-center">
-        <div class="col-lg-10">
-          <h4 class="text-center mb-4">Or jump straight to your instrument and level:</h4>
-          <div class="accordion" id="instrumentAccordion">
-            {% for instrument, data in instruments.items %}
-              <div class="accordion-item">
-                <h2 class="accordion-header" id="heading{{ forloop.counter }}">
-                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                          data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false"
-                          aria-controls="collapse{{ forloop.counter }}">
-                    <span class="text-capitalize fw-bold">{{ instrument }}</span>
-                  </button>
-                </h2>
-                <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse"
-                     aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#instrumentAccordion">
-                  <div class="accordion-body">
-                    <div class="d-flex flex-wrap gap-2 justify-content-center">
-                      {% for level in data.levels %}
-                        <a href="{% url 'practice-try-sigs' instrument=instrument key=data.keys.0 clef=data.clefs.0 level=level octave=0 signatures='0' %}"
-                           class="btn btn-outline-secondary btn-sm">
-                          Level {{ level }}
-                        </a>
-                      {% endfor %}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            {% endfor %}
-          </div>
         </div>
       </div>
     </div>
@@ -361,3 +329,103 @@
   {% include 'footer.html' %}
 
 {% endblock body %}
+
+{% block modal %}
+  <!-- Modal -->
+  <div class="modal fade" id="practiceModal" tabindex="-1" aria-labelledby="practiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="practiceModalLabel">Start Practicing</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="step1">
+            <h6 class="mb-3">Select your instrument:</h6>
+            <div class="d-grid gap-2">
+              {% for instrument, data in instruments.items %}
+                <button class="btn btn-outline-primary instrument-btn text-capitalize"
+                        data-instrument="{{ instrument }}"
+                        data-clef="{{ data.clefs.0 }}"
+                        data-key="{{ data.keys.0 }}">
+                  {{ instrument }}
+                </button>
+              {% endfor %}
+            </div>
+          </div>
+          <div id="step2" class="d-none">
+            <h6 class="mb-3">Select your level:</h6>
+            <div class="d-grid gap-2" id="levelButtons">
+              <!-- Levels will be populated by JS -->
+            </div>
+            <button class="btn btn-link mt-3" id="backToStep1">Back</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock modal %}
+
+{% block inline_javascript %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const instrumentsData = {{ instruments|safe }}; // Assuming instruments is passed as JSON-serializable dict
+      // If instruments is not JSON serializable directly in template, we might need to construct a JS object manually or use a filter.
+      // However, usually in Django templates, we can't just dump a dict to JS without a filter or tag if it's complex.
+      // Let's assume we can reconstruct the data we need from the DOM or just use the data attributes we put on buttons.
+      // Actually, for step 2 we need to know the levels for the selected instrument.
+      // Let's serialize the instruments data to JSON in the view or construct a JS object here.
+      // Since I cannot change the view right now easily without seeing it, I will try to build the JS object from the template loop.
+
+      const instrumentsConfig = {};
+      {% for instrument, data in instruments.items %}
+        instrumentsConfig["{{ instrument }}"] = {
+          levels: {{ data.levels|safe }},
+          clef: "{{ data.clefs.0 }}",
+          key: "{{ data.keys.0 }}"
+        };
+      {% endfor %}
+
+      let selectedInstrument = null;
+      let selectedClef = null;
+      let selectedKey = null;
+
+      const step1 = document.getElementById('step1');
+      const step2 = document.getElementById('step2');
+      const levelButtonsContainer = document.getElementById('levelButtons');
+      const backToStep1 = document.getElementById('backToStep1');
+
+      document.querySelectorAll('.instrument-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          selectedInstrument = this.dataset.instrument;
+          selectedClef = this.dataset.clef;
+          selectedKey = this.dataset.key;
+
+          // Populate levels
+          levelButtonsContainer.innerHTML = '';
+          const levels = instrumentsConfig[selectedInstrument].levels;
+          levels.forEach(level => {
+            const levelBtn = document.createElement('button');
+            levelBtn.className = 'btn btn-outline-secondary level-btn';
+            levelBtn.textContent = 'Level ' + level;
+            levelBtn.addEventListener('click', function() {
+              // Redirect to practice URL
+              // URL pattern: /practice-try/<instrument>/<clef>/<key>/<level>/0/0/
+              const url = `/practice-try/${selectedInstrument}/${selectedClef}/${selectedKey}/${level}/0/0/`;
+              window.location.href = url;
+            });
+            levelButtonsContainer.appendChild(levelBtn);
+          });
+
+          step1.classList.add('d-none');
+          step2.classList.remove('d-none');
+        });
+      });
+
+      backToStep1.addEventListener('click', function() {
+        step2.classList.add('d-none');
+        step1.classList.remove('d-none');
+      });
+    });
+  </script>
+{% endblock inline_javascript %}
