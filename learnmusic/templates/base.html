@@ -29,13 +29,10 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
   {% block css %}
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css"
-          integrity="sha512-5Hs3dF2AEPkpNAR7UiOHba+lRSJNeM2ECkwxUIxC1Q/FLycGTbNapWXB4tP889k5T5Ju8fs4b1P5z/iB4nMfSQ=="
-          crossorigin="anonymous" referrerpolicy="no-referrer"/>
-    <!-- Latest compiled and minified Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
-          integrity="sha512-jnSuA4Ss2PkkikSOLtYs8BlYIeeIK1h99ty4YfvRPAlzr377vr3CXDb7sb7eEEBYjDtcYj+AjBH3FLv5uSJuXg=="
-          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <!-- Font Awesome (local for offline support) -->
+    <link rel="stylesheet" href="{% static 'css/vendor/fontawesome.min.css' %}"/>
+    <!-- Bootstrap CSS (local for offline support) -->
+    <link rel="stylesheet" href="{% static 'css/vendor/bootstrap.min.css' %}"/>
     <link rel="stylesheet" href="{% static 'css/sf.css' %}"/>
     <!-- Your stuff: Third-party CSS libraries go here -->
     <!-- This file stores project-specific CSS -->
@@ -50,16 +47,14 @@
   {# Placed at the top of the document so pages load faster with defer #}
   {% block javascript %}
 
-    <script src="https://unpkg.com/htmx.org@2.0.4"
-            integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+"
-            crossorigin="anonymous"></script>
+    <!-- HTMX (local for offline support) -->
+    <script src="{% static 'js/vendor/htmx.min.js' %}"></script>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"
-            integrity="sha512-7Pi/otdlbbCR+LnW+F7PwFcSDJOuUJB3OxtEHbg4vSMvzvJjde4Po1v4BR9Gdc9aXNUNFVUY+SK51wWT8WF0Gg=="
-            crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+    <!-- Bootstrap JS (local for offline support) -->
+    <script src="{% static 'js/vendor/bootstrap.bundle.min.js' %}" defer></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SweetAlert2 (local for offline support) -->
+    <script src="{% static 'js/vendor/sweetalert2.min.js' %}"></script>
     <script src="{% static 'js/project.js' %}"></script>
 
 
