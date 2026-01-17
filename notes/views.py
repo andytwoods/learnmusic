@@ -312,6 +312,26 @@ def practice_try(request, instrument: str, clef: str, key: str, absolute_pitch: 
     return render(request, 'notes/practice_try.html', context=context)
 
 
+def practice_start(request):
+    """Entry point for practice that asks for instrument and level inline."""
+    my_instruments = instrument_infos.keys()
+    instruments_with_data = {}
+
+    for inst_name in my_instruments:
+        levels_for_instrument = list(instruments.get(inst_name, {}).keys())
+        instrument_info = instrument_infos[inst_name]
+        instruments_with_data[inst_name] = {
+            'levels': levels_for_instrument,
+            'clefs': instrument_info.get('clefs', ['treble']),
+            'keys': instrument_info.get('common_keys', ['C']),
+        }
+
+    context = {
+        'instruments': instruments_with_data,
+    }
+    return render(request, 'notes/practice_start.html', context=context)
+
+
 @login_required
 def practice_data(request, package_id: int):
     json_data = json.loads(request.body)

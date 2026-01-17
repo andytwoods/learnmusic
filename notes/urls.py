@@ -22,6 +22,7 @@ urlpatterns = [
 
 
     path('practice-demo/', views.practice_demo, name='practice-demo'),
+    path('practice-start/', views.practice_start, name='practice-start'),
 
     # Routes without absolute_pitch segment
     path('practice-try/<str:instrument>/<str:clef>/<str:key>/<str:level>/<str:octave>/<str:signatures>/',
