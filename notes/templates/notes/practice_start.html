@@ -11,19 +11,16 @@
     <div class="row justify-content-center">
       <div class="col-lg-8">
         <div class="card shadow">
-          <div class="card-header bg-primary text-white">
-            <h3 class="mb-0">Start Your Practice</h3>
-          </div>
           <div class="card-body">
             <div id="step1">
               <h5 class="mb-4">Select Your Instrument</h5>
               <div class="d-grid gap-3">
                 {% for instrument, data in instruments.items %}
-                  <button class="btn btn-lg btn-outline-primary text-start instrument-btn text-capitalize"
+                  <button class="btn btn-outline-primary text-start instrument-btn text-capitalize"
                           data-instrument="{{ instrument }}"
                           data-clef="{{ data.clefs.0 }}"
                           data-key="{{ data.keys.0 }}">
-                    <i class="fas fa-music me-2"></i>{{ instrument }}
+                    {{ instrument }}
                   </button>
                 {% endfor %}
               </div>
@@ -66,19 +63,6 @@
 {% block inline_javascript %}
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const CACHE_KEY = 'practice_start_preferences';
-
-      // Check if user has cached preferences
-      if (typeof cache !== 'undefined') {
-        const cached = cache.get(CACHE_KEY);
-        if (cached && cached.instrument && cached.level) {
-          // Redirect to practice page with cached settings
-          const url = `/practice-try/${cached.instrument}/${cached.clef}/${cached.key}/${cached.level}/0/0/`;
-          window.location.href = url;
-          return;
-        }
-      }
-
       const instrumentsConfig = {};
       {% for instrument, data in instruments.items %}
         instrumentsConfig["{{ instrument }}"] = {
@@ -87,8 +71,6 @@
           key: "{{ data.keys.0 }}"
         };
       {% endfor %}
-
-      console.log('Instruments config:', instrumentsConfig);
 
       let selectedInstrument = null;
       let selectedClef = null;
@@ -102,7 +84,6 @@
       document.querySelectorAll('.instrument-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
           e.preventDefault();
-          console.log('Instrument button clicked:', this.dataset.instrument);
 
           selectedInstrument = this.dataset.instrument;
           selectedClef = this.dataset.clef;
@@ -111,30 +92,17 @@
           // Populate levels
           levelButtonsContainer.innerHTML = '';
           const instrumentData = instrumentsConfig[selectedInstrument];
-          console.log('Instrument data:', instrumentData);
 
           if (instrumentData && instrumentData.levels && instrumentData.levels.length > 0) {
             instrumentData.levels.forEach(level => {
               const levelBtn = document.createElement('button');
-              levelBtn.className = 'btn btn-lg btn-outline-secondary level-btn text-start';
-              levelBtn.innerHTML = `<i class="fas fa-graduation-cap me-2"></i>Level: ${level}`;
+              levelBtn.className = 'btn btn-outline-secondary level-btn text-start';
+              levelBtn.innerHTML = `Level: ${level}`;
               levelBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                console.log('Level button clicked:', level);
-
-                // Save preferences to cache
-                if (typeof cache !== 'undefined') {
-                  cache.save(CACHE_KEY, {
-                    instrument: selectedInstrument,
-                    clef: selectedClef,
-                    key: selectedKey,
-                    level: level
-                  });
-                }
 
                 // Redirect to practice URL
                 const url = `/practice-try/${selectedInstrument}/${selectedClef}/${selectedKey}/${level}/0/0/`;
-                console.log('Redirecting to:', url);
                 window.location.href = url;
               });
               levelButtonsContainer.appendChild(levelBtn);
