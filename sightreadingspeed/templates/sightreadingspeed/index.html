@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sight Reading Speed{% endblock %}
+
+{% block content %}
+  <div class="container py-4">
+
+    <h1 class="mb-1">Sight Reading Speed</h1>
+    <p class="text-muted mb-0">Generate a passage, press Play, and read.
+    <div class="mb-1">
+      <span class="badge bg-light text-dark border">Space</span> Play/Pause &nbsp;
+      <span class="badge bg-light text-dark border">G</span> Generate &nbsp;
+      <span class="badge bg-light text-dark border">R</span> Reset
+    </div>
+    </p>
+
+    <!-- Warning area -->
+    <div id="srs-warning" class="alert alert-warning d-none" role="alert"></div>
+
+    <div id="srs-settings-body" class="card-body collapse">
+      <div class="row g-3">
+
+        <!-- Musical settings -->
+        <div class="col-sm-6 col-lg-2">
+          <label class="form-label" for="srs-bpm">BPM</label>
+          <div class="d-flex align-items-center gap-2">
+            <input type="range" class="form-range flex-grow-1"
+                   id="srs-bpm" min="20" max="200" value="60">
+            <span id="srs-bpm-label" class="text-nowrap small fw-bold">60</span>
+          </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-2">
+          <label class="form-label" for="srs-clef">Clef</label>
+          <select class="form-select form-select-sm" id="srs-clef">
+            <option value="treble">Treble</option>
+            <option value="bass">Bass</option>
+          </select>
+        </div>
+
+        <div class="col-sm-6 col-lg-2">
+          <label class="form-label" for="srs-timesig">Time Sig</label>
+          <select class="form-select form-select-sm" id="srs-timesig">
+            <option value="4/4">4/4</option>
+            <option value="3/4">3/4</option>
+            <option value="2/4">2/4</option>
+          </select>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+          <label class="form-label">Key Signature</label>
+          <div class="d-flex gap-1">
+            <select class="form-select form-select-sm" id="srs-keysig-type">
+              <option value="sharps">♯</option>
+              <option value="flats">♭</option>
+            </select>
+            <select class="form-select form-select-sm" id="srs-keysig-count">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+          <label class="form-label" for="srs-numbars">Total Bars</label>
+          <select class="form-select form-select-sm" id="srs-numbars">
+            <option value="4">4 Bars</option>
+            <option value="8">8 Bars</option>
+            <option value="12">12 Bars</option>
+            <option value="16" selected>16 Bars</option>
+            <option value="20">20 Bars</option>
+            <option value="24">24 Bars</option>
+            <option value="32">32 Bars</option>
+            <option value="48">48 Bars</option>
+            <option value="64">64 Bars</option>
+          </select>
+        </div>
+
+        <!-- Range and Metronome -->
+        <div class="col-sm-6 col-lg-3">
+          <label class="form-label" for="srs-min-note">Low Note</label>
+          <select class="form-select form-select-sm" id="srs-min-note"></select>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+          <label class="form-label" for="srs-max-note">High Note</label>
+          <select class="form-select form-select-sm" id="srs-max-note"></select>
+        </div>
+
+        <div class="col-sm-6 col-lg-2">
+          <label class="form-label d-block">Metronome</label>
+          <div class="form-check form-switch pt-1">
+            <input class="form-check-input" type="checkbox"
+                   id="srs-metronome" role="switch">
+            <label class="form-check-label visually-hidden" for="srs-metronome">On</label>
+          </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-2">
+          <label class="form-label" for="srs-score-scale">Score Scale</label>
+          <div class="d-flex align-items-center gap-2">
+            <input type="range" class="form-range flex-grow-1"
+                   id="srs-score-scale" min="0.5" max="2.0" step="0.1" value="1.0">
+            <span id="srs-score-scale-label" class="text-nowrap small fw-bold">1.0</span>
+          </div>
+        </div>
+
+        <!-- Note Durations - Single line horizontal -->
+        <div class="col-12 border-top pt-2 mt-2">
+          <div class="d-flex gap-3 flex-wrap align-items-center">
+            <span class="small text-muted fw-bold">Durations:</span>
+            <div class="form-check form-check-inline mb-0">
+              <input class="form-check-input srs-duration" type="checkbox" id="dur-w" value="w">
+              <label class="form-check-label small" for="dur-w">Semibreve</label>
+            </div>
+            <div class="form-check form-check-inline mb-0">
+              <input class="form-check-input srs-duration" type="checkbox" id="dur-h" value="h">
+              <label class="form-check-label small" for="dur-h">Minim</label>
+            </div>
+            <div class="form-check form-check-inline mb-0">
+              <input class="form-check-input srs-duration" type="checkbox" id="dur-q" value="q" checked>
+              <label class="form-check-label small" for="dur-q">Crotchet</label>
+            </div>
+            <div class="form-check form-check-inline mb-0">
+              <input class="form-check-input srs-duration" type="checkbox" id="dur-8" value="8">
+              <label class="form-check-label small" for="dur-8">Quaver</label>
+            </div>
+            <div class="form-check form-check-inline mb-0">
+              <input class="form-check-input srs-duration" type="checkbox" id="dur-16" value="16">
+              <label class="form-check-label small" for="dur-16">Semiquaver</label>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /.row -->
+    </div><!-- /#srs-settings-body -->
+  </div><!-- /.card -->
+
+
+  <!-- Transport controls (Top) -->
+  <div class="d-flex gap-2 flex-wrap mb-4 align-items-center">
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary btn-generate">
+        <i class="fas fa-music"></i> Generate
+      </button>
+      <button class="btn btn-success btn-lg btn-play">
+        <i class="fas fa-play"></i> Play
+      </button>
+      <button class="btn btn-warning btn-lg btn-pause d-none">
+        <i class="fas fa-pause"></i> Pause
+      </button>
+      <button class="btn btn-secondary btn-reset d-none">
+        <i class="fas fa-undo"></i> Reset
+      </button>
+      <button class="btn btn-sm btn-outline-secondary"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#srs-settings-body">
+        Settings
+      </button>
+    </div>
+  </div>
+
+  <!-- Status label -->
+  <p id="srs-status" class="text-muted small mb-2">Idle</p>
+
+  <!-- Score -->
+  <div id="score-wrapper" class="position-relative border rounded mb-4"
+       style="overflow-x: auto; min-height: 120px;">
+    <div id="score-container"></div>
+    <div id="playhead" style="
+      position: absolute; top: 0; left: 0;
+      width: 2px; height: 100%;
+      background: red; opacity: 0.7;
+      pointer-events: none;
+      display: none;
+    "></div>
+  </div>
+
+  <!-- Transport controls (Bottom) -->
+  <div class="d-flex gap-2 flex-wrap mb-4">
+    <button class="btn btn-outline-primary btn-generate">
+      <i class="fas fa-music"></i> Generate
+    </button>
+    <button class="btn btn-success btn-lg btn-play">
+      <i class="fas fa-play"></i> Play
+    </button>
+    <button class="btn btn-warning btn-lg btn-pause d-none">
+      <i class="fas fa-pause"></i> Pause
+    </button>
+    <button class="btn btn-secondary btn-reset d-none">
+      <i class="fas fa-undo"></i> Reset
+    </button>
+  </div>
+
+{% endblock %}
+
+{% block inline_javascript %}
+  <!-- VexFlow (must come before app JS) -->
+  <script src="{% static 'js/vexflow.js' %}"></script>
+
+  <!-- App modules (order matters) -->
+  <script src="{% static 'sightreadingspeed/js/settings_manager.js' %}"></script>
+  <script src="{% static 'sightreadingspeed/js/music_theory.js' %}"></script>
+  <script src="{% static 'sightreadingspeed/js/score_generator.js' %}"></script>
+  <script src="{% static 'sightreadingspeed/js/score_renderer.js' %}"></script>
+  <script src="{% static 'sightreadingspeed/js/metronome.js' %}"></script>
+  <script src="{% static 'sightreadingspeed/js/playback_manager.js' %}"></script>
+
+  <script>
+    // ── Shared state ──────────────────────────────────────────────────────────
+    // Initialised here. Static JS files must NOT access this at file-evaluation
+    // time — only inside functions called after this bootstrap script runs.
+    window.srs_state = {
+      settings: null,
+      bars: [],
+      flatNotes: [],
+      renderedPositions: [],
+      playbackState: 'idle',
+      generationVersion: 0,
+    };
+
+    // ── Warning helpers ───────────────────────────────────────────────────────
+    function showSrsWarning(message) {
+      const el = document.getElementById('srs-warning');
+      el.textContent = message;
+      el.classList.remove('d-none');
+    }
+
+    function clearSrsWarning() {
+      const el = document.getElementById('srs-warning');
+      el.textContent = '';
+      el.classList.add('d-none');
+    }
+
+    // ── UI read / write ───────────────────────────────────────────────────────
+    function gatherSettingsFromUI() {
+      return {
+        bpm: parseInt(document.getElementById('srs-bpm').value, 10),
+        clef: document.getElementById('srs-clef').value,
+        time_signature: document.getElementById('srs-timesig').value,
+        min_note: document.getElementById('srs-min-note').value,
+        max_note: document.getElementById('srs-max-note').value,
+        durations: Array.from(
+          document.querySelectorAll('.srs-duration:checked')
+        ).map(el => el.value),
+        metronome: document.getElementById('srs-metronome').checked,
+        score_scale: parseFloat(document.getElementById('srs-score-scale').value),
+        num_bars: parseInt(document.getElementById('srs-numbars').value, 10),
+        key_sig_type: document.getElementById('srs-keysig-type').value,
+        key_sig_count: parseInt(document.getElementById('srs-keysig-count').value, 10),
+      };
+    }
+
+    function applySettingsToUI(s) {
+      document.getElementById('srs-bpm').value = s.bpm;
+      document.getElementById('srs-bpm-label').textContent = s.bpm;
+      document.getElementById('srs-clef').value = s.clef;
+      document.getElementById('srs-timesig').value = s.time_signature;
+      document.getElementById('srs-min-note').value = s.min_note;
+      document.getElementById('srs-max-note').value = s.max_note;
+      document.getElementById('srs-metronome').checked = s.metronome;
+      document.getElementById('srs-score-scale').value = s.score_scale;
+      document.getElementById('srs-score-scale-label').textContent = s.score_scale;
+      document.getElementById('srs-numbars').value = s.num_bars;
+      document.getElementById('srs-keysig-type').value = s.key_sig_type;
+      document.getElementById('srs-keysig-count').value = s.key_sig_count;
+      document.querySelectorAll('.srs-duration').forEach(el => {
+        el.checked = s.durations.includes(el.value);
+      });
+    }
+
+    function setStatus(text) {
+      document.getElementById('srs-status').textContent = text;
+    }
+
+    function updateTransportButtons(state) {
+      const play = document.querySelectorAll('.btn-play');
+      const pause = document.querySelectorAll('.btn-pause');
+      const reset = document.querySelectorAll('.btn-reset');
+      const isActive = state === 'playing';
+      play.forEach(el => el.classList.toggle('d-none', isActive));
+      pause.forEach(el => el.classList.toggle('d-none', !isActive));
+      reset.forEach(el => el.classList.toggle('d-none', state === 'idle'));
+      const labels = {
+        idle: 'Idle',
+        playing: 'Playing', paused: 'Paused', finished: 'Finished',
+      };
+      setStatus(labels[state] || state);
+    }
+
+    // ── Pitch range selects ───────────────────────────────────────────────────
+    function populateNoteSelects() {
+      const pitches = music_theory.getChromaticScale();
+      ['srs-min-note', 'srs-max-note'].forEach(id => {
+        const sel = document.getElementById(id);
+        sel.innerHTML = '';
+        pitches.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p;
+          opt.textContent = p.replace('/', '');
+          sel.appendChild(opt);
+        });
+      });
+    }
+
+    // ── Core action ───────────────────────────────────────────────────────────
+    function regenerateScore() {
+      clearSrsWarning();
+      playback_manager.reset();
+
+      const settings = settings_manager.sanitise(gatherSettingsFromUI());
+
+      // Validate range (minimum perfect fourth = 5 semitones)
+      const minMidi = music_theory.pitchToMidi(settings.min_note);
+      const maxMidi = music_theory.pitchToMidi(settings.max_note);
+      if (maxMidi - minMidi < 5) {
+        showSrsWarning(
+          'Note range is too narrow. Choose a range of at least a perfect fourth (5 semitones).'
+        );
+        return;
+      }
+
+      // Validate rhythmic cells
+      if (!music_theory.getValidRhythmicCells(settings).length) {
+        showSrsWarning(
+          'The selected durations cannot fill a complete bar. Enable at least one compatible duration.'
+        );
+        return;
+      }
+
+      settings_manager.save(settings);
+      window.srs_state.settings = settings;
+      window.srs_state.generationVersion += 1;
+
+      const bars = score_generator.generate(settings);
+      const flatNotes = music_theory.flattenBars(bars);
+      window.srs_state.bars = bars;
+      window.srs_state.flatNotes = flatNotes;
+
+      // score_renderer.render() writes window.srs_state.renderedPositions internally
+      score_renderer.render(bars, settings);
+    }
+
+    // ── Control wiring ────────────────────────────────────────────────────────
+    function bindControls() {
+      // BPM slider live label
+      document.getElementById('srs-bpm').addEventListener('input', function () {
+        document.getElementById('srs-bpm-label').textContent = this.value;
+      });
+
+      // Score scale slider live label
+      document.getElementById('srs-score-scale').addEventListener('input', function () {
+        document.getElementById('srs-score-scale-label').textContent = this.value;
+      });
+
+      document.querySelectorAll('.btn-generate').forEach(el => el.addEventListener('click', regenerateScore));
+      document.querySelectorAll('.btn-play').forEach(el => el.addEventListener('click', () => playback_manager.play()));
+      document.querySelectorAll('.btn-pause').forEach(el => el.addEventListener('click', () => playback_manager.pause()));
+      document.querySelectorAll('.btn-reset').forEach(el => el.addEventListener('click', () => playback_manager.reset()));
+
+      // State transitions from playback_manager
+      document.addEventListener('srs_state_change', e => {
+        window.srs_state.playbackState = e.detail.state;
+        updateTransportButtons(e.detail.state);
+      });
+
+
+      // Responsive resize: re-render on window resize (debounced)
+      let resizeTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          const ps = window.srs_state.playbackState;
+          if (ps === 'playing') playback_manager.pause();
+          if (window.srs_state.bars.length) {
+            score_renderer.render(window.srs_state.bars, window.srs_state.settings);
+          }
+        }, 200);
+      });
+
+      // Keyboard shortcuts (ignored when focus is in an input)
+      document.addEventListener('keydown', e => {
+        if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+        if (e.key === ' ') {
+          e.preventDefault();
+          const ps = window.srs_state.playbackState;
+          if (ps === 'playing') playback_manager.pause();
+          else if (ps === 'paused' || ps === 'idle' || ps === 'finished') playback_manager.play();
+        }
+        if (e.key === 'r' || e.key === 'R') playback_manager.reset();
+        if (e.key === 'g' || e.key === 'G') regenerateScore();
+      });
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    (function init() {
+      populateNoteSelects();
+
+      const settings = settings_manager.get();
+      window.srs_state.settings = settings;
+      applySettingsToUI(settings);
+
+      // Auto-generate on load so the user arrives with a ready passage.
+      // After this, Play always uses the currently visible passage unless
+      // the user explicitly presses Generate.
+      regenerateScore();
+
+      bindControls();
+      updateTransportButtons('idle');
+    })();
+  </script>
+{% endblock %}
