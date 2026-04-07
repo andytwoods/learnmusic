@@ -103,6 +103,7 @@ LOCAL_APPS = [
     "notes.apps.NotesConfig",
     "tuning.apps.TuningConfig",
     "intervals.apps.IntervalsConfig",
+    "sightreadingspeed.apps.SightreadingspeedConfig",
     "config",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

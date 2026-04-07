@@ -38,6 +38,7 @@ urlpatterns = [
     path("", include("notes.urls")),
     path("", include("intervals.urls")),
     path("", include("tuning.urls")),
+    path("sight-reading-speed/", include("sightreadingspeed.urls")),
     path('captcha/', include('captcha.urls')),
 
     path('test-rollbar/', views.test_rollbar, name='test-rollbar'),
